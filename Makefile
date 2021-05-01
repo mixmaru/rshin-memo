@@ -1,7 +1,7 @@
 build:
 	cd ./cui_app && go build
 
-execute: build
+exec: build
 	cd ./cui_app && ./cui_app
 
 clean:
