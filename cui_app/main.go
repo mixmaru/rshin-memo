@@ -14,11 +14,14 @@ func main() {
 	}
 	defer g.Close()
 
+    g.Cursor = true
+
 	g.SetManagerFunc(layout)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
+
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
@@ -42,14 +45,26 @@ func layout(g *gocui.Gui) error {
 		fmt.Fprintln(v, "4444")
 		str, _ := v.Line(1)
 		fmt.Fprintln(v, str)
-		v.SetCursor(0, 2)
-        _, y := v.Cursor()
-        selectedStr, _ := v.Line(y)
-		fmt.Fprintln(v, selectedStr)
+        // v.SetCursor(0, 2)
+        // _, y := v.Cursor()
+        // selectedStr, _ := v.Line(y)
+		// fmt.Fprintln(v, selectedStr)
+	}
+	if err := g.SetKeybinding("hello", gocui.KeyArrowDown, gocui.ModNone, down); err != nil {
+		log.Panicln(err)
 	}
 	return nil
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
+}
+
+// カーソルを一つ下に動かす
+func down(g *gocui.Gui, v *gocui.View) error {
+    // 現在の位置を取得
+    //_, y := v.Cursor()
+    //v.SetCursor(0, 3)
+    fmt.Fprintln(v, "9999")
+    return nil
 }
