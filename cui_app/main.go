@@ -2,8 +2,6 @@ package main
 
 import (
 	"log"
-
-	"github.com/jroimartin/gocui"
 )
 
 func main() {
@@ -11,7 +9,7 @@ func main() {
 	defer rshinMemo.Close()
 
 	err := rshinMemo.Run()
-	if err != gocui.ErrQuit {
+	if err != nil {
 		log.Panicf("%+v", err)
 	}
 }
