@@ -1,45 +1,80 @@
 package main
 
 import (
-	"log"
-
 	"github.com/jroimartin/gocui"
+	"github.com/pkg/errors"
 )
 
 type RshinMemo struct {
-	gui *gocui.Gui
+	gui                *gocui.Gui
+	alreadyInitialized bool
 }
 
 func NewRshinMemo() *RshinMemo {
 	rshinMemo := &RshinMemo{}
-
-	g, err := gocui.NewGui(gocui.OutputNormal)
-	if err != nil {
-		log.Panicln(err)
-	}
-
-    rshinMemo.gui = g
-	rshinMemo.init()
+	rshinMemo.alreadyInitialized = false
 	return rshinMemo
 }
 
-func (r *RshinMemo) init() {
+func (r *RshinMemo) Run() error {
+	// guiの初期化
+	g, err := gocui.NewGui(gocui.OutputNormal)
+	if err != nil {
+		return err
+	}
+	g.SetManagerFunc(r.layout)
+	r.gui = g
+
+	// guiメインループの起動
+	if err := r.gui.MainLoop(); err != nil && err != gocui.ErrQuit {
+		return err
+	}
+	return nil
+}
+
+// layout is called for every screen re-render e.g. when the screen is resized
+func (r *RshinMemo) layout(g *gocui.Gui) error {
+	if !r.alreadyInitialized {
+		// 初期化
+		if err := r.init(); err != nil {
+			return err
+		}
+		r.alreadyInitialized = true
+	} else {
+		// viewのリサイズ
+		if err := r.initOrResizeViews(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *RshinMemo) init() error {
 	// 画面の設定
 	r.gui.Cursor = true
 
 	// viewの設定
-	r.gui.SetManager(NewDailyListViewManager())
+	if err := r.initOrResizeViews(); err != nil {
+		return err
+	}
 
 	// キーバインディング設定
 	if err := r.gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
-		log.Panicln(err)
+		return err
 	}
+	return nil
 }
 
-func (r *RshinMemo) Run() {
-	if err := r.gui.MainLoop(); err != nil && err != gocui.ErrQuit {
-		log.Panicln(err)
+const DAILY_LIST_VIEW = "daily_list"
+
+// viewの初期化とリサイズは同じ処理なので使い回す
+func (r *RshinMemo) initOrResizeViews() error {
+	_, height := r.gui.Size()
+	_, err := r.gui.SetView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
+	if err != nil && err != gocui.ErrUnknownView {
+		return errors.Wrapf(err, "%vの初期化またはリサイズ失敗", DAILY_LIST_VIEW)
 	}
+	return nil
 }
 
 func (r *RshinMemo) Close() {

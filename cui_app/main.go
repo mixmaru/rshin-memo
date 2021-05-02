@@ -1,8 +1,15 @@
 package main
 
-func main() {
-    rshinMemo := NewRshinMemo()
-    defer rshinMemo.Close()
+import (
+	"log"
+)
 
-    rshinMemo.Run()
+func main() {
+	rshinMemo := NewRshinMemo()
+	defer rshinMemo.Close()
+
+	err := rshinMemo.Run()
+	if err != nil {
+		log.Panicf("%+v", err)
+	}
 }
