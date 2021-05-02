@@ -51,19 +51,28 @@ func (r *RshinMemo) FlushView() {
 
 // daily_listのview描画設定
 func dailyListViewLayout(g *gocui.Gui) error {
-	if v, err := g.SetView("dailyList", 0, 0, 30, 100); err != nil {
+	_, hight := g.Size()
+	if v, err := g.SetView("dailyList", 0, 0, 30, hight-1); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
 		v.Highlight = true
 		v.SelBgColor = gocui.ColorGreen
 		v.SelFgColor = gocui.ColorBlack
-		fmt.Fprintln(v, "1111")
-		fmt.Fprintln(v, "2222")
-		fmt.Fprintln(v, "3333")
-		fmt.Fprintln(v, "4444")
-		fmt.Fprintln(v, "5555")
-		fmt.Fprintln(v, "6666")
+		fmt.Fprintln(v, "2021-05-02")
+		fmt.Fprintln(v, " な ん ら か メ モ 1")
+		fmt.Fprintln(v, " な ん ら か メ モ 2")
+		fmt.Fprintln(v, " な ん ら か メ モ 3")
+		fmt.Fprintln(v, "")
+		fmt.Fprintln(v, "2021-05-01")
+		fmt.Fprintln(v, " な ん ら か メ モ 1")
+		fmt.Fprintln(v, " な ん ら か メ モ 2")
+		fmt.Fprintln(v, " な ん ら か メ モ 3")
+		fmt.Fprintln(v, "")
+		fmt.Fprintln(v, "2021-04-30")
+		fmt.Fprintln(v, " な ん ら か メ モ 1")
+		fmt.Fprintln(v, " な ん ら か メ モ 2")
+		fmt.Fprintln(v, " な ん ら か メ モ 3")
 	}
 	g.SetCurrentView("dailyList")
 	return nil
