@@ -25,10 +25,19 @@ func (m *DailyListViewManager) Layout(g *gocui.Gui) error {
 		v.Highlight = true
 		v.SelBgColor = gocui.ColorGreen
 		v.SelFgColor = gocui.ColorBlack
+
 		m.view = v
 		m.flushDailyListView()
+
+        // キーバインド設定
+        if err := g.SetKeybinding(VIEW_NAME, gocui.KeyArrowDown, gocui.ModNone, down); err != nil {
+            return err
+        }
+        if err := g.SetKeybinding(VIEW_NAME, gocui.KeyArrowUp, gocui.ModNone, up); err != nil {
+            return err
+        }
+        g.SetCurrentView(VIEW_NAME)
 	}
-	g.SetCurrentView(VIEW_NAME)
 	return nil
 }
 
@@ -54,22 +63,23 @@ func (m *DailyListViewManager) flushDailyListView() {
 // 	return gocui.ErrQuit
 // }
 // 
-// // カーソルを一つ下に動かす
-// func down(g *gocui.Gui, v *gocui.View) error {
-//     // 現在の位置を取得
-//     _, y := v.Cursor()
-//     v.SetCursor(0, y + 1)
-//     return nil
-// }
-// 
-// // カーソルを一つうえに動かす
-// func up(g *gocui.Gui, v *gocui.View) error {
-//     // 現在の位置を取得
-//     _, y := v.Cursor()
-//     v.SetCursor(0, y - 1)
-//     return nil
-// }
-// 
+
+// カーソルを一つ下に動かす
+func down(g *gocui.Gui, v *gocui.View) error {
+    // 現在の位置を取得
+    _, y := v.Cursor()
+    v.SetCursor(0, y + 1)
+    return nil
+}
+
+// カーソルを一つうえに動かす
+func up(g *gocui.Gui, v *gocui.View) error {
+    // 現在の位置を取得
+    _, y := v.Cursor()
+    v.SetCursor(0, y - 1)
+    return nil
+}
+
 // func enter(g *gocui.Gui, v *gocui.View) error {
 //     // 現在の位置を取得
 //     _, y := v.Cursor()
