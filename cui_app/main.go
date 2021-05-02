@@ -1,8 +1,17 @@
 package main
 
-func main() {
-    rshinMemo := NewRshinMemo()
-    defer rshinMemo.Close()
+import (
+	"log"
 
-    rshinMemo.Run()
+	"github.com/jroimartin/gocui"
+)
+
+func main() {
+	rshinMemo := NewRshinMemo()
+	defer rshinMemo.Close()
+
+	err := rshinMemo.Run()
+	if err != gocui.ErrQuit {
+		log.Panicf("%+v", err)
+	}
 }
