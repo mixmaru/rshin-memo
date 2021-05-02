@@ -12,7 +12,7 @@ type RshinMemo struct {
 
 func NewRshinMemo() *RshinMemo {
 	rshinMemo := &RshinMemo{}
-    rshinMemo.alreadyInitialized = false
+	rshinMemo.alreadyInitialized = false
 	return rshinMemo
 }
 
@@ -39,7 +39,12 @@ func (r *RshinMemo) layout(g *gocui.Gui) error {
 		if err := r.init(); err != nil {
 			return err
 		}
-        r.alreadyInitialized = true
+		r.alreadyInitialized = true
+	} else {
+		// viewのリサイズ
+		if err := r.initOrResizeViews(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -49,7 +54,7 @@ func (r *RshinMemo) init() error {
 	r.gui.Cursor = true
 
 	// viewの設定
-	if err := r.initView(); err != nil {
+	if err := r.initOrResizeViews(); err != nil {
 		return err
 	}
 
@@ -62,21 +67,13 @@ func (r *RshinMemo) init() error {
 
 const DAILY_LIST_VIEW = "daily_list"
 
-// viewの初期化
-func (r *RshinMemo) initView() error {
-	// daily_list
-	if err := r.initDailyListView(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *RshinMemo) initDailyListView() error {
+// viewの初期化とリサイズは同じ処理なので使い回す
+func (r *RshinMemo) initOrResizeViews() error {
 	_, height := r.gui.Size()
-    _, err := r.gui.SetView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
-    if err != nil && err != gocui.ErrUnknownView {
-        return errors.Wrapf(err, "%vの初期化失敗", DAILY_LIST_VIEW)
-    }
+	_, err := r.gui.SetView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
+	if err != nil && err != gocui.ErrUnknownView {
+		return errors.Wrapf(err, "%vの初期化またはリサイズ失敗", DAILY_LIST_VIEW)
+	}
 	return nil
 }
 
