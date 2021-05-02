@@ -44,11 +44,6 @@ func (r *RshinMemo) Close() {
 	r.gui.Close()
 }
 
-// 表示をデータ状態に合わせて再描画する
-func (r *RshinMemo) FlushView() {
-
-}
-
 // daily_listのview描画設定
 func dailyListViewLayout(g *gocui.Gui) error {
 	_, hight := g.Size()
@@ -59,23 +54,28 @@ func dailyListViewLayout(g *gocui.Gui) error {
 		v.Highlight = true
 		v.SelBgColor = gocui.ColorGreen
 		v.SelFgColor = gocui.ColorBlack
-		fmt.Fprintln(v, "2021-05-02")
-		fmt.Fprintln(v, " な ん ら か メ モ 1")
-		fmt.Fprintln(v, " な ん ら か メ モ 2")
-		fmt.Fprintln(v, " な ん ら か メ モ 3")
-		fmt.Fprintln(v, "")
-		fmt.Fprintln(v, "2021-05-01")
-		fmt.Fprintln(v, " な ん ら か メ モ 1")
-		fmt.Fprintln(v, " な ん ら か メ モ 2")
-		fmt.Fprintln(v, " な ん ら か メ モ 3")
-		fmt.Fprintln(v, "")
-		fmt.Fprintln(v, "2021-04-30")
-		fmt.Fprintln(v, " な ん ら か メ モ 1")
-		fmt.Fprintln(v, " な ん ら か メ モ 2")
-		fmt.Fprintln(v, " な ん ら か メ モ 3")
+        flushDailyListView(v)
 	}
 	g.SetCurrentView("dailyList")
 	return nil
+}
+
+// 表示をデータ状態に合わせて再描画する
+func flushDailyListView(v *gocui.View) {
+	fmt.Fprintln(v, "2021-05-02")
+	fmt.Fprintln(v, " な ん ら か メ モ 1")
+	fmt.Fprintln(v, " な ん ら か メ モ 2")
+	fmt.Fprintln(v, " な ん ら か メ モ 3")
+	fmt.Fprintln(v, "")
+	fmt.Fprintln(v, "2021-05-01")
+	fmt.Fprintln(v, " な ん ら か メ モ 1")
+	fmt.Fprintln(v, " な ん ら か メ モ 2")
+	fmt.Fprintln(v, " な ん ら か メ モ 3")
+	fmt.Fprintln(v, "")
+	fmt.Fprintln(v, "2021-04-30")
+	fmt.Fprintln(v, " な ん ら か メ モ 1")
+	fmt.Fprintln(v, " な ん ら か メ モ 2")
+	fmt.Fprintln(v, " な ん ら か メ モ 3")
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
