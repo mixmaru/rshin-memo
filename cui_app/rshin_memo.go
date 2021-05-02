@@ -6,11 +6,13 @@ import (
 )
 
 type RshinMemo struct {
-	gui *gocui.Gui
+	gui                *gocui.Gui
+	alreadyInitialized bool
 }
 
 func NewRshinMemo() *RshinMemo {
 	rshinMemo := &RshinMemo{}
+    rshinMemo.alreadyInitialized = false
 	return rshinMemo
 }
 
@@ -20,7 +22,7 @@ func (r *RshinMemo) Run() error {
 	if err != nil {
 		return err
 	}
-    g.SetManagerFunc(r.layout)
+	g.SetManagerFunc(r.layout)
 	r.gui = g
 
 	// guiメインループの起動
@@ -32,11 +34,14 @@ func (r *RshinMemo) Run() error {
 
 // layout is called for every screen re-render e.g. when the screen is resized
 func (r *RshinMemo) layout(g *gocui.Gui) error {
-	// viewの初期化
-	if err := r.init(); err != nil {
-		return err
+	if !r.alreadyInitialized {
+		// 初期化
+		if err := r.init(); err != nil {
+			return err
+		}
+        r.alreadyInitialized = true
 	}
-    return nil
+	return nil
 }
 
 func (r *RshinMemo) init() error {
@@ -44,7 +49,6 @@ func (r *RshinMemo) init() error {
 	r.gui.Cursor = true
 
 	// viewの設定
-	//r.gui.SetManager(NewDailyListViewManager())
 	if err := r.initView(); err != nil {
 		return err
 	}
@@ -61,31 +65,19 @@ const DAILY_LIST_VIEW = "daily_list"
 // viewの初期化
 func (r *RshinMemo) initView() error {
 	// daily_list
-    if err := r.initDailyListView(); err != nil{
-        return err
-    }
+	if err := r.initDailyListView(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (r *RshinMemo) initDailyListView() error {
 	_, height := r.gui.Size()
-	_, err := r.gui.View(DAILY_LIST_VIEW)
-	if err == nil {
-		// リサイズ
-		_, err := r.gui.SetView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
-		if err != nil {
-			return errors.Wrap(err, "リサイズ失敗")
-		}
-	} else if err == gocui.ErrUnknownView {
-		// 初期化
-		_, err := r.gui.SetView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
-		if err != nil && err != gocui.ErrUnknownView  {
-			return errors.Wrapf(err, "%vの初期化失敗", DAILY_LIST_VIEW)
-		}
-	} else {
-        return errors.Wrap(err, "viewの取得失敗")
-	}
-    return nil
+    _, err := r.gui.SetView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
+    if err != nil && err != gocui.ErrUnknownView {
+        return errors.Wrapf(err, "%vの初期化失敗", DAILY_LIST_VIEW)
+    }
+	return nil
 }
 
 func (r *RshinMemo) Close() {
