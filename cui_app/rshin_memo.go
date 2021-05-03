@@ -77,52 +77,55 @@ func (r *RshinMemo) initViews() (*gocui.View, error) {
 	v.Highlight = true
 	v.SelBgColor = gocui.ColorGreen
 	v.SelFgColor = gocui.ColorBlack
-	// 初期ダミーデータ
-	fmt.Fprintln(v, "2021-05-02\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-02\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-02\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-02\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-02\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-02\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-02\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-02\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-02\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 1")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 2")
-	fmt.Fprintln(v, "2021-05-01\tな ん ら か メ モ 3")
+
+	// データロード（ダミーデータ）
+    dailyList := map[string][]string{
+		"2021-04-30": {
+			"なんらかデータ1",
+			"なんらかデータ2",
+			"なんらかデータ3",
+			"なんらかデータ4",
+			"なんらかデータ5",
+			"なんらかデータ6",
+		},
+		"2021-04-29": {
+			"なんらかデータ1",
+			"なんらかデータ2",
+			"なんらかデータ3",
+			"なんらかデータ4",
+			"なんらかデータ5",
+			"なんらかデータ6",
+		},
+		"2021-04-28": {
+			"なんらかデータ1",
+			"なんらかデータ2",
+			"なんらかデータ3",
+			"なんらかデータ4",
+			"なんらかデータ5",
+			"なんらかデータ6",
+		},
+		"2021-04-27": {
+			"なんらかデータ1",
+			"なんらかデータ2",
+			"なんらかデータ3",
+			"なんらかデータ4",
+			"なんらかデータ5",
+			"なんらかデータ6",
+		},
+		"2021-04-26": {
+			"なんらかデータ1",
+			"なんらかデータ2",
+			"なんらかデータ3",
+			"なんらかデータ4",
+			"なんらかデータ5",
+			"なんらかデータ6",
+		},
+	}
+    for date, notes := range dailyList{
+        for _, note := range notes {
+            fmt.Fprintln(v, date + "\t" + note)
+        }
+    }
 
 	// 起動時のフォーカス設定
 	r.gui.SetCurrentView(DAILY_LIST_VIEW)
