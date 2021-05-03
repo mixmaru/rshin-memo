@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jroimartin/gocui"
+	"github.com/mattn/go-runewidth"
 	"github.com/pkg/errors"
 )
 
@@ -68,6 +69,11 @@ func (r *RshinMemo) init() error {
 
 const DAILY_LIST_VIEW = "daily_list"
 
+type dailyData struct {
+	Date  string
+	Notes []string
+}
+
 func (r *RshinMemo) initViews() (*gocui.View, error) {
 	v, err := r.createOrResizeView()
 	if err != nil && err != gocui.ErrUnknownView {
@@ -77,25 +83,53 @@ func (r *RshinMemo) initViews() (*gocui.View, error) {
 	v.Highlight = true
 	v.SelBgColor = gocui.ColorGreen
 	v.SelFgColor = gocui.ColorBlack
-	// 初期ダミーデータ
-	fmt.Fprintln(v, "2021-05-02")
-	fmt.Fprintln(v, " な ん ら か メ モ 1")
-	fmt.Fprintln(v, " な ん ら か メ モ 2")
-	fmt.Fprintln(v, " な ん ら か メ モ 3")
-	fmt.Fprintln(v, "")
-	fmt.Fprintln(v, "2021-05-01")
-	fmt.Fprintln(v, " な ん ら か メ モ 1")
-	fmt.Fprintln(v, " な ん ら か メ モ 2")
-	fmt.Fprintln(v, " な ん ら か メ モ 3")
-	fmt.Fprintln(v, "")
-	fmt.Fprintln(v, "2021-04-30")
-	fmt.Fprintln(v, " な ん ら か メ モ 1")
-	fmt.Fprintln(v, " な ん ら か メ モ 2")
-	fmt.Fprintln(v, " な ん ら か メ モ 3")
+
+	// データロード（ダミーデータ）
+	dailyList := []dailyData{
+		{
+			Date: "2021-04-30",
+			Notes: []string{
+				"なんらかデータ1",
+				"abcefg",
+				"なんらかdata3",
+				"なaんbらcかdデeーfタg4",
+				"なんらかデータ5",
+				"なんらかデータ6",
+			},
+		},
+		{
+			Date: "2021-04-29",
+			Notes: []string{
+				"なんらかデータ1",
+				"abcefg",
+				"なんらかdata3",
+				"なaんbらcかdデeーfタg4",
+				"なんらかデータ5",
+				"なんらかデータ6",
+			},
+		},
+	}
+	for _, dailyData := range dailyList {
+		for _, note := range dailyData.Notes {
+			fmt.Fprintln(v, dailyData.Date+"\t"+convertStringForView(note))
+		}
+	}
 
 	// 起動時のフォーカス設定
 	r.gui.SetCurrentView(DAILY_LIST_VIEW)
 	return v, nil
+}
+
+func convertStringForView(s string) string {
+	runeArr := []rune{}
+	for _, r := range s {
+		runeArr = append(runeArr, r)
+		// if もし全角文字だったら
+		if runewidth.StringWidth(string(r)) == 2 {
+			runeArr = append(runeArr, ' ')
+		}
+	}
+	return string(runeArr)
 }
 
 func (r *RshinMemo) createOrResizeView() (*gocui.View, error) {
