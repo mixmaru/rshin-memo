@@ -69,6 +69,11 @@ func (r *RshinMemo) init() error {
 
 const DAILY_LIST_VIEW = "daily_list"
 
+type dailyData struct {
+	Date  string
+	Notes []string
+}
+
 func (r *RshinMemo) initViews() (*gocui.View, error) {
 	v, err := r.createOrResizeView()
 	if err != nil && err != gocui.ErrUnknownView {
@@ -80,51 +85,33 @@ func (r *RshinMemo) initViews() (*gocui.View, error) {
 	v.SelFgColor = gocui.ColorBlack
 
 	// データロード（ダミーデータ）
-	dailyList := map[string][]string{
-		"2021-04-30": {
-			"なんらかデータ1",
-			"abcefg",
-			"なんらかdata3",
-			"なaんbらcかdデeーfタg4",
-			"なんらかデータ5",
-			"なんらかデータ6",
+	dailyList := []dailyData{
+		{
+			Date: "2021-04-30",
+			Notes: []string{
+				"なんらかデータ1",
+				"abcefg",
+				"なんらかdata3",
+				"なaんbらcかdデeーfタg4",
+				"なんらかデータ5",
+				"なんらかデータ6",
+			},
 		},
-		"2021-04-29": {
-			"なんらかデータ1",
-			"なんらかデータ2",
-			"なんらかデータ3",
-			"なんらかデータ4",
-			"なんらかデータ5",
-			"なんらかデータ6",
-		},
-		"2021-04-28": {
-			"なんらかデータ1",
-			"なんらかデータ2",
-			"なんらかデータ3",
-			"なんらかデータ4",
-			"なんらかデータ5",
-			"なんらかデータ6",
-		},
-		"2021-04-27": {
-			"なんらかデータ1",
-			"なんらかデータ2",
-			"なんらかデータ3",
-			"なんらかデータ4",
-			"なんらかデータ5",
-			"なんらかデータ6",
-		},
-		"2021-04-26": {
-			"なんらかデータ1",
-			"なんらかデータ2",
-			"なんらかデータ3",
-			"なんらかデータ4",
-			"なんらかデータ5",
-			"なんらかデータ6",
+		{
+			Date: "2021-04-29",
+			Notes: []string{
+				"なんらかデータ1",
+				"abcefg",
+				"なんらかdata3",
+				"なaんbらcかdデeーfタg4",
+				"なんらかデータ5",
+				"なんらかデータ6",
+			},
 		},
 	}
-	for date, notes := range dailyList {
-		for _, note := range notes {
-			fmt.Fprintln(v, date+"\t"+convertStringForView(note))
+	for _, dailyData := range dailyList {
+		for _, note := range dailyData.Notes {
+			fmt.Fprintln(v, dailyData.Date+"\t"+convertStringForView(note))
 		}
 	}
 
