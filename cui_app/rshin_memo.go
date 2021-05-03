@@ -120,18 +120,32 @@ func (r *RshinMemo) resizeViews() error {
 func (r *RshinMemo) setEventActions() error {
 	// CtrlC
 	if err := r.gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
-		return err
+		return errors.Wrap(err, "CtrlCキーバーンド失敗")
 	}
 
 	// daily_listのカーソル移動
 	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
-		return err
+		return errors.Wrap(err, "KeyArrowDownキーバーンド失敗")
+	}
+	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, 'j', gocui.ModNone, r.cursorDown); err != nil {
+		return errors.Wrap(err, "jキーバーンド失敗")
+	}
+	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyArrowUp, gocui.ModNone, r.cursorUp); err != nil {
+		return errors.Wrap(err, "KeyArrowUpキーバーンド失敗")
+	}
+	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
+		return errors.Wrap(err, "kキーバーンド失敗")
 	}
 	return nil
 }
 
 func (r *RshinMemo) cursorDown(g *gocui.Gui, v *gocui.View) error {
 	v.MoveCursor(0, 1, false)
+	return nil
+}
+
+func (r *RshinMemo) cursorUp(g *gocui.Gui, v *gocui.View) error {
+	v.MoveCursor(0, -1, false)
 	return nil
 }
 
