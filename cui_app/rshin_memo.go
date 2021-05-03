@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jroimartin/gocui"
+	"github.com/mattn/go-runewidth"
 	"github.com/pkg/errors"
 )
 
@@ -79,12 +80,12 @@ func (r *RshinMemo) initViews() (*gocui.View, error) {
 	v.SelFgColor = gocui.ColorBlack
 
 	// データロード（ダミーデータ）
-    dailyList := map[string][]string{
+	dailyList := map[string][]string{
 		"2021-04-30": {
 			"なんらかデータ1",
-			"なんらかデータ2",
-			"なんらかデータ3",
-			"なんらかデータ4",
+			"abcefg",
+			"なんらかdata3",
+			"なaんbらcかdデeーfタg4",
 			"なんらかデータ5",
 			"なんらかデータ6",
 		},
@@ -121,15 +122,27 @@ func (r *RshinMemo) initViews() (*gocui.View, error) {
 			"なんらかデータ6",
 		},
 	}
-    for date, notes := range dailyList{
-        for _, note := range notes {
-            fmt.Fprintln(v, date + "\t" + note)
-        }
-    }
+	for date, notes := range dailyList {
+		for _, note := range notes {
+			fmt.Fprintln(v, date+"\t"+convertStringForView(note))
+		}
+	}
 
 	// 起動時のフォーカス設定
 	r.gui.SetCurrentView(DAILY_LIST_VIEW)
 	return v, nil
+}
+
+func convertStringForView(s string) string {
+	runeArr := []rune{}
+	for _, r := range s {
+		runeArr = append(runeArr, r)
+		// if もし全角文字だったら
+		if runewidth.StringWidth(string(r)) == 2 {
+			runeArr = append(runeArr, ' ')
+		}
+	}
+	return string(runeArr)
 }
 
 func (r *RshinMemo) createOrResizeView() (*gocui.View, error) {
