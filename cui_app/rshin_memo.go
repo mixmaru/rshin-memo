@@ -8,6 +8,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+/*
+vimを開く方法メモ
+c := exec.Command("vim", "main.go")
+c.Stdin = os.Stdin
+c.Stdout = os.Stdout
+c.Stderr = os.Stderr
+err := c.Run()
+if err != nil {
+    return errors.Wrap(err, "実行エラー")
+}
+*/
+
 type RshinMemo struct {
 	gui                *gocui.Gui
 	alreadyInitialized bool
