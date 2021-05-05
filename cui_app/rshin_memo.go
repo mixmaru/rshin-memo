@@ -91,13 +91,12 @@ type dailyData struct {
 }
 
 func (r *RshinMemo) initViews() error {
-	dailyListView, err := r.createDailyListView()
+	_, err := r.createDailyListView()
 	if err != nil{
 		return err
 	}
-	width, _ := dailyListView.Size()
 
-	_, err = r.createNoteView(width+2, 0)
+	_, err = r.createNoteView()
 	if err != nil{
 		return err
 	}
@@ -111,8 +110,8 @@ func (r *RshinMemo) initViews() error {
 }
 
 func (r * RshinMemo) createDailyListView() (*gocui.View, error) {
-	_, height := r.gui.Size()
-	v, err := r.createOrResizeView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
+	// あとでどうせリサイズされるので、ここではこまかな位置調整は行わない。
+	v, err := r.createOrResizeView(DAILY_LIST_VIEW, 0, 0, 1, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -153,9 +152,9 @@ func (r * RshinMemo) loadAllDailyList() ([]dailyData, error) {
 	return retList, nil
 }
 
-func (r * RshinMemo) createNoteView(x, y int) (*gocui.View, error) {
-	width, height := r.gui.Size()
-	v, err := r.createOrResizeView(NOTE_VIEW, x, y, width-1, height-1)
+func (r * RshinMemo) createNoteView() (*gocui.View, error) {
+	// あとでどうせリサイズされて配置調整されるので、ここでは細かな位置調整は行わない
+	v, err := r.createOrResizeView(NOTE_VIEW, 0, 0, 1, 1)
 	if err != nil {
 		return nil, err
 	}
