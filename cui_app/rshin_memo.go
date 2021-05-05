@@ -6,6 +6,7 @@ import (
 	"github.com/mattn/go-runewidth"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -25,12 +26,17 @@ type RshinMemo struct {
 	gui                *gocui.Gui
 	alreadyInitialized bool
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface
+	getNoteSummaryUseCase usecases.GetNoteSummaryUsecaseInterface
 }
 
-func NewRshinMemo(getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface) *RshinMemo {
+func NewRshinMemo(
+	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface,
+	getNoteSummaryUseCase usecases.GetNoteSummaryUsecaseInterface,
+) *RshinMemo {
 	rshinMemo := &RshinMemo{}
 	rshinMemo.alreadyInitialized = false
 	rshinMemo.getAllDailyListUsecase = getAllDailyListUsecase
+	rshinMemo.getNoteSummaryUseCase = getNoteSummaryUseCase
 	return rshinMemo
 }
 
@@ -154,10 +160,13 @@ func (r * RshinMemo) loadAllDailyList() ([]dailyData, error) {
 
 func (r * RshinMemo) createNoteView() (*gocui.View, error) {
 	// あとでどうせリサイズされて配置調整されるので、ここでは細かな位置調整は行わない
-	v, err := r.createOrResizeView(NOTE_VIEW, 0, 0, 1, 1)
+	v, err := r.createOrResizeView(NOTE_VIEW, 0, 0, 10, 1)
 	if err != nil {
 		return nil, err
 	}
+	// viewへの設定
+	v.Highlight = true
+	v.Wrap = true
 	return v, nil
 }
 
@@ -222,6 +231,20 @@ func (r *RshinMemo) setEventActions() error {
 	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyEnter, gocui.ModNone, r.openNote); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
+
+	// noteViewでのカーソル移動
+	if err := r.gui.SetKeybinding(NOTE_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
+		return errors.Wrap(err, "KeyArrowDownキーバインド失敗")
+	}
+	if err := r.gui.SetKeybinding(NOTE_VIEW, 'j', gocui.ModNone, r.cursorDown); err != nil {
+		return errors.Wrap(err, "jキーバインド失敗")
+	}
+	if err := r.gui.SetKeybinding(NOTE_VIEW, gocui.KeyArrowUp, gocui.ModNone, r.cursorUp); err != nil {
+		return errors.Wrap(err, "KeyArrowUpキーバインド失敗")
+	}
+	if err := r.gui.SetKeybinding(NOTE_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
+		return errors.Wrap(err, "kキーバイーンド失敗")
+	}
 	return nil
 }
 
@@ -242,9 +265,30 @@ func (r *RshinMemo) Close() {
 // ノートViewに指定のノートを表示する
 func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	// 選択行のテキストを取得
+	_, y := v.Cursor()
+	text, err := v.Line(y)
+	if err != nil{
+		return errors.Wrap(err, "選択行のtextの取得に失敗")
+	}
+	noteView, err := r.gui.View(NOTE_VIEW)
+	if err != nil{
+		return errors.Wrapf(err, "$v のviewの取得に失敗")
+	}
 	// \tで分割してノート名を取得
+	noteName := strings.Split(text, "\t")[1]
 	// ノート名で清書データを取得
+	noteText, err := r.getNoteSummaryUseCase.Handle(noteName)
+	if err != nil{
+		return err
+	}
 	// データをnoteViewへ流し込む
+	noteView.Clear()
+	fmt.Fprintln(noteView, convertStringForView(noteText))
+	// フォーカスを移動
+	_, err = g.SetCurrentView(NOTE_VIEW)
+	if err != nil{
+		return errors.Wrapf(err, "フォーカスセット失敗。%v", NOTE_VIEW)
+	}
 	return nil
 }
 
