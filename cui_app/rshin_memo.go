@@ -20,7 +20,6 @@ type RshinMemo struct {
 
 func NewRshinMemo(
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface,
-	getNoteSummaryUseCase usecases.GetNoteSummaryUsecaseInterface,
 ) *RshinMemo {
 	rshinMemo := &RshinMemo{}
 	rshinMemo.alreadyInitialized = false
