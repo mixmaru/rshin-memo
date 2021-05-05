@@ -71,7 +71,7 @@ func (r *RshinMemo) init() error {
 	// 画面の設定
 	r.gui.Cursor = true
 
-	_, err := r.initViews()
+	err := r.initViews()
 	if err != nil {
 		return err
 	}
@@ -89,10 +89,21 @@ type dailyData struct {
 	Notes []string
 }
 
-func (r *RshinMemo) initViews() (*gocui.View, error) {
+func (r *RshinMemo) initViews() error {
+	err := r.createDailyListView()
+
+	// 起動時のフォーカス設定
+	_, err = r.gui.SetCurrentView(DAILY_LIST_VIEW)
+	if err != nil {
+		return errors.Wrap(err, "起動時フォーカス失敗")
+	}
+	return nil
+}
+
+func (r * RshinMemo) createDailyListView() error {
 	v, err := r.createOrResizeView()
-	if err != nil && err != gocui.ErrUnknownView {
-		return nil, err
+	if err != nil {
+		return err
 	}
 	// viewへの設定
 	v.Highlight = true
@@ -101,24 +112,18 @@ func (r *RshinMemo) initViews() (*gocui.View, error) {
 
 	dailyList, err := r.loadAllDailyList()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, dailyData := range dailyList {
 		for _, note := range dailyData.Notes {
 			_, err = fmt.Fprintln(v, dailyData.Date.Format("2006-01-02")+"\t"+convertStringForView(note))
 			if err != nil {
-				return nil, errors.Wrapf(err, "テキスト出力失敗。%+v", dailyData)
+				return errors.Wrapf(err, "テキスト出力失敗。%+v", dailyData)
 			}
 		}
 	}
-
-	// 起動時のフォーカス設定
-	_, err = r.gui.SetCurrentView(DAILY_LIST_VIEW)
-	if err != nil {
-		return nil, errors.Wrap(err, "起動時フォーカス失敗")
-	}
-	return v, nil
+	return nil
 }
 
 func (r * RshinMemo) loadAllDailyList() ([]dailyData, error) {
