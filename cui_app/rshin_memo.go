@@ -2,20 +2,35 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/jroimartin/gocui"
 	"github.com/mattn/go-runewidth"
+	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/pkg/errors"
+	"time"
 )
+
+/*
+vimを開く方法メモ
+c := exec.Command("vim", "main.go")
+c.Stdin = os.Stdin
+c.Stdout = os.Stdout
+c.Stderr = os.Stderr
+err := c.Run()
+if err != nil {
+    return errors.Wrap(err, "実行エラー")
+}
+*/
 
 type RshinMemo struct {
 	gui                *gocui.Gui
 	alreadyInitialized bool
+	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface
 }
 
-func NewRshinMemo() *RshinMemo {
+func NewRshinMemo(getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface) *RshinMemo {
 	rshinMemo := &RshinMemo{}
 	rshinMemo.alreadyInitialized = false
+	rshinMemo.getAllDailyListUsecase = getAllDailyListUsecase
 	return rshinMemo
 }
 
@@ -70,7 +85,7 @@ func (r *RshinMemo) init() error {
 const DAILY_LIST_VIEW = "daily_list"
 
 type dailyData struct {
-	Date  string
+	Date  time.Time
 	Notes []string
 }
 
@@ -84,40 +99,42 @@ func (r *RshinMemo) initViews() (*gocui.View, error) {
 	v.SelBgColor = gocui.ColorGreen
 	v.SelFgColor = gocui.ColorBlack
 
-	// データロード（ダミーデータ）
-	dailyList := []dailyData{
-		{
-			Date: "2021-04-30",
-			Notes: []string{
-				"なんらかデータ1",
-				"abcefg",
-				"なんらかdata3",
-				"なaんbらcかdデeーfタg4",
-				"なんらかデータ5",
-				"なんらかデータ6",
-			},
-		},
-		{
-			Date: "2021-04-29",
-			Notes: []string{
-				"なんらかデータ1",
-				"abcefg",
-				"なんらかdata3",
-				"なaんbらcかdデeーfタg4",
-				"なんらかデータ5",
-				"なんらかデータ6",
-			},
-		},
+	dailyList, err := r.loadAllDailyList()
+	if err != nil {
+		return nil, err
 	}
+
 	for _, dailyData := range dailyList {
 		for _, note := range dailyData.Notes {
-			fmt.Fprintln(v, dailyData.Date+"\t"+convertStringForView(note))
+			_, err = fmt.Fprintln(v, dailyData.Date.Format("2006-01-02")+"\t"+convertStringForView(note))
+			if err != nil {
+				return nil, errors.Wrapf(err, "テキスト出力失敗。%+v", dailyData)
+			}
 		}
 	}
 
 	// 起動時のフォーカス設定
-	r.gui.SetCurrentView(DAILY_LIST_VIEW)
+	_, err = r.gui.SetCurrentView(DAILY_LIST_VIEW)
+	if err != nil {
+		return nil, errors.Wrap(err, "起動時フォーカス失敗")
+	}
 	return v, nil
+}
+
+func (r * RshinMemo) loadAllDailyList() ([]dailyData, error) {
+	retList := []dailyData{}
+	response, err := r.getAllDailyListUsecase.Handle()
+	if err != nil{
+		return nil, err
+	}
+	for _, oneDayList := range response.DailyList {
+		dailyData := dailyData{
+			Date: oneDayList.Date,
+			Notes: oneDayList.Notes,
+		}
+		retList = append(retList, dailyData)
+	}
+	return retList, nil
 }
 
 func convertStringForView(s string) string {
