@@ -6,27 +6,16 @@ import (
 	"github.com/mattn/go-runewidth"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/pkg/errors"
+	"os"
+	"os/exec"
 	"strings"
 	"time"
 )
-
-/*
-vimを開く方法メモ
-c := exec.Command("vim", "main.go")
-c.Stdin = os.Stdin
-c.Stdout = os.Stdout
-c.Stderr = os.Stderr
-err := c.Run()
-if err != nil {
-    return errors.Wrap(err, "実行エラー")
-}
-*/
 
 type RshinMemo struct {
 	gui                *gocui.Gui
 	alreadyInitialized bool
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface
-	getNoteSummaryUseCase usecases.GetNoteSummaryUsecaseInterface
 }
 
 func NewRshinMemo(
@@ -36,7 +25,6 @@ func NewRshinMemo(
 	rshinMemo := &RshinMemo{}
 	rshinMemo.alreadyInitialized = false
 	rshinMemo.getAllDailyListUsecase = getAllDailyListUsecase
-	rshinMemo.getNoteSummaryUseCase = getNoteSummaryUseCase
 	return rshinMemo
 }
 
@@ -89,7 +77,6 @@ func (r *RshinMemo) init() error {
 }
 
 const DAILY_LIST_VIEW = "daily_list"
-const NOTE_VIEW = "note"
 
 type dailyData struct {
 	Date  time.Time
@@ -98,11 +85,6 @@ type dailyData struct {
 
 func (r *RshinMemo) initViews() error {
 	_, err := r.createDailyListView()
-	if err != nil{
-		return err
-	}
-
-	_, err = r.createNoteView()
 	if err != nil{
 		return err
 	}
@@ -158,18 +140,6 @@ func (r * RshinMemo) loadAllDailyList() ([]dailyData, error) {
 	return retList, nil
 }
 
-func (r * RshinMemo) createNoteView() (*gocui.View, error) {
-	// あとでどうせリサイズされて配置調整されるので、ここでは細かな位置調整は行わない
-	v, err := r.createOrResizeView(NOTE_VIEW, 0, 0, 10, 1)
-	if err != nil {
-		return nil, err
-	}
-	// viewへの設定
-	v.Highlight = true
-	v.Wrap = true
-	return v, nil
-}
-
 func convertStringForView(s string) string {
 	runeArr := []rune{}
 	for _, r := range s {
@@ -192,14 +162,8 @@ func (r *RshinMemo) createOrResizeView(viewName string, x0, y0, x1, y1 int) (*go
 
 // viewのリサイズ
 func (r *RshinMemo) resizeViews() error {
-	width, height := r.gui.Size()
-	dailyListView, err := r.createOrResizeView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
-	if err != nil {
-		return err
-	}
-
-	x, _ := dailyListView.Size()
-	_, err = r.createOrResizeView(NOTE_VIEW, x+2, 0, width-1, height-1)
+	_, height := r.gui.Size()
+	_, err := r.createOrResizeView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
 	if err != nil {
 		return err
 	}
@@ -231,20 +195,6 @@ func (r *RshinMemo) setEventActions() error {
 	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyEnter, gocui.ModNone, r.openNote); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
-
-	// noteViewでのカーソル移動
-	if err := r.gui.SetKeybinding(NOTE_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
-		return errors.Wrap(err, "KeyArrowDownキーバインド失敗")
-	}
-	if err := r.gui.SetKeybinding(NOTE_VIEW, 'j', gocui.ModNone, r.cursorDown); err != nil {
-		return errors.Wrap(err, "jキーバインド失敗")
-	}
-	if err := r.gui.SetKeybinding(NOTE_VIEW, gocui.KeyArrowUp, gocui.ModNone, r.cursorUp); err != nil {
-		return errors.Wrap(err, "KeyArrowUpキーバインド失敗")
-	}
-	if err := r.gui.SetKeybinding(NOTE_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
-		return errors.Wrap(err, "kキーバイーンド失敗")
-	}
 	return nil
 }
 
@@ -262,7 +212,7 @@ func (r *RshinMemo) Close() {
 	r.gui.Close()
 }
 
-// ノートViewに指定のノートを表示する
+// 指定NoteをVimで起動する
 func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	// 選択行のテキストを取得
 	_, y := v.Cursor()
@@ -270,24 +220,17 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	if err != nil{
 		return errors.Wrap(err, "選択行のtextの取得に失敗")
 	}
-	noteView, err := r.gui.View(NOTE_VIEW)
-	if err != nil{
-		return errors.Wrapf(err, "$v のviewの取得に失敗")
-	}
 	// \tで分割してノート名を取得
 	noteName := strings.Split(text, "\t")[1]
-	// ノート名で清書データを取得
-	noteText, err := r.getNoteSummaryUseCase.Handle(noteName)
-	if err != nil{
-		return err
-	}
-	// データをnoteViewへ流し込む
-	noteView.Clear()
-	fmt.Fprintln(noteView, convertStringForView(noteText))
-	// フォーカスを移動
-	_, err = g.SetCurrentView(NOTE_VIEW)
-	if err != nil{
-		return errors.Wrapf(err, "フォーカスセット失敗。%v", NOTE_VIEW)
+
+	// vimで対象noteを開く
+	c := exec.Command("vim", noteName)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	err = c.Run()
+	if err != nil {
+		return errors.Wrap(err, "vim起動エラー")
 	}
 	return nil
 }
