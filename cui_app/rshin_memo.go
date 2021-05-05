@@ -83,6 +83,7 @@ func (r *RshinMemo) init() error {
 }
 
 const DAILY_LIST_VIEW = "daily_list"
+const NOTE_VIEW = "note"
 
 type dailyData struct {
 	Date  time.Time
@@ -90,7 +91,17 @@ type dailyData struct {
 }
 
 func (r *RshinMemo) initViews() error {
-	err := r.createDailyListView()
+	dailyListView, err := r.createDailyListView()
+	if err != nil{
+		return err
+	}
+	x, _ := dailyListView.Origin()
+	width, _ := dailyListView.Size()
+
+	_, err = r.createNoteView(x+width+2, 0)
+	if err != nil{
+		return err
+	}
 
 	// 起動時のフォーカス設定
 	_, err = r.gui.SetCurrentView(DAILY_LIST_VIEW)
@@ -100,10 +111,11 @@ func (r *RshinMemo) initViews() error {
 	return nil
 }
 
-func (r * RshinMemo) createDailyListView() error {
-	v, err := r.createOrResizeView()
+func (r * RshinMemo) createDailyListView() (*gocui.View, error) {
+	_, height := r.gui.Size()
+	v, err := r.createOrResizeView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// viewへの設定
 	v.Highlight = true
@@ -112,18 +124,18 @@ func (r * RshinMemo) createDailyListView() error {
 
 	dailyList, err := r.loadAllDailyList()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, dailyData := range dailyList {
 		for _, note := range dailyData.Notes {
 			_, err = fmt.Fprintln(v, dailyData.Date.Format("2006-01-02")+"\t"+convertStringForView(note))
 			if err != nil {
-				return errors.Wrapf(err, "テキスト出力失敗。%+v", dailyData)
+				return nil, errors.Wrapf(err, "テキスト出力失敗。%+v", dailyData)
 			}
 		}
 	}
-	return nil
+	return v, nil
 }
 
 func (r * RshinMemo) loadAllDailyList() ([]dailyData, error) {
@@ -142,6 +154,15 @@ func (r * RshinMemo) loadAllDailyList() ([]dailyData, error) {
 	return retList, nil
 }
 
+func (r * RshinMemo) createNoteView(x, y int) (*gocui.View, error) {
+	width, height := r.gui.Size()
+	v, err := r.createOrResizeView(NOTE_VIEW, x, y, width-1, height-1)
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
 func convertStringForView(s string) string {
 	runeArr := []rune{}
 	for _, r := range s {
@@ -154,9 +175,8 @@ func convertStringForView(s string) string {
 	return string(runeArr)
 }
 
-func (r *RshinMemo) createOrResizeView() (*gocui.View, error) {
-	_, height := r.gui.Size()
-	v, err := r.gui.SetView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
+func (r *RshinMemo) createOrResizeView(viewName string, x0, y0, width, height int) (*gocui.View, error) {
+	v, err := r.gui.SetView(viewName, x0, y0, width, height)
 	if err != nil && err != gocui.ErrUnknownView {
 		return nil, errors.Wrapf(err, "%vの初期化またはリサイズ失敗", DAILY_LIST_VIEW)
 	}
@@ -165,7 +185,8 @@ func (r *RshinMemo) createOrResizeView() (*gocui.View, error) {
 
 // viewのリサイズ
 func (r *RshinMemo) resizeViews() error {
-	_, err := r.createOrResizeView()
+	_, height := r.gui.Size()
+	_, err := r.createOrResizeView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
 	if err != nil {
 		return err
 	}
