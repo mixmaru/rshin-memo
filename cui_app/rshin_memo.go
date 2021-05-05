@@ -6,13 +6,16 @@ import (
 	"github.com/mattn/go-runewidth"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/pkg/errors"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+	"path/filepath"
 )
 
 type RshinMemo struct {
+	memoDirPath string
 	gui                *gocui.Gui
 	alreadyInitialized bool
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface
@@ -21,13 +24,25 @@ type RshinMemo struct {
 func NewRshinMemo(
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface,
 ) *RshinMemo {
+	homedir, err := os.UserHomeDir()
+	if err != nil{
+		log.Panicf("初期化失敗. %+v", err)
+	}
 	rshinMemo := &RshinMemo{}
+	rshinMemo.memoDirPath = filepath.Join(homedir, "rshin_memo")
 	rshinMemo.alreadyInitialized = false
 	rshinMemo.getAllDailyListUsecase = getAllDailyListUsecase
 	return rshinMemo
 }
 
 func (r *RshinMemo) Run() error {
+	// なければmemo用dirの作成
+	if _, err := os.Stat(r.memoDirPath); os.IsNotExist(err) {
+		err := os.Mkdir(r.memoDirPath, 0777)
+		if err != nil {
+			return errors.Wrap(err, "memo用dirの作成に失敗しました。")
+		}
+	}
 	// guiの初期化
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -221,9 +236,11 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	}
 	// \tで分割してノート名を取得
 	noteName := strings.Split(text, "\t")[1]
+	// 取得したテキストは表示のために半角スペースがはいってるので除去
+	noteName = strings.ReplaceAll(noteName, " ", "")
 
 	// vimで対象noteを開く
-	c := exec.Command("vim", noteName)
+	c := exec.Command("vim", filepath.Join(r.memoDirPath, noteName+".txt"))
 	c.Stdin = os.Stdin
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
