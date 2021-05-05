@@ -209,7 +209,33 @@ func (r *RshinMemo) setEventActions() error {
 	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyEnter, gocui.ModNone, r.openNote); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
+
+	// daily_listでの新規list追加
+	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, 'o', gocui.ModNone, r.addList); err != nil {
+		return errors.Wrap(err, "Enterキーバインド失敗")
+	}
 	return nil
+}
+
+func (r *RshinMemo) addList(g *gocui.Gui, v *gocui.View) error {
+	// note名入力viewの表示
+	_, err := r.createNoteNameInputView()
+	// フォーカスの移動
+	_, err = r.gui.SetCurrentView(NOTE_NAME_INPUT_VIEW)
+	if err != nil {
+		return errors.Wrap(err, "フォーカス移動失敗")
+	}
+	return nil
+}
+
+const NOTE_NAME_INPUT_VIEW = "note_name_input"
+func (r *RshinMemo) createNoteNameInputView() (*gocui.View, error) {
+	width, height := r.gui.Size()
+	_, err := r.createOrResizeView(NOTE_NAME_INPUT_VIEW, width/2-20, height/2-1, width/2+20, height/2+1)
+	if err != nil{
+		return nil, err
+	}
+	return nil, nil
 }
 
 func (r *RshinMemo) cursorDown(g *gocui.Gui, v *gocui.View) error {
