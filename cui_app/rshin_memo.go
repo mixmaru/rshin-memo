@@ -201,21 +201,26 @@ func (r *RshinMemo) resizeViews() error {
 func (r *RshinMemo) setEventActions() error {
 	// CtrlC
 	if err := r.gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
-		return errors.Wrap(err, "CtrlCキーバーンド失敗")
+		return errors.Wrap(err, "CtrlCキーバインド失敗")
 	}
 
 	// daily_listのカーソル移動
 	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
-		return errors.Wrap(err, "KeyArrowDownキーバーンド失敗")
+		return errors.Wrap(err, "KeyArrowDownキーバインド失敗")
 	}
 	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, 'j', gocui.ModNone, r.cursorDown); err != nil {
-		return errors.Wrap(err, "jキーバーンド失敗")
+		return errors.Wrap(err, "jキーバインド失敗")
 	}
 	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyArrowUp, gocui.ModNone, r.cursorUp); err != nil {
-		return errors.Wrap(err, "KeyArrowUpキーバーンド失敗")
+		return errors.Wrap(err, "KeyArrowUpキーバインド失敗")
 	}
 	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
-		return errors.Wrap(err, "kキーバーンド失敗")
+		return errors.Wrap(err, "kキーバイーンド失敗")
+	}
+
+	// daily_listでのエンターキー
+	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyEnter, gocui.ModNone, r.openNote); err != nil {
+		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
 	return nil
 }
@@ -232,6 +237,15 @@ func (r *RshinMemo) cursorUp(g *gocui.Gui, v *gocui.View) error {
 
 func (r *RshinMemo) Close() {
 	r.gui.Close()
+}
+
+// ノートViewに指定のノートを表示する
+func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
+	// 選択行のテキストを取得
+	// \tで分割してノート名を取得
+	// ノート名で清書データを取得
+	// データをnoteViewへ流し込む
+	return nil
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
