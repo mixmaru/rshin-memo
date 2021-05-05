@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"log"
-	"time"
 )
 
 func main() {
@@ -21,11 +20,10 @@ func main() {
 type GetAllDailyListUsecaseMock struct {}
 
 func (u *GetAllDailyListUsecaseMock) Handle() (usecases.GetAllDailyListUsecaseResponse, error) {
-	local, _ := time.LoadLocation("Local")
 	response := usecases.GetAllDailyListUsecaseResponse{
 		DailyList: []usecases.OneDayList{
 			{
-				Date: time.Date(2021, 04, 30, 0,0,0,0, local),
+				Date: "2021-04-30",
 				Notes: []string{
 					"なんかしらのNote1",
 					"なんかしらのNote2",
@@ -38,7 +36,7 @@ func (u *GetAllDailyListUsecaseMock) Handle() (usecases.GetAllDailyListUsecaseRe
 				},
 			},
 			{
-				Date: time.Date(2021, 04, 29, 0,0,0,0, local),
+				Date: "2021-04-29",
 				Notes: []string{
 					"なんかしらのNote1",
 					"なんかしらのNote2",

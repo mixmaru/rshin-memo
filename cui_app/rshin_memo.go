@@ -9,9 +9,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
-	"time"
 	"path/filepath"
+	"strings"
 )
 
 type RshinMemo struct {
@@ -93,7 +92,7 @@ func (r *RshinMemo) init() error {
 const DAILY_LIST_VIEW = "daily_list"
 
 type dailyData struct {
-	Date  time.Time
+	Date  string
 	Notes []string
 }
 
@@ -129,7 +128,7 @@ func (r * RshinMemo) createDailyListView() (*gocui.View, error) {
 
 	for _, dailyData := range dailyList {
 		for _, note := range dailyData.Notes {
-			_, err = fmt.Fprintln(v, dailyData.Date.Format("2006-01-02")+"\t"+convertStringForView(note))
+			_, err = fmt.Fprintln(v, dailyData.Date+"\t"+convertStringForView(note))
 			if err != nil {
 				return nil, errors.Wrapf(err, "テキスト出力失敗。%+v", dailyData)
 			}
