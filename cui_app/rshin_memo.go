@@ -95,10 +95,9 @@ func (r *RshinMemo) initViews() error {
 	if err != nil{
 		return err
 	}
-	x, _ := dailyListView.Origin()
 	width, _ := dailyListView.Size()
 
-	_, err = r.createNoteView(x+width+2, 0)
+	_, err = r.createNoteView(width+2, 0)
 	if err != nil{
 		return err
 	}
@@ -185,8 +184,14 @@ func (r *RshinMemo) createOrResizeView(viewName string, x0, y0, x1, y1 int) (*go
 
 // viewのリサイズ
 func (r *RshinMemo) resizeViews() error {
-	_, height := r.gui.Size()
-	_, err := r.createOrResizeView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
+	width, height := r.gui.Size()
+	dailyListView, err := r.createOrResizeView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
+	if err != nil {
+		return err
+	}
+
+	x, _ := dailyListView.Size()
+	_, err = r.createOrResizeView(NOTE_VIEW, x+2, 0, width-1, height-1)
 	if err != nil {
 		return err
 	}
