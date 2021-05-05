@@ -175,8 +175,8 @@ func convertStringForView(s string) string {
 	return string(runeArr)
 }
 
-func (r *RshinMemo) createOrResizeView(viewName string, x0, y0, width, height int) (*gocui.View, error) {
-	v, err := r.gui.SetView(viewName, x0, y0, width, height)
+func (r *RshinMemo) createOrResizeView(viewName string, x0, y0, x1, y1 int) (*gocui.View, error) {
+	v, err := r.gui.SetView(viewName, x0, y0, x1, y1)
 	if err != nil && err != gocui.ErrUnknownView {
 		return nil, errors.Wrapf(err, "%vの初期化またはリサイズ失敗", DAILY_LIST_VIEW)
 	}
