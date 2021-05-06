@@ -1,7 +1,5 @@
 package usecases
 
-import "time"
-
 type GetAllDailyListUsecaseInterface interface {
     Handle() (GetAllDailyListUsecaseResponse, error)
 }
@@ -11,7 +9,7 @@ type GetAllDailyListUsecaseResponse struct {
 }
 
 type OneDayList struct {
-    Date time.Time
+    Date string
     Notes []string
 }
 
