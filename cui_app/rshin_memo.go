@@ -106,14 +106,6 @@ func (r *RshinMemo) initViews() error {
 	return nil
 }
 
-func (r *RshinMemo) createOrResizeView(viewName string, x0, y0, x1, y1 int) (*gocui.View, error) {
-	v, err := r.gui.SetView(viewName, x0, y0, x1, y1)
-	if err != nil && err != gocui.ErrUnknownView {
-		return nil, errors.Wrap(err, "初期化またはリサイズ失敗")
-	}
-	return v, nil
-}
-
 // イベントに対してのアクションを設定する
 func (r *RshinMemo) setEventActions() error {
 	// CtrlC
