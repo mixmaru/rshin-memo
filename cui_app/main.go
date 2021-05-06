@@ -8,6 +8,8 @@ import (
 func main() {
 	rshinMemo := NewRshinMemo(
 		&GetAllDailyListUsecaseMock{},
+		&GetNoteUseCaseMock{},
+		&CreateNoteUseCaseMock{},
 	)
 	defer rshinMemo.Close()
 
@@ -51,4 +53,16 @@ func (u *GetAllDailyListUsecaseMock) Handle() (usecases.GetAllDailyListUsecaseRe
 		},
 	}
 	return response, nil
+}
+
+type GetNoteUseCaseMock struct {}
+
+func (g *GetNoteUseCaseMock) Handle(noteName string) (text string, notExist bool, err error) {
+	return "nannan", true, nil
+}
+
+type CreateNoteUseCaseMock struct {}
+
+func (c CreateNoteUseCaseMock) Handle(noteName string) error {
+	return nil
 }

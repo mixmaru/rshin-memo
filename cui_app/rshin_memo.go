@@ -26,6 +26,8 @@ type RshinMemo struct {
 
 func NewRshinMemo(
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface,
+	getNoteUseCase usecases.GetNoteUseCaseInterface,
+	createNoteUseCase usecases.CreateNoteUseCaseInterface,
 ) *RshinMemo {
 
 	homedir, err := os.UserHomeDir()
@@ -45,6 +47,8 @@ func NewRshinMemo(
 	rshinMemo.alreadyInitialized = false
 	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, getAllDailyListUsecase)
 	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
+	rshinMemo.getNoteUseCase = getNoteUseCase
+	rshinMemo.createNoteUseCase = createNoteUseCase
 	return rshinMemo
 }
 

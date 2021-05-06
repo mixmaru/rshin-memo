@@ -27,9 +27,10 @@ func (n *NoteNameInputView) Create() error{
 	if err != nil{
 		return err
 	}
+	n.view = v
 
-	v.Editable = true
-	v.Editor = &Editor{}
+	n.view.Editable = true
+	n.view.Editor = &Editor{}
 	return nil
 }
 
