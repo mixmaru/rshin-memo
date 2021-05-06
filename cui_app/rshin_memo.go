@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"github.com/jroimartin/gocui"
-	"github.com/mattn/go-runewidth"
 	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/mixmaru/rshin-memo/cui_app/views"
 	"github.com/pkg/errors"
 	"log"
 	"os"
@@ -14,23 +13,32 @@ import (
 )
 
 type RshinMemo struct {
-	memoDirPath string
+	memoDirPath        string
 	gui                *gocui.Gui
+	dailyListView      *views.DailyListView
 	alreadyInitialized bool
-	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface
 }
 
 func NewRshinMemo(
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface,
 ) *RshinMemo {
+
 	homedir, err := os.UserHomeDir()
 	if err != nil{
 		log.Panicf("初期化失敗. %+v", err)
 	}
+
 	rshinMemo := &RshinMemo{}
+	// guiの初期化
+	g, err := gocui.NewGui(gocui.OutputNormal)
+	if err != nil {
+		log.Panicf("初期化失敗。error: %+v", errors.Wrap(err, "初期化失敗"))
+	}
+	g.SetManagerFunc(rshinMemo.layout)
+	rshinMemo.gui = g
 	rshinMemo.memoDirPath = filepath.Join(homedir, "rshin_memo")
 	rshinMemo.alreadyInitialized = false
-	rshinMemo.getAllDailyListUsecase = getAllDailyListUsecase
+	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, getAllDailyListUsecase)
 	return rshinMemo
 }
 
@@ -42,13 +50,6 @@ func (r *RshinMemo) Run() error {
 			return errors.Wrap(err, "memo用dirの作成に失敗しました。")
 		}
 	}
-	// guiの初期化
-	g, err := gocui.NewGui(gocui.OutputNormal)
-	if err != nil {
-		return err
-	}
-	g.SetManagerFunc(r.layout)
-	r.gui = g
 
 	// guiメインループの起動
 	if err := r.gui.MainLoop(); err != nil && err != gocui.ErrQuit {
@@ -67,7 +68,7 @@ func (r *RshinMemo) layout(g *gocui.Gui) error {
 		r.alreadyInitialized = true
 	} else {
 		// viewのリサイズ
-		if err := r.resizeViews(); err != nil {
+		if err := r.dailyListView.Resize(); err != nil {
 			return err
 		}
 	}
@@ -89,98 +90,26 @@ func (r *RshinMemo) init() error {
 	return nil
 }
 
-const DAILY_LIST_VIEW = "daily_list"
-
-type dailyData struct {
-	Date  string
-	Notes []string
-}
-
 func (r *RshinMemo) initViews() error {
-	_, err := r.createDailyListView()
+	err := r.dailyListView.Create()
 	if err != nil{
 		return err
 	}
 
 	// 起動時のフォーカス設定
-	_, err = r.gui.SetCurrentView(DAILY_LIST_VIEW)
+	_, err = r.gui.SetCurrentView(views.DAILY_LIST_VIEW)
 	if err != nil {
 		return errors.Wrap(err, "起動時フォーカス失敗")
 	}
 	return nil
 }
 
-func (r * RshinMemo) createDailyListView() (*gocui.View, error) {
-	// あとでどうせリサイズされるので、ここではこまかな位置調整は行わない。
-	v, err := r.createOrResizeView(DAILY_LIST_VIEW, 0, 0, 1, 1)
-	if err != nil {
-		return nil, err
-	}
-	// viewへの設定
-	v.Highlight = true
-	v.SelBgColor = gocui.ColorGreen
-	v.SelFgColor = gocui.ColorBlack
-
-	dailyList, err := r.loadAllDailyList()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, dailyData := range dailyList {
-		for _, note := range dailyData.Notes {
-			_, err = fmt.Fprintln(v, dailyData.Date+"\t"+convertStringForView(note))
-			if err != nil {
-				return nil, errors.Wrapf(err, "テキスト出力失敗。%+v", dailyData)
-			}
-		}
-	}
-	return v, nil
-}
-
-func (r * RshinMemo) loadAllDailyList() ([]dailyData, error) {
-	retList := []dailyData{}
-	response, err := r.getAllDailyListUsecase.Handle()
-	if err != nil{
-		return nil, err
-	}
-	for _, oneDayList := range response.DailyList {
-		dailyData := dailyData{
-			Date: oneDayList.Date,
-			Notes: oneDayList.Notes,
-		}
-		retList = append(retList, dailyData)
-	}
-	return retList, nil
-}
-
-func convertStringForView(s string) string {
-	runeArr := []rune{}
-	for _, r := range s {
-		runeArr = append(runeArr, r)
-		// if もし全角文字だったら
-		if runewidth.StringWidth(string(r)) == 2 {
-			runeArr = append(runeArr, ' ')
-		}
-	}
-	return string(runeArr)
-}
-
 func (r *RshinMemo) createOrResizeView(viewName string, x0, y0, x1, y1 int) (*gocui.View, error) {
 	v, err := r.gui.SetView(viewName, x0, y0, x1, y1)
 	if err != nil && err != gocui.ErrUnknownView {
-		return nil, errors.Wrapf(err, "%vの初期化またはリサイズ失敗", DAILY_LIST_VIEW)
+		return nil, errors.Wrap(err, "初期化またはリサイズ失敗")
 	}
 	return v, nil
-}
-
-// viewのリサイズ
-func (r *RshinMemo) resizeViews() error {
-	_, height := r.gui.Size()
-	_, err := r.createOrResizeView(DAILY_LIST_VIEW, 0, 0, 50, height-1)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // イベントに対してのアクションを設定する
@@ -191,26 +120,26 @@ func (r *RshinMemo) setEventActions() error {
 	}
 
 	// daily_listのカーソル移動
-	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
+	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
 		return errors.Wrap(err, "KeyArrowDownキーバインド失敗")
 	}
-	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, 'j', gocui.ModNone, r.cursorDown); err != nil {
+	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'j', gocui.ModNone, r.cursorDown); err != nil {
 		return errors.Wrap(err, "jキーバインド失敗")
 	}
-	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyArrowUp, gocui.ModNone, r.cursorUp); err != nil {
+	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, gocui.KeyArrowUp, gocui.ModNone, r.cursorUp); err != nil {
 		return errors.Wrap(err, "KeyArrowUpキーバインド失敗")
 	}
-	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
+	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
 		return errors.Wrap(err, "kキーバイーンド失敗")
 	}
 
 	// daily_listでのエンターキー
-	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, gocui.KeyEnter, gocui.ModNone, r.openNote); err != nil {
+	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, gocui.KeyEnter, gocui.ModNone, r.openNote); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
 
 	// daily_listでの新規list追加
-	if err := r.gui.SetKeybinding(DAILY_LIST_VIEW, 'o', gocui.ModNone, r.addList); err != nil {
+	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'o', gocui.ModNone, r.addList); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
 	return nil
