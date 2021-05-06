@@ -16,6 +16,7 @@ type RshinMemo struct {
 	memoDirPath        string
 	gui                *gocui.Gui
 	dailyListView      *views.DailyListView
+	noteNameInputView  *views.NoteNameInputView
 	alreadyInitialized bool
 }
 
@@ -39,6 +40,7 @@ func NewRshinMemo(
 	rshinMemo.memoDirPath = filepath.Join(homedir, "rshin_memo")
 	rshinMemo.alreadyInitialized = false
 	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, getAllDailyListUsecase)
+	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
 	return rshinMemo
 }
 
@@ -147,23 +149,16 @@ func (r *RshinMemo) setEventActions() error {
 
 func (r *RshinMemo) addList(g *gocui.Gui, v *gocui.View) error {
 	// note名入力viewの表示
-	_, err := r.createNoteNameInputView()
+	err := r.noteNameInputView.Create()
+	if err != nil {
+		return err
+	}
 	// フォーカスの移動
-	_, err = r.gui.SetCurrentView(NOTE_NAME_INPUT_VIEW)
+	err = r.noteNameInputView.Focus()
 	if err != nil {
 		return errors.Wrap(err, "フォーカス移動失敗")
 	}
 	return nil
-}
-
-const NOTE_NAME_INPUT_VIEW = "note_name_input"
-func (r *RshinMemo) createNoteNameInputView() (*gocui.View, error) {
-	width, height := r.gui.Size()
-	_, err := r.createOrResizeView(NOTE_NAME_INPUT_VIEW, width/2-20, height/2-1, width/2+20, height/2+1)
-	if err != nil{
-		return nil, err
-	}
-	return nil, nil
 }
 
 func (r *RshinMemo) cursorDown(g *gocui.Gui, v *gocui.View) error {
