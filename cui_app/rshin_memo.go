@@ -97,9 +97,9 @@ func (r *RshinMemo) initViews() error {
 	}
 
 	// 起動時のフォーカス設定
-	_, err = r.gui.SetCurrentView(views.DAILY_LIST_VIEW)
+	err = r.dailyListView.Focus()
 	if err != nil {
-		return errors.Wrap(err, "起動時フォーカス失敗")
+		return err
 	}
 	return nil
 }
