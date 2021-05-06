@@ -3,8 +3,8 @@ package views
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
-	"github.com/mattn/go-runewidth"
 	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/pkg/errors"
 )
 
@@ -45,7 +45,7 @@ func (d *DailyListView) Create() error{
 
 	for _, dailyData := range dailyList {
 		for _, note := range dailyData.Notes {
-			_, err = fmt.Fprintln(d.view, dailyData.Date+"\t"+convertStringForView(note))
+			_, err = fmt.Fprintln(d.view, dailyData.Date+"\t"+utils.ConvertStringForView(note))
 			if err != nil {
 				return errors.Wrapf(err, "テキスト出力失敗。%+v", dailyData)
 			}
@@ -78,18 +78,6 @@ func createOrResizeView(gui *gocui.Gui, viewName string, x0, y0, x1, y1 int) (*g
 		return nil, errors.Wrapf(err, "%vの初期化またはリサイズ失敗", DAILY_LIST_VIEW)
 	}
 	return v, nil
-}
-
-func convertStringForView(s string) string {
-	runeArr := []rune{}
-	for _, r := range s {
-		runeArr = append(runeArr, r)
-		// if もし全角文字だったら
-		if runewidth.StringWidth(string(r)) == 2 {
-			runeArr = append(runeArr, ' ')
-		}
-	}
-	return string(runeArr)
 }
 
 func (d *DailyListView) loadAllDailyList() ([]DailyData, error) {
