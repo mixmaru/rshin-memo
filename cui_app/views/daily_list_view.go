@@ -64,6 +64,14 @@ func (d *DailyListView) Resize() error {
 	return nil
 }
 
+func (d *DailyListView) Focus() error {
+	_, err := d.gui.SetCurrentView(DAILY_LIST_VIEW)
+	if err != nil {
+		return errors.Wrap(err, "フォーカス失敗")
+	}
+	return nil
+}
+
 func createOrResizeView(gui *gocui.Gui, viewName string, x0, y0, x1, y1 int) (*gocui.View, error) {
 	v, err := gui.SetView(viewName, x0, y0, x1, y1)
 	if err != nil && err != gocui.ErrUnknownView {
