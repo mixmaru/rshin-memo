@@ -41,6 +41,15 @@ func (n *NoteNameInputView) Focus() error {
 	return nil
 }
 
+func (n *NoteNameInputView) GetInputNoteName() (string, error) {
+	text, err := n.view.Line(0)
+	if err != nil {
+		return "", errors.Wrap(err, "入力データの取得に失敗しました")
+	}
+	inputText := utils.ConvertStringForLogic(text)
+	return inputText, nil
+}
+
 type Editor struct {
 }
 func (e *Editor)Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
@@ -59,7 +68,6 @@ func (e *Editor)Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) 
 	case key == gocui.KeyInsert:
 		v.Overwrite = !v.Overwrite
 	case key == gocui.KeyEnter:
-		// ファイル名を決定して、その名前でnoteを作るための関数を呼ぶ
 	case key == gocui.KeyArrowDown:
 	case key == gocui.KeyArrowUp:
 	case key == gocui.KeyArrowLeft:

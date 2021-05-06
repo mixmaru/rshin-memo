@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/jroimartin/gocui"
 	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/mixmaru/rshin-memo/cui_app/views"
 	"github.com/pkg/errors"
 	"log"
@@ -18,6 +19,9 @@ type RshinMemo struct {
 	dailyListView      *views.DailyListView
 	noteNameInputView  *views.NoteNameInputView
 	alreadyInitialized bool
+
+	getNoteUseCase		usecases.GetNoteUseCaseInterface
+	createNoteUseCase	usecases.CreateNoteUseCaseInterface
 }
 
 func NewRshinMemo(
@@ -136,6 +140,11 @@ func (r *RshinMemo) setEventActions() error {
 	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'o', gocui.ModNone, r.addList); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
+
+	// inputNoteNameViewでのEnterキー
+	if err := r.gui.SetKeybinding(views.NOTE_NAME_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.createNote); err != nil {
+		return errors.Wrap(err, "Enterキーバインド失敗")
+	}
 	return nil
 }
 
@@ -178,7 +187,7 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	// \tで分割してノート名を取得
 	noteName := strings.Split(text, "\t")[1]
 	// 取得したテキストは表示のために半角スペースがはいってるので除去
-	noteName = strings.ReplaceAll(noteName, " ", "")
+	noteName = utils.ConvertStringForLogic(noteName)
 
 	// vimで対象noteを開く
 	c := exec.Command("vim", filepath.Join(r.memoDirPath, noteName+".txt"))
@@ -188,6 +197,30 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	err = c.Run()
 	if err != nil {
 		return errors.Wrap(err, "vim起動エラー")
+	}
+	return nil
+}
+
+func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
+	// 入力内容を取得
+	noteName, err := r.noteNameInputView.GetInputNoteName()
+	if err != nil {
+		return err
+	}
+	// 同名Noteが存在しないかcheck
+	_, notExist, err := r.getNoteUseCase.Handle(noteName)
+	if err != nil{
+		return nil
+	} else if !notExist {
+		// todo: エラーメッセージビューへメッセージを表示する
+		return nil
+	}
+
+	// Note作成を依頼
+	err = r.createNoteUseCase.Handle(noteName)
+	if err != nil {
+		// todo: エラーメッセージビューへメッセージを表示する
+		return nil
 	}
 	return nil
 }
