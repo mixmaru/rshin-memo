@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/jroimartin/gocui"
 	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/mixmaru/rshin-memo/cui_app/views"
 	"github.com/pkg/errors"
 	"log"
@@ -18,10 +19,15 @@ type RshinMemo struct {
 	dailyListView      *views.DailyListView
 	noteNameInputView  *views.NoteNameInputView
 	alreadyInitialized bool
+
+	getNoteUseCase		usecases.GetNoteUseCaseInterface
+	createNoteUseCase	usecases.CreateNoteUseCaseInterface
 }
 
 func NewRshinMemo(
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface,
+	getNoteUseCase usecases.GetNoteUseCaseInterface,
+	createNoteUseCase usecases.CreateNoteUseCaseInterface,
 ) *RshinMemo {
 
 	homedir, err := os.UserHomeDir()
@@ -41,6 +47,8 @@ func NewRshinMemo(
 	rshinMemo.alreadyInitialized = false
 	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, getAllDailyListUsecase)
 	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
+	rshinMemo.getNoteUseCase = getNoteUseCase
+	rshinMemo.createNoteUseCase = createNoteUseCase
 	return rshinMemo
 }
 
@@ -106,14 +114,6 @@ func (r *RshinMemo) initViews() error {
 	return nil
 }
 
-func (r *RshinMemo) createOrResizeView(viewName string, x0, y0, x1, y1 int) (*gocui.View, error) {
-	v, err := r.gui.SetView(viewName, x0, y0, x1, y1)
-	if err != nil && err != gocui.ErrUnknownView {
-		return nil, errors.Wrap(err, "初期化またはリサイズ失敗")
-	}
-	return v, nil
-}
-
 // イベントに対してのアクションを設定する
 func (r *RshinMemo) setEventActions() error {
 	// CtrlC
@@ -142,6 +142,11 @@ func (r *RshinMemo) setEventActions() error {
 
 	// daily_listでの新規list追加
 	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'o', gocui.ModNone, r.addList); err != nil {
+		return errors.Wrap(err, "Enterキーバインド失敗")
+	}
+
+	// inputNoteNameViewでのEnterキー
+	if err := r.gui.SetKeybinding(views.NOTE_NAME_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.createNote); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
 	return nil
@@ -186,7 +191,7 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	// \tで分割してノート名を取得
 	noteName := strings.Split(text, "\t")[1]
 	// 取得したテキストは表示のために半角スペースがはいってるので除去
-	noteName = strings.ReplaceAll(noteName, " ", "")
+	noteName = utils.ConvertStringForLogic(noteName)
 
 	// vimで対象noteを開く
 	c := exec.Command("vim", filepath.Join(r.memoDirPath, noteName+".txt"))
@@ -196,6 +201,30 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	err = c.Run()
 	if err != nil {
 		return errors.Wrap(err, "vim起動エラー")
+	}
+	return nil
+}
+
+func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
+	// 入力内容を取得
+	noteName, err := r.noteNameInputView.GetInputNoteName()
+	if err != nil {
+		return err
+	}
+	// 同名Noteが存在しないかcheck
+	_, notExist, err := r.getNoteUseCase.Handle(noteName)
+	if err != nil{
+		return nil
+	} else if !notExist {
+		// todo: エラーメッセージビューへメッセージを表示する
+		return nil
+	}
+
+	// Note作成を依頼
+	err = r.createNoteUseCase.Handle(noteName)
+	if err != nil {
+		// todo: エラーメッセージビューへメッセージを表示する
+		return nil
 	}
 	return nil
 }
