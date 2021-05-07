@@ -193,14 +193,9 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	// 取得したテキストは表示のために半角スペースがはいってるので除去
 	noteName = utils.ConvertStringForLogic(noteName)
 
-	// vimで対象noteを開く
-	c := exec.Command("vim", filepath.Join(r.memoDirPath, noteName+".txt"))
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	err = c.Run()
+	err = r.openVim(noteName)
 	if err != nil {
-		return errors.Wrap(err, "vim起動エラー")
+		return err
 	}
 	return nil
 }
@@ -224,7 +219,25 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 	err = r.createNoteUseCase.Handle(noteName)
 	if err != nil {
 		// todo: エラーメッセージビューへメッセージを表示する
-		return nil
+		return err
+	}
+
+	err = r.openVim(noteName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// vimで対象noteを開く
+func (r *RshinMemo)openVim(noteName string) error {
+	c := exec.Command("vim", filepath.Join(r.memoDirPath, noteName+".txt"))
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	err := c.Run()
+	if err != nil {
+		return errors.Wrap(err, "vim起動エラー")
 	}
 	return nil
 }
