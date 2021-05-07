@@ -4,6 +4,7 @@ import (
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"log"
+	"time"
 )
 
 func main() {
@@ -59,6 +60,6 @@ func (u *GetAllDailyListUsecaseMock) Handle() (usecases.GetAllDailyListUsecaseRe
 
 type CreateNoteUseCaseMock struct{}
 
-func (c CreateNoteUseCaseMock) Handle(noteName string) error {
+func (c CreateNoteUseCaseMock) Handle(noteName string, date time.Time) error {
 	return nil
 }

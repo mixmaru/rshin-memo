@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type RshinMemo struct {
@@ -214,8 +215,14 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 		// すでに同名のNoteが存在する
 		// todo: エラーメッセージビューへメッセージを表示する
 	} else {
+		// 作業日付をとってくる
+		dateText, err := r.dailyListView.GetDateOnCursor()
+		if err != nil {
+			return err
+		}
+		date, err := time.Parse("2006-01-02", dateText)
 		// Note作成を依頼
-		err = r.createNoteUseCase.Handle(noteName)
+		err = r.createNoteUseCase.Handle(noteName, date)
 		if err != nil {
 			// todo: エラーメッセージビューへメッセージを表示する
 			return err

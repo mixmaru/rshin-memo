@@ -1,19 +1,12 @@
 package entities
 
-import "time"
-
 type NoteEntity struct {
-	date time.Time
 	name string
 	text string
 }
 
-func NewNoteEntity(date time.Time, name string, text string) *NoteEntity {
-	return &NoteEntity{date: date, name: name, text: text}
-}
-
-func (n *NoteEntity) Date() time.Time {
-	return n.date
+func NewNoteEntity(name string, text string) *NoteEntity {
+	return &NoteEntity{name: name, text: text}
 }
 
 func (n *NoteEntity) Name() string {

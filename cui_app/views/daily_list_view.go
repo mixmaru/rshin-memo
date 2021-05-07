@@ -6,26 +6,27 @@ import (
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 const DAILY_LIST_VIEW = "daily_list"
 
 type DailyListView struct {
-	gui *gocui.Gui
+	gui                    *gocui.Gui
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface
-	view *gocui.View
+	view                   *gocui.View
 }
 
 func NewDailyListView(gui *gocui.Gui, getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface) *DailyListView {
 	retObj := &DailyListView{
-		gui: gui,
+		gui:                    gui,
 		getAllDailyListUsecase: getAllDailyListUsecase,
 	}
 	return retObj
 }
 
 // dailyListViewの新規作成
-func (d *DailyListView) Create() error{
+func (d *DailyListView) Create() error {
 	// あとでどうせリサイズされるので、ここではこまかな位置調整は行わない。
 	v, err := createOrResizeView(d.gui, DAILY_LIST_VIEW, 0, 0, 1, 1)
 	if err != nil {
@@ -83,17 +84,28 @@ func createOrResizeView(gui *gocui.Gui, viewName string, x0, y0, x1, y1 int) (*g
 func (d *DailyListView) loadAllDailyList() ([]DailyData, error) {
 	retList := []DailyData{}
 	response, err := d.getAllDailyListUsecase.Handle()
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	for _, oneDayList := range response.DailyList {
 		dailyData := DailyData{
-			Date: oneDayList.Date,
+			Date:  oneDayList.Date,
 			Notes: oneDayList.Notes,
 		}
 		retList = append(retList, dailyData)
 	}
 	return retList, nil
+}
+
+func (d *DailyListView) GetDateOnCursor() (string, error) {
+	_, y := d.view.Cursor()
+	text, err := d.view.Line(y)
+	if err != nil {
+		return "", errors.Wrap(err, "選択行のtextの取得に失敗")
+	}
+	// \tで分割してノート名を取得
+	dateText := strings.Split(text, "\t")[0]
+	return dateText, nil
 }
 
 type DailyData struct {
