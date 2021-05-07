@@ -51,6 +51,14 @@ func (n *NoteNameInputView) GetInputNoteName() (string, error) {
 	return inputText, nil
 }
 
+func (n *NoteNameInputView) Delete() error {
+	err := n.gui.DeleteView(NOTE_NAME_INPUT_VIEW)
+	if err != nil {
+		return errors.Wrapf(err, "Viewの削除に失敗。%v", NOTE_NAME_INPUT_VIEW)
+	}
+	return nil
+}
+
 type Editor struct {
 }
 func (e *Editor)Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
