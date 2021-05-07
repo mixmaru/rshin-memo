@@ -21,13 +21,13 @@ type RshinMemo struct {
 	alreadyInitialized bool
 
 	getNoteUseCase    usecases.GetNoteUseCaseInterface
-	createNoteUseCase usecases.CreateNoteUseCaseInterface
+	createNoteUseCase usecases.SaveDailyDataUseCaseInterface
 }
 
 func NewRshinMemo(
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface,
 	getNoteUseCase usecases.GetNoteUseCaseInterface,
-	createNoteUseCase usecases.CreateNoteUseCaseInterface,
+	createNoteUseCase usecases.SaveDailyDataUseCaseInterface,
 ) *RshinMemo {
 
 	homedir, err := os.UserHomeDir()
