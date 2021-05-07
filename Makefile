@@ -7,6 +7,10 @@ exec: build
 clean:
 	rm -f ./cui_app/cui_app
 
+test:
+	go test ./... -count=1 -cover
+
+
 # docker-build:
 # 	cd ./development && \
 # 		docker-compose up -d --build
