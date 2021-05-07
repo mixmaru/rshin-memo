@@ -1,6 +1,6 @@
 package usecases
 
-import "github.com/mixmaru/rshin-memo/cui_app/repositories"
+import "github.com/mixmaru/rshin-memo/core/repositories"
 
 type GetNoteUseCaseInterface interface {
 	Handle(noteName string) (text string, notExist bool, err error)
