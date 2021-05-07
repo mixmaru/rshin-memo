@@ -15,6 +15,7 @@ type DailyListView struct {
 	gui                    *gocui.Gui
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface
 	view                   *gocui.View
+	dailyList              []DailyData
 }
 
 func NewDailyListView(gui *gocui.Gui, getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface) *DailyListView {
@@ -43,8 +44,9 @@ func (d *DailyListView) Create() error {
 	if err != nil {
 		return err
 	}
+	d.dailyList = dailyList
 
-	for _, dailyData := range dailyList {
+	for _, dailyData := range d.dailyList {
 		for _, note := range dailyData.Notes {
 			_, err = fmt.Fprintln(d.view, dailyData.Date+"\t"+utils.ConvertStringForView(note))
 			if err != nil {
