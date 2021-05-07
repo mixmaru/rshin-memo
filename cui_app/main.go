@@ -1,14 +1,16 @@
 package main
 
 import (
+	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"log"
 )
 
 func main() {
+	getNoteUseCaseInteractor := usecases.NewGetNoteUseCaseInteractor(&repositories.NoteRepositoryMock{})
 	rshinMemo := NewRshinMemo(
 		&GetAllDailyListUsecaseMock{},
-		&GetNoteUseCaseMock{},
+		getNoteUseCaseInteractor,
 		&CreateNoteUseCaseMock{},
 	)
 	defer rshinMemo.Close()
@@ -19,7 +21,7 @@ func main() {
 	}
 }
 
-type GetAllDailyListUsecaseMock struct {}
+type GetAllDailyListUsecaseMock struct{}
 
 func (u *GetAllDailyListUsecaseMock) Handle() (usecases.GetAllDailyListUsecaseResponse, error) {
 	response := usecases.GetAllDailyListUsecaseResponse{
@@ -55,13 +57,7 @@ func (u *GetAllDailyListUsecaseMock) Handle() (usecases.GetAllDailyListUsecaseRe
 	return response, nil
 }
 
-type GetNoteUseCaseMock struct {}
-
-func (g *GetNoteUseCaseMock) Handle(noteName string) (text string, notExist bool, err error) {
-	return "nannan", true, nil
-}
-
-type CreateNoteUseCaseMock struct {}
+type CreateNoteUseCaseMock struct{}
 
 func (c CreateNoteUseCaseMock) Handle(noteName string) error {
 	return nil
