@@ -21,11 +21,11 @@ func NewCreateNoteUseCaseInteractor(noteRepository repositories.NoteRepositoryIn
 func (c *CreateNoteUseCaseInteractor) Handle(noteName string, date time.Time) error {
 	// dailyListの作成
 	// Noteの作成
-	entity := entities.NewNoteEntity(
+	noteEntity := entities.NewNoteEntity(
 		noteName,
 		"",
 	)
-	err := c.noteRepository.Save(entity)
+	err := c.noteRepository.Save(noteEntity)
 	if err != nil {
 		return err
 	}
