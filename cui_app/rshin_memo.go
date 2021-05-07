@@ -211,6 +211,7 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 	if err != nil {
 		return err
 	} else if !notExist {
+		// すでに同名のNoteが存在する
 		// todo: エラーメッセージビューへメッセージを表示する
 	} else {
 		// Note作成を依頼
