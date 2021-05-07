@@ -2,10 +2,13 @@ package repositories
 
 import (
 	"github.com/mixmaru/rshin-memo/core/entities"
-	"time"
 )
 
 type NoteRepositoryMock struct{}
+
+func (n *NoteRepositoryMock) Save(entity *entities.NoteEntity) error {
+	return nil
+}
 
 const EXIST_NOTE_NAME = "exist_note_name"
 const NOT_EXIST_NOTE_NAME = "not_exist_note_name"
@@ -14,7 +17,6 @@ func (n *NoteRepositoryMock) GetByNoteName(noteName string) (*entities.NoteEntit
 	switch noteName {
 	case EXIST_NOTE_NAME:
 		entity := entities.NewNoteEntity(
-			time.Date(2021, 2, 1, 0, 0, 0, 0, time.Local),
 			"なんかしらのNote",
 			`なんかしらの内容。
 なんかしらの内容2行目`,

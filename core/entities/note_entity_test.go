@@ -3,29 +3,11 @@ package entities
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"time"
 )
-
-func TestNoteEntity_Date(t *testing.T) {
-	// 準備
-	entity := NewNoteEntity(
-		time.Date(2020, 1, 2, 0, 0, 0, 0, time.Local),
-		"note_name",
-		`内容text
-内容text2
-内容text3
-`,
-	)
-	// 実行
-	date := entity.Date()
-	// 検証
-	assert.Equal(t, time.Date(2020, 1, 2, 0, 0, 0, 0, time.Local), date)
-}
 
 func TestNoteEntity_Name(t *testing.T) {
 	// 準備
 	entity := NewNoteEntity(
-		time.Date(2020, 1, 2, 0, 0, 0, 0, time.Local),
 		"note_name",
 		`内容text
 内容text2
@@ -41,7 +23,6 @@ func TestNoteEntity_Name(t *testing.T) {
 func TestNoteEntity_Text(t *testing.T) {
 	// 準備
 	entity := NewNoteEntity(
-		time.Date(2020, 1, 2, 0, 0, 0, 0, time.Local),
 		"note_name",
 		`内容text
 内容text2

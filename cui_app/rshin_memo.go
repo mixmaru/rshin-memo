@@ -203,6 +203,7 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 	// 入力内容を取得
 	noteName, err := r.noteNameInputView.GetInputNoteName()
+
 	if err != nil {
 		return err
 	}
@@ -211,10 +212,16 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 	if err != nil {
 		return err
 	} else if !notExist {
+		// すでに同名のNoteが存在する
 		// todo: エラーメッセージビューへメッセージを表示する
 	} else {
+		// 対象日付のdailyListを取得作成
+		dailyData, err := r.dailyListView.GenerateNewDailyData(noteName)
+		if err != nil {
+			return err
+		}
 		// Note作成を依頼
-		err = r.createNoteUseCase.Handle(noteName)
+		err = r.createNoteUseCase.Handle(dailyData)
 		if err != nil {
 			// todo: エラーメッセージビューへメッセージを表示する
 			return err
