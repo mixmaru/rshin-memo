@@ -20,8 +20,8 @@ type RshinMemo struct {
 	noteNameInputView  *views.NoteNameInputView
 	alreadyInitialized bool
 
-	getNoteUseCase		usecases.GetNoteUseCaseInterface
-	createNoteUseCase	usecases.CreateNoteUseCaseInterface
+	getNoteUseCase    usecases.GetNoteUseCaseInterface
+	createNoteUseCase usecases.CreateNoteUseCaseInterface
 }
 
 func NewRshinMemo(
@@ -31,7 +31,7 @@ func NewRshinMemo(
 ) *RshinMemo {
 
 	homedir, err := os.UserHomeDir()
-	if err != nil{
+	if err != nil {
 		log.Panicf("初期化失敗. %+v", err)
 	}
 
@@ -102,7 +102,7 @@ func (r *RshinMemo) init() error {
 
 func (r *RshinMemo) initViews() error {
 	err := r.dailyListView.Create()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
@@ -185,7 +185,7 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	// 選択行のテキストを取得
 	_, y := v.Cursor()
 	text, err := v.Line(y)
-	if err != nil{
+	if err != nil {
 		return errors.Wrap(err, "選択行のtextの取得に失敗")
 	}
 	// \tで分割してノート名を取得
@@ -193,14 +193,9 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	// 取得したテキストは表示のために半角スペースがはいってるので除去
 	noteName = utils.ConvertStringForLogic(noteName)
 
-	// vimで対象noteを開く
-	c := exec.Command("vim", filepath.Join(r.memoDirPath, noteName+".txt"))
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	err = c.Run()
+	err = r.openVim(noteName)
 	if err != nil {
-		return errors.Wrap(err, "vim起動エラー")
+		return err
 	}
 	return nil
 }
@@ -213,18 +208,45 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 	}
 	// 同名Noteが存在しないかcheck
 	_, notExist, err := r.getNoteUseCase.Handle(noteName)
-	if err != nil{
-		return nil
+	if err != nil {
+		return err
 	} else if !notExist {
 		// todo: エラーメッセージビューへメッセージを表示する
-		return nil
+	} else {
+		// Note作成を依頼
+		err = r.createNoteUseCase.Handle(noteName)
+		if err != nil {
+			// todo: エラーメッセージビューへメッセージを表示する
+			return err
+		}
+
+		err = r.openVim(noteName)
+		if err != nil {
+			return err
+		}
 	}
 
-	// Note作成を依頼
-	err = r.createNoteUseCase.Handle(noteName)
+	err = r.dailyListView.Focus()
 	if err != nil {
-		// todo: エラーメッセージビューへメッセージを表示する
-		return nil
+		return err
+	}
+
+	err = r.noteNameInputView.Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// vimで対象noteを開く
+func (r *RshinMemo) openVim(noteName string) error {
+	c := exec.Command("vim", filepath.Join(r.memoDirPath, noteName+".txt"))
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	err := c.Run()
+	if err != nil {
+		return errors.Wrap(err, "vim起動エラー")
 	}
 	return nil
 }
