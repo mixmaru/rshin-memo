@@ -14,10 +14,10 @@ func NewDailyDataEntity(date time.Time, noteNames []string) *DailyDataEntity {
 	}
 }
 
-func (d DailyDataEntity) Date() time.Time {
+func (d *DailyDataEntity) Date() time.Time {
 	return d.date
 }
 
-func (d DailyDataEntity) NoteNames() []string {
+func (d *DailyDataEntity) NoteNames() []string {
 	return d.noteNames
 }
