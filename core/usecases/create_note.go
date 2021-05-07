@@ -1,13 +1,11 @@
 package usecases
 
 import (
-	"github.com/mixmaru/rshin-memo/core/entities"
 	"github.com/mixmaru/rshin-memo/core/repositories"
-	"time"
 )
 
 type CreateNoteUseCaseInterface interface {
-	Handle(noteName string, date time.Time) error
+	Handle(dailyData DailyData) error
 }
 
 type CreateNoteUseCaseInteractor struct {
@@ -18,16 +16,16 @@ func NewCreateNoteUseCaseInteractor(noteRepository repositories.NoteRepositoryIn
 	return &CreateNoteUseCaseInteractor{noteRepository: noteRepository}
 }
 
-func (c *CreateNoteUseCaseInteractor) Handle(noteName string, date time.Time) error {
+func (c *CreateNoteUseCaseInteractor) Handle(dailyData DailyData) error {
 	// dailyListの作成
-	// Noteの作成
-	noteEntity := entities.NewNoteEntity(
-		noteName,
-		"",
-	)
-	err := c.noteRepository.Save(noteEntity)
-	if err != nil {
-		return err
-	}
+	// Noteの作成（存在しないNoteであれば作成する）
+	//noteEntity := entities.NewNoteEntity(
+	//	noteName,
+	//	"",
+	//)
+	//err := c.noteRepository.Save(noteEntity)
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }

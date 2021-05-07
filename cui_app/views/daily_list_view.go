@@ -15,7 +15,7 @@ type DailyListView struct {
 	gui                    *gocui.Gui
 	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface
 	view                   *gocui.View
-	dailyList              []DailyData
+	dailyList              []usecases.DailyData
 }
 
 func NewDailyListView(gui *gocui.Gui, getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface) *DailyListView {
@@ -83,20 +83,8 @@ func createOrResizeView(gui *gocui.Gui, viewName string, x0, y0, x1, y1 int) (*g
 	return v, nil
 }
 
-func (d *DailyListView) loadAllDailyList() ([]DailyData, error) {
-	retList := []DailyData{}
-	response, err := d.getAllDailyListUsecase.Handle()
-	if err != nil {
-		return nil, err
-	}
-	for _, oneDayList := range response.DailyList {
-		dailyData := DailyData{
-			Date:  oneDayList.Date,
-			Notes: oneDayList.Notes,
-		}
-		retList = append(retList, dailyData)
-	}
-	return retList, nil
+func (d *DailyListView) loadAllDailyList() ([]usecases.DailyData, error) {
+	return d.getAllDailyListUsecase.Handle()
 }
 
 func (d *DailyListView) GetDateOnCursor() (string, error) {
@@ -110,7 +98,27 @@ func (d *DailyListView) GetDateOnCursor() (string, error) {
 	return dateText, nil
 }
 
-type DailyData struct {
-	Date  string
-	Notes []string
+func (d *DailyListView) GenerateNewDailyData(newNoteName string) (usecases.DailyData, error) {
+	// カーソル位置の日付を取得する
+	date, err := d.GetDateOnCursor()
+	if err != nil {
+		return usecases.DailyData{}, err
+	}
+	// dateでdailyDateを取得して返す
+	count := 0
+	for _, dailyDate := range d.dailyList {
+		if dailyDate.Date == date {
+			// カーソル位置の下にnewNoteNameを追加する
+			_, cursorNum := d.view.Cursor()
+			insertNum := cursorNum - count
+			newNotes := []string{}
+			newNotes = append(newNotes, dailyDate.Notes[:insertNum+1]...)
+			newNotes = append(newNotes, newNoteName)
+			newNotes = append(newNotes, dailyDate.Notes[insertNum+1:]...)
+			dailyDate.Notes = newNotes
+			return dailyDate, nil
+		}
+		count += len(dailyDate.Notes)
+	}
+	return usecases.DailyData{}, errors.New("カーソル位置の日付のdailydataが取得できなかった。想定外エラー")
 }
