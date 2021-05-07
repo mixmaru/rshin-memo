@@ -236,15 +236,6 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 	if err != nil {
 		return err
 	}
-
-	r.gui.Update(func (g *gocui.Gui) error {
-		r.gui.SetView(views.DAILY_LIST_VIEW, 0,0,1,1)
-		//err = r.dailyListView.Resize()
-		//if err != nil {
-		//	return err
-		//}
-		return nil
-	})
 	return nil
 }
 
