@@ -73,17 +73,29 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 			if err != nil {
 				return errors.Wrapf(err, "日付パース失敗。%+v", dailyData)
 			}
-			// 日付が同じだったら上書きする
-			if date.Equal(entity.Date()) {
+			if date.After(entity.Date()) {
+				// 同じ日付にヒットするまで過去にさかのぼって捜査する
+				continue
+			} else if date.Equal(entity.Date()) {
+				// 日付が同じだったら上書きする
 				newDailyData := DailyData{
 					Date:  entity.Date().Format("2006-01-02"),
 					Notes: entity.NoteNames(),
 				}
 				dailyDataList[i] = newDailyData
 				break
-			} else if date.After(entity.Date()) {
-				// 引数のdailyDataよりも未来の日付だったら同じ日付が出てくるまで繰り返す
-				continue
+			} else {
+				// 日付が過去だったら、そこに挿入する
+				newDailyData := DailyData{
+					Date:  entity.Date().Format("2006-01-02"),
+					Notes: entity.NoteNames(),
+				}
+				insertedDailyList := []DailyData{}
+				insertedDailyList = append(insertedDailyList, dailyDataList[:i]...)
+				insertedDailyList = append(insertedDailyList, newDailyData)
+				insertedDailyList = append(insertedDailyList, dailyDataList[i:]...)
+				dailyDataList = insertedDailyList
+				break
 			}
 		}
 	}
