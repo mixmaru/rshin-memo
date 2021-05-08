@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type DailyDataRepositoryInterface interface {
@@ -66,6 +67,22 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 			Notes: entity.NoteNames(),
 		}
 		dailyDataList = append(dailyDataList, dailyData)
+	} else {
+		for i, dailyData := range dailyDataList {
+			date, err := time.ParseInLocation("2006-01-02", dailyData.Date, time.Local)
+			if err != nil {
+				return errors.Wrapf(err, "日付パース失敗。%+v", dailyData)
+			}
+			// 日付が同じだったら上書きする
+			if date.Equal(entity.Date()) {
+				newDailyData := DailyData{
+					Date:  entity.Date().Format("2006-01-02"),
+					Notes: entity.NoteNames(),
+				}
+				dailyDataList[i] = newDailyData
+				break
+			}
+		}
 	}
 	//insertIndex := -1
 	//for i, dailyData := range dailyDataList {
