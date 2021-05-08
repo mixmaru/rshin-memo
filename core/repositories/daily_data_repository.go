@@ -110,31 +110,6 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 			dailyDataList = append(dailyDataList, newDailyData)
 		}
 	}
-	//insertIndex := -1
-	//for i, dailyData := range dailyDataList {
-	//	date, err := time.Parse("2006-01-02", dailyData.Date)
-	//	if err != nil {
-	//		return errors.Wrapf(err, "日付パース失敗。%+v", dailyData)
-	//	}
-	//	if date.Equal(entity.Date()) {
-	//		// 日付が同じだったら上書きする
-	//		newDailyData := DailyData{
-	//			Date:  entity.Date().Format("2006-01-02"),
-	//			Notes: entity.NoteNames(),
-	//		}
-	//		dailyData = newDailyData
-	//		break
-	//	} else if date.After(entity.Date()) {
-	//		// 引数のdailyDataよりも未来の日付である
-	//		continue
-	//	} else {
-	//		insertIndex = i
-	//		break
-	//	}
-	//}
-	//if insertIndex > 0 {
-	//	// 指定位置へdataを挿入
-	//}
 
 	// jsonファイル出力
 	newText, err := json.Marshal(dailyDataList)
