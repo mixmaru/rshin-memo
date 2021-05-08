@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
-	"time"
+	"path/filepath"
 )
 
 type DailyDataRepositoryInterface interface {
@@ -48,7 +48,6 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 	if err != nil {
 		return errors.Wrapf(err, "fileopen失敗。%v", d.filePath)
 	}
-	defer fd.Close()
 	// json読み込み
 	bytes, err := ioutil.ReadAll(fd)
 	if err != nil {
@@ -61,33 +60,63 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 	}
 
 	// データ書き換え
-	insertIndex := -1
-	for i, dailyData := range dailyDataList {
-		date, err := time.Parse("2006-01-02", dailyData.Date)
-		if err != nil {
-			return errors.Wrapf(err, "日付パース失敗。%+v", dailyData)
+	if len(dailyDataList) == 0 {
+		dailyData := DailyData{
+			Date:  entity.Date().Format("2006-01-02"),
+			Notes: entity.NoteNames(),
 		}
-		if date.Equal(entity.Date()) {
-			// 日付が同じだったら上書きする
-			newDailyData := DailyData{
-				Date:  entity.Date().Format("2006-01-02"),
-				Notes: entity.NoteNames(),
-			}
-			dailyData = newDailyData
-			break
-		} else if date.After(entity.Date()) {
-
-		}
-		// else if 引数のdailyDataよりも未来の日付である
-		//     continue
-		// else
-		//		挿入point := i
+		dailyDataList = append(dailyDataList, dailyData)
 	}
-	if insertIndex > 0 {
-		// 指定位置へdataを挿入
-	}
+	//insertIndex := -1
+	//for i, dailyData := range dailyDataList {
+	//	date, err := time.Parse("2006-01-02", dailyData.Date)
+	//	if err != nil {
+	//		return errors.Wrapf(err, "日付パース失敗。%+v", dailyData)
+	//	}
+	//	if date.Equal(entity.Date()) {
+	//		// 日付が同じだったら上書きする
+	//		newDailyData := DailyData{
+	//			Date:  entity.Date().Format("2006-01-02"),
+	//			Notes: entity.NoteNames(),
+	//		}
+	//		dailyData = newDailyData
+	//		break
+	//	} else if date.After(entity.Date()) {
+	//		// 引数のdailyDataよりも未来の日付である
+	//		continue
+	//	} else {
+	//		insertIndex = i
+	//		break
+	//	}
+	//}
+	//if insertIndex > 0 {
+	//	// 指定位置へdataを挿入
+	//}
 
 	// jsonファイル出力
+	newText, err := json.Marshal(dailyDataList)
+	if err != nil {
+		return errors.Errorf("json Mar")
+	}
+	// tmpファイルに書き出す。
+	tmpFilePath := filepath.Join(filepath.Dir(d.filePath), "tmp_daily_data.json")
+	err = ioutil.WriteFile(tmpFilePath, newText, 0644)
+	if err != nil {
+		return errors.Wrapf(err, "tmpファイルの作成失敗。%v", tmpFilePath)
+	}
+
+	// 読み込みファイルを削除する
+	fd.Close()
+	err = os.Remove(d.filePath)
+	if err != nil {
+		return errors.Wrapf(err, "ファイルの削除失敗。%v", d.filePath)
+	}
+
+	// tmpファイルの名前を変更する
+	err = os.Rename(tmpFilePath, d.filePath)
+	if err != nil {
+		return errors.Wrapf(err, "ファイルのリネーム失敗。%v => %v", tmpFilePath, d.filePath)
+	}
 
 	return nil
 }
