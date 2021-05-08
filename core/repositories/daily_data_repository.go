@@ -68,6 +68,7 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 		}
 		dailyDataList = append(dailyDataList, dailyData)
 	} else {
+		inserted := false
 		for i, dailyData := range dailyDataList {
 			date, err := time.ParseInLocation("2006-01-02", dailyData.Date, time.Local)
 			if err != nil {
@@ -83,6 +84,7 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 					Notes: entity.NoteNames(),
 				}
 				dailyDataList[i] = newDailyData
+				inserted = true
 				break
 			} else {
 				// 日付が過去だったら、そこに挿入する
@@ -95,8 +97,17 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 				insertedDailyList = append(insertedDailyList, newDailyData)
 				insertedDailyList = append(insertedDailyList, dailyDataList[i:]...)
 				dailyDataList = insertedDailyList
+				inserted = true
 				break
 			}
+		}
+		if !inserted {
+			// 上記処理で挿入されなかったのなら末にappendされる
+			newDailyData := DailyData{
+				Date:  entity.Date().Format("2006-01-02"),
+				Notes: entity.NoteNames(),
+			}
+			dailyDataList = append(dailyDataList, newDailyData)
 		}
 	}
 	//insertIndex := -1
