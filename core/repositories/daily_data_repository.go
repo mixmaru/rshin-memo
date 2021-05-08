@@ -81,6 +81,9 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 				}
 				dailyDataList[i] = newDailyData
 				break
+			} else if date.After(entity.Date()) {
+				// 引数のdailyDataよりも未来の日付だったら同じ日付が出てくるまで繰り返す
+				continue
 			}
 		}
 	}
