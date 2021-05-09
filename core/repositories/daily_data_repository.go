@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	bytes2 "bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/mixmaru/rshin-memo/core/entities"
@@ -112,13 +113,18 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 	}
 
 	// jsonファイル出力
+	var buf bytes2.Buffer
 	newText, err := json.Marshal(dailyDataList)
 	if err != nil {
-		return errors.Errorf("json Mar")
+		return errors.Wrapf(err, "json Marshal error. dailyDataList: %+v", dailyDataList)
+	}
+	err = json.Indent(&buf, newText, "", "  ")
+	if err != nil {
+		return errors.Wrapf(err, "json indent error newText: %+v", newText)
 	}
 	// tmpファイルに書き出す。
 	tmpFilePath := filepath.Join(filepath.Dir(d.filePath), "tmp_daily_data.json")
-	err = ioutil.WriteFile(tmpFilePath, newText, 0644)
+	err = ioutil.WriteFile(tmpFilePath, buf.Bytes(), 0644)
 	if err != nil {
 		return errors.Wrapf(err, "tmpファイルの作成失敗。%v", tmpFilePath)
 	}
