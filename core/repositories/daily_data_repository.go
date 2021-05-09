@@ -23,6 +23,8 @@ func NewDailyDataRepository(filePath string) *DailyDataRepository {
 	return &DailyDataRepository{filePath: filePath}
 }
 
+// entityをjsonfileへ永続化する
+// スレッドセーフではない
 func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 	// ファイルがなければ空データで作成する
 	if _, err := os.Stat(d.filePath); err != nil {
@@ -32,7 +34,7 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 		}
 	}
 
-	// ファイル読み込み
+	// ファイル読み込み（一人でしかつかわないのでスレッドセーフは考慮してない）
 	jsonTextBytes, err := ioutil.ReadFile(d.filePath)
 	if err != nil {
 		return errors.Wrapf(err, "ファイル読み込み失敗。d.filePath%v", d.filePath)
@@ -71,54 +73,40 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 
 // currentDailyDataListの適切な位置にentityが表すDailyDataを上書き、もしくは挿入したものを返す
 func generateNewDailyDataList(currentDailyDataList []DailyData, entity *entities.DailyDataEntity) ([]DailyData, error) {
-	if len(currentDailyDataList) == 0 {
-		dailyData := DailyData{
-			Date:  entity.Date().Format("2006-01-02"),
-			Notes: entity.NoteNames(),
+	newDailyData := DailyData{
+		Date:  entity.Date().Format("2006-01-02"),
+		Notes: entity.NoteNames(),
+	}
+
+	inserted := false
+	for i, dailyData := range currentDailyDataList {
+		date, err := time.ParseInLocation("2006-01-02", dailyData.Date, time.Local)
+		if err != nil {
+			return nil, errors.Wrapf(err, "日付パース失敗。%+v", dailyData)
 		}
-		currentDailyDataList = append(currentDailyDataList, dailyData)
-	} else {
-		inserted := false
-		for i, dailyData := range currentDailyDataList {
-			date, err := time.ParseInLocation("2006-01-02", dailyData.Date, time.Local)
-			if err != nil {
-				return nil, errors.Wrapf(err, "日付パース失敗。%+v", dailyData)
-			}
-			if date.After(entity.Date()) {
-				// 同じ日付にヒットするまで過去にさかのぼって捜査する
-				continue
-			} else if date.Equal(entity.Date()) {
-				// 日付が同じだったら上書きする
-				newDailyData := DailyData{
-					Date:  entity.Date().Format("2006-01-02"),
-					Notes: entity.NoteNames(),
-				}
-				currentDailyDataList[i] = newDailyData
-				inserted = true
-				break
-			} else {
-				// 日付が過去だったら、そこに挿入する
-				newDailyData := DailyData{
-					Date:  entity.Date().Format("2006-01-02"),
-					Notes: entity.NoteNames(),
-				}
-				insertedDailyList := []DailyData{}
-				insertedDailyList = append(insertedDailyList, currentDailyDataList[:i]...)
-				insertedDailyList = append(insertedDailyList, newDailyData)
-				insertedDailyList = append(insertedDailyList, currentDailyDataList[i:]...)
-				currentDailyDataList = insertedDailyList
-				inserted = true
-				break
-			}
+
+		if date.After(entity.Date()) {
+			// 同じ日付にヒットするまで過去にさかのぼって捜査する
+			continue
+		} else if date.Equal(entity.Date()) {
+			// 日付が同じだったら上書きする
+			currentDailyDataList[i] = newDailyData
+			inserted = true
+			break
+		} else {
+			// 日付が過去だったら、そこに挿入する
+			insertedDailyList := []DailyData{}
+			insertedDailyList = append(insertedDailyList, currentDailyDataList[:i]...)
+			insertedDailyList = append(insertedDailyList, newDailyData)
+			insertedDailyList = append(insertedDailyList, currentDailyDataList[i:]...)
+			currentDailyDataList = insertedDailyList
+			inserted = true
+			break
 		}
-		if !inserted {
-			// 上記処理で挿入されなかったのなら末にappendされる
-			newDailyData := DailyData{
-				Date:  entity.Date().Format("2006-01-02"),
-				Notes: entity.NoteNames(),
-			}
-			currentDailyDataList = append(currentDailyDataList, newDailyData)
-		}
+	}
+	if !inserted {
+		// 上記処理で挿入されなかったのなら末にappendされる
+		currentDailyDataList = append(currentDailyDataList, newDailyData)
 	}
 	return currentDailyDataList, nil
 }
