@@ -3,12 +3,10 @@ package repositories
 import (
 	bytes2 "bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/mixmaru/rshin-memo/core/entities"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -28,52 +26,63 @@ func NewDailyDataRepository(filePath string) *DailyDataRepository {
 func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 	// ファイルがなければ空データで作成する
 	if _, err := os.Stat(d.filePath); err != nil {
-		fd, err := os.Create(d.filePath)
+		err := ioutil.WriteFile(d.filePath, []byte("[]"), 0644)
 		if err != nil {
-			return errors.Wrapf(err, "file作成失敗。%v", d.filePath)
-		}
-		text, err := json.Marshal([]DailyData{})
-		if err != nil {
-			return errors.Wrap(err, "空json作成失敗。")
-		}
-		_, err = fmt.Fprint(fd, string(text))
-		if err != nil {
-			return errors.Wrapf(err, "書き込み失敗。%v", string(text))
-		}
-		err = fd.Close()
-		if err != nil {
-			return errors.Wrap(err, "ファイルClose失敗。")
+			return errors.Wrapf(err, "ファイル作成失敗。d.filePath: %v", d.filePath)
 		}
 	}
 
-	fd, err := os.OpenFile(d.filePath, os.O_RDWR|os.O_APPEND, 0666)
+	// ファイル読み込み
+	jsonTextBytes, err := ioutil.ReadFile(d.filePath)
 	if err != nil {
-		return errors.Wrapf(err, "fileopen失敗。%v", d.filePath)
+		return errors.Wrapf(err, "ファイル読み込み失敗。d.filePath%v", d.filePath)
 	}
-	// json読み込み
-	bytes, err := ioutil.ReadAll(fd)
-	if err != nil {
-		return errors.Wrap(err, "jsonファイル読み込み失敗")
-	}
+
+	// jsonパース
 	var dailyDataList []DailyData
-	err = json.Unmarshal(bytes, &dailyDataList)
+	err = json.Unmarshal(jsonTextBytes, &dailyDataList)
 	if err != nil {
-		return errors.Wrapf(err, "jsonパース失敗。%v", string(bytes))
+		return errors.Wrapf(err, "jsonパース失敗。%v", string(jsonTextBytes))
 	}
 
-	// データ書き換え
-	if len(dailyDataList) == 0 {
+	updatedDailyDataList, err := generateNewDailyDataList(dailyDataList, entity)
+	if err != nil {
+		return err
+	}
+
+	// jsonに変換
+	var buf bytes2.Buffer
+	newText, err := json.Marshal(updatedDailyDataList)
+	if err != nil {
+		return errors.Wrapf(err, "json Marshal error. updatedDailyDataList: %+v", updatedDailyDataList)
+	}
+	// jsonを整形する
+	err = json.Indent(&buf, newText, "", "  ")
+	if err != nil {
+		return errors.Wrapf(err, "json indent error newText: %+v", newText)
+	}
+	// ファイルに書き出す。
+	err = ioutil.WriteFile(d.filePath, buf.Bytes(), 0644)
+	if err != nil {
+		return errors.Wrapf(err, "ファイルへの書き出し失敗。d.filePath: %v, buf.Bytes(): %v", d.filePath, buf.Bytes())
+	}
+	return nil
+}
+
+// currentDailyDataListの適切な位置にentityが表すDailyDataを上書き、もしくは挿入したものを返す
+func generateNewDailyDataList(currentDailyDataList []DailyData, entity *entities.DailyDataEntity) ([]DailyData, error) {
+	if len(currentDailyDataList) == 0 {
 		dailyData := DailyData{
 			Date:  entity.Date().Format("2006-01-02"),
 			Notes: entity.NoteNames(),
 		}
-		dailyDataList = append(dailyDataList, dailyData)
+		currentDailyDataList = append(currentDailyDataList, dailyData)
 	} else {
 		inserted := false
-		for i, dailyData := range dailyDataList {
+		for i, dailyData := range currentDailyDataList {
 			date, err := time.ParseInLocation("2006-01-02", dailyData.Date, time.Local)
 			if err != nil {
-				return errors.Wrapf(err, "日付パース失敗。%+v", dailyData)
+				return nil, errors.Wrapf(err, "日付パース失敗。%+v", dailyData)
 			}
 			if date.After(entity.Date()) {
 				// 同じ日付にヒットするまで過去にさかのぼって捜査する
@@ -84,7 +93,7 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 					Date:  entity.Date().Format("2006-01-02"),
 					Notes: entity.NoteNames(),
 				}
-				dailyDataList[i] = newDailyData
+				currentDailyDataList[i] = newDailyData
 				inserted = true
 				break
 			} else {
@@ -94,10 +103,10 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 					Notes: entity.NoteNames(),
 				}
 				insertedDailyList := []DailyData{}
-				insertedDailyList = append(insertedDailyList, dailyDataList[:i]...)
+				insertedDailyList = append(insertedDailyList, currentDailyDataList[:i]...)
 				insertedDailyList = append(insertedDailyList, newDailyData)
-				insertedDailyList = append(insertedDailyList, dailyDataList[i:]...)
-				dailyDataList = insertedDailyList
+				insertedDailyList = append(insertedDailyList, currentDailyDataList[i:]...)
+				currentDailyDataList = insertedDailyList
 				inserted = true
 				break
 			}
@@ -108,41 +117,10 @@ func (d *DailyDataRepository) Save(entity *entities.DailyDataEntity) error {
 				Date:  entity.Date().Format("2006-01-02"),
 				Notes: entity.NoteNames(),
 			}
-			dailyDataList = append(dailyDataList, newDailyData)
+			currentDailyDataList = append(currentDailyDataList, newDailyData)
 		}
 	}
-
-	// jsonファイル出力
-	var buf bytes2.Buffer
-	newText, err := json.Marshal(dailyDataList)
-	if err != nil {
-		return errors.Wrapf(err, "json Marshal error. dailyDataList: %+v", dailyDataList)
-	}
-	err = json.Indent(&buf, newText, "", "  ")
-	if err != nil {
-		return errors.Wrapf(err, "json indent error newText: %+v", newText)
-	}
-	// tmpファイルに書き出す。
-	tmpFilePath := filepath.Join(filepath.Dir(d.filePath), "tmp_daily_data.json")
-	err = ioutil.WriteFile(tmpFilePath, buf.Bytes(), 0644)
-	if err != nil {
-		return errors.Wrapf(err, "tmpファイルの作成失敗。%v", tmpFilePath)
-	}
-
-	// 読み込みファイルを削除する
-	fd.Close()
-	err = os.Remove(d.filePath)
-	if err != nil {
-		return errors.Wrapf(err, "ファイルの削除失敗。%v", d.filePath)
-	}
-
-	// tmpファイルの名前を変更する
-	err = os.Rename(tmpFilePath, d.filePath)
-	if err != nil {
-		return errors.Wrapf(err, "ファイルのリネーム失敗。%v => %v", tmpFilePath, d.filePath)
-	}
-
-	return nil
+	return currentDailyDataList, nil
 }
 
 type DailyData struct {
