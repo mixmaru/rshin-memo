@@ -4,18 +4,29 @@ import (
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"log"
+	"os"
+	"path/filepath"
 )
 
 func main() {
 	getNoteUseCaseInteractor := usecases.NewGetNoteUseCaseInteractor(&repositories.NoteRepositoryMock{})
+
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		log.Panicf("homeDir取得失敗. %v", err)
+	}
+	saveDailyDataUseCaseInteractor := usecases.NewSaveDailyDataUseCaseInteractor(
+		&repositories.NoteRepositoryMock{},
+		repositories.NewDailyDataRepository(filepath.Join(homedir, "rshin_memo", "daily_data.json")),
+	)
 	rshinMemo := NewRshinMemo(
 		&GetAllDailyListUsecaseMock{},
 		getNoteUseCaseInteractor,
-		&CreateNoteUseCaseMock{},
+		saveDailyDataUseCaseInteractor,
 	)
 	defer rshinMemo.Close()
 
-	err := rshinMemo.Run()
+	err = rshinMemo.Run()
 	if err != nil {
 		log.Panicf("%+v", err)
 	}
@@ -53,10 +64,4 @@ func (u *GetAllDailyListUsecaseMock) Handle() ([]usecases.DailyData, error) {
 		},
 	}
 	return retList, nil
-}
-
-type CreateNoteUseCaseMock struct{}
-
-func (c CreateNoteUseCaseMock) Handle(data usecases.DailyData) error {
-	return nil
 }

@@ -20,8 +20,8 @@ type RshinMemo struct {
 	noteNameInputView  *views.NoteNameInputView
 	alreadyInitialized bool
 
-	getNoteUseCase    usecases.GetNoteUseCaseInterface
-	createNoteUseCase usecases.SaveDailyDataUseCaseInterface
+	getNoteUseCase       usecases.GetNoteUseCaseInterface
+	saveDailyDataUseCase usecases.SaveDailyDataUseCaseInterface
 }
 
 func NewRshinMemo(
@@ -48,7 +48,7 @@ func NewRshinMemo(
 	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, getAllDailyListUsecase)
 	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
 	rshinMemo.getNoteUseCase = getNoteUseCase
-	rshinMemo.createNoteUseCase = createNoteUseCase
+	rshinMemo.saveDailyDataUseCase = createNoteUseCase
 	return rshinMemo
 }
 
@@ -221,7 +221,7 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 			return err
 		}
 		// Note作成を依頼
-		err = r.createNoteUseCase.Handle(dailyData)
+		err = r.saveDailyDataUseCase.Handle(dailyData)
 		if err != nil {
 			// todo: エラーメッセージビューへメッセージを表示する
 			return err
