@@ -4,6 +4,7 @@ import (
 	"github.com/mixmaru/rshin-memo/core/entities"
 	"github.com/pkg/errors"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
@@ -21,11 +22,25 @@ func NewNoteRepository(dirPath string) *NoteRepository {
 }
 
 func (n *NoteRepository) GetByNoteName(noteName string) (*entities.NoteEntity, error) {
-	panic("implement me")
+	noteFilePath := filepath.Join(n.dirPath, noteName+".txt")
+	_, err := os.Stat(noteFilePath)
+	if err != nil {
+		return nil, nil
+	}
+
+	bytes, err := ioutil.ReadFile(noteFilePath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "noteファイル作成失敗. %v", noteFilePath)
+	}
+	retEntity := entities.NewNoteEntity(noteName, string(bytes))
+	return retEntity, nil
 }
 
 func (n *NoteRepository) Save(entity *entities.NoteEntity) error {
 	// NoteFileが存在しなければ新規作成、あれば上書きする
-	err := ioutil.WriteFile(filepath.Join(n.dirPath, entity.Name()), []byte(entity.Text()), 0644)
-	return errors.Wrapf(err, "NoteFile create error. entity: %+v", entity)
+	err := ioutil.WriteFile(filepath.Join(n.dirPath, entity.Name()+".txt"), []byte(entity.Text()), 0644)
+	if err != nil {
+		return errors.Wrapf(err, "NoteFile create error. entity: %+v", entity)
+	}
+	return nil
 }

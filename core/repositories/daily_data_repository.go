@@ -12,6 +12,7 @@ import (
 
 type DailyDataRepositoryInterface interface {
 	Save(entity *entities.DailyDataEntity) error
+	Get() ([]*entities.DailyDataEntity, error)
 }
 
 // DailyDataをjsonファイルで永続化するリポジトリ
@@ -21,6 +22,32 @@ type DailyDataRepository struct {
 
 func NewDailyDataRepository(filePath string) *DailyDataRepository {
 	return &DailyDataRepository{filePath: filePath}
+}
+
+// load as entity from jsonfile
+func (d *DailyDataRepository) Get() ([]*entities.DailyDataEntity, error) {
+	// ファイルから内容を読み込む
+	fileContentBytes, err := ioutil.ReadFile(d.filePath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "ファイル読み込み失敗。%v", d.filePath)
+	}
+	// jsonパースする
+	var dailyDataList []DailyData
+	err = json.Unmarshal(fileContentBytes, &dailyDataList)
+	if err != nil {
+		return nil, errors.Wrapf(err, "jsonパース失敗。%v", string(fileContentBytes))
+	}
+	// entityに詰める
+	dailyDataEntities := []*entities.DailyDataEntity{}
+	for _, data := range dailyDataList {
+		entity, err := entities.NewDailyDataEntityByLoadedData(data.Date, data.Notes)
+		if err != nil {
+			return nil, err
+		}
+		dailyDataEntities = append(dailyDataEntities, entity)
+	}
+	// 返却する
+	return dailyDataEntities, nil
 }
 
 // entityをjsonfileへ永続化する

@@ -15,9 +15,10 @@ func main() {
 	if err != nil {
 		log.Panicf("homeDir取得失敗. %v", err)
 	}
+	rshinMemoBaseDir := filepath.Join(homedir, "rshin_memo")
 	saveDailyDataUseCaseInteractor := usecases.NewSaveDailyDataUseCaseInteractor(
-		&repositories.NoteRepositoryMock{},
-		repositories.NewDailyDataRepository(filepath.Join(homedir, "rshin_memo", "daily_data.json")),
+		repositories.NewNoteRepository(rshinMemoBaseDir),
+		repositories.NewDailyDataRepository(filepath.Join(rshinMemoBaseDir, "daily_data.json")),
 	)
 	rshinMemo := NewRshinMemo(
 		&GetAllDailyListUsecaseMock{},
