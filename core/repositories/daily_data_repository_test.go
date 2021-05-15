@@ -26,6 +26,12 @@ func TestDailyDataRepository_Save(t *testing.T) {
 	rep := NewDailyDataRepository(filePath)
 
 	t.Run("すべて新規Noteだった場合、全体が新規追加される", func(t *testing.T) {
+		// 一旦削除
+		err := os.Remove(filePath)
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
+
 		// 準備
 		newEntity := entities.NewDailyDataEntity(
 			time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
@@ -39,13 +45,22 @@ func TestDailyDataRepository_Save(t *testing.T) {
 		)
 
 		// 実行
-		err := rep.Save(newEntity)
+		err = rep.Save(newEntity)
 		// 検証
 		assert.NoError(t, err)
+		loadedEntities, err := rep.Get()
+		assert.NoError(t, err)
+		assert.Len(t, loadedEntities, 1)
+		assert.EqualValues(t, newEntity, loadedEntities[0])
 	})
 
 	t.Run("一部が新規Noteだった場合、一部のみが新規追加される", func(t *testing.T) {
 		////// 準備
+		// 一旦削除
+		err := os.Remove(filePath)
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
 		preEntity := entities.NewDailyDataEntity(
 			time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
 			[]string{
@@ -53,7 +68,7 @@ func TestDailyDataRepository_Save(t *testing.T) {
 				"Note2-2",
 			},
 		)
-		err := rep.Save(preEntity)
+		err = rep.Save(preEntity)
 		assert.NoError(t, err)
 		// 一部のみ新規Noteのentityを用意
 		newEntity := entities.NewDailyDataEntity(
@@ -70,6 +85,10 @@ func TestDailyDataRepository_Save(t *testing.T) {
 
 		////// 検証
 		assert.NoError(t, err)
+		loadedEntities, err := rep.Get()
+		assert.NoError(t, err)
+		assert.Len(t, loadedEntities, 1)
+		assert.EqualValues(t, newEntity, loadedEntities[0])
 	})
 }
 
