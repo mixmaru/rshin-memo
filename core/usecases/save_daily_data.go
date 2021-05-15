@@ -22,7 +22,7 @@ func NewSaveDailyDataUseCaseInteractor(noteRepository repositories.NoteRepositor
 
 func (c *SaveDailyDataUseCaseInteractor) Handle(dailyData DailyData) error {
 	// dailyListの作成
-	date, err := time.Parse("2006-01-02", dailyData.Date)
+	date, err := time.ParseInLocation("2006-01-02", dailyData.Date, time.Local)
 	if err != nil {
 		return errors.Wrapf(err, "日付Parseの失敗。%+v", dailyData)
 	}
