@@ -23,7 +23,16 @@ type RshinMemo struct {
 
 	getNoteUseCase       *usecases.GetNoteUseCase
 	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
+
+	addRowMode AddRowMode
 }
+
+type AddRowMode int
+
+const (
+	ADD_ROW_PREV_MODE = iota
+	ADD_ROW_NEXT_MODE
+)
 
 func NewRshinMemo(
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
@@ -140,8 +149,12 @@ func (r *RshinMemo) setEventActions() error {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
 
-	// daily_listでの新規list追加
-	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'o', gocui.ModNone, r.addList); err != nil {
+	// daily_listでカーソルの下行に新規list追加
+	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'o', gocui.ModNone, r.addNoteNextRow); err != nil {
+		return errors.Wrap(err, "Enterキーバインド失敗")
+	}
+	// daily_listでカーソルの上行に新規list追加
+	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'O', gocui.ModNone, r.addNotePrevRow); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
 
@@ -152,7 +165,17 @@ func (r *RshinMemo) setEventActions() error {
 	return nil
 }
 
-func (r *RshinMemo) addList(g *gocui.Gui, v *gocui.View) error {
+func (r *RshinMemo) addNoteNextRow(g *gocui.Gui, v *gocui.View) error {
+	r.addRowMode = ADD_ROW_NEXT_MODE
+	return r.addNote()
+}
+
+func (r *RshinMemo) addNotePrevRow(g *gocui.Gui, v *gocui.View) error {
+	r.addRowMode = ADD_ROW_PREV_MODE
+	return r.addNote()
+}
+
+func (r *RshinMemo) addNote() error {
 	// note名入力viewの表示
 	err := r.noteNameInputView.Create()
 	if err != nil {
@@ -216,9 +239,17 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 		// todo: エラーメッセージビューへメッセージを表示する
 	} else {
 		// 対象日付のdailyListを取得作成
-		dailyData, err := r.dailyListView.GenerateNewDailyData(noteName)
-		if err != nil {
-			return err
+		var dailyData usecases.DailyData
+		if r.addRowMode == ADD_ROW_PREV_MODE {
+			dailyData, err = r.dailyListView.GenerateNewDailyDataToPrevCursor(noteName)
+			if err != nil {
+				return err
+			}
+		} else {
+			dailyData, err = r.dailyListView.GenerateNewDailyDataToNextCursor(noteName)
+			if err != nil {
+				return err
+			}
 		}
 		// Note作成を依頼
 		err = r.saveDailyDataUseCase.Handle(dailyData)
