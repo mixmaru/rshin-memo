@@ -13,12 +13,12 @@ const DAILY_LIST_VIEW = "daily_list"
 
 type DailyListView struct {
 	gui                    *gocui.Gui
-	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface
+	getAllDailyListUsecase *usecases.GetAllDailyListUsecaseInteractor
 	view                   *gocui.View
 	dailyList              []usecases.DailyData
 }
 
-func NewDailyListView(gui *gocui.Gui, getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface) *DailyListView {
+func NewDailyListView(gui *gocui.Gui, getAllDailyListUsecase *usecases.GetAllDailyListUsecaseInteractor) *DailyListView {
 	retObj := &DailyListView{
 		gui:                    gui,
 		getAllDailyListUsecase: getAllDailyListUsecase,

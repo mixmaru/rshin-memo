@@ -7,10 +7,6 @@ import (
 	"time"
 )
 
-type SaveDailyDataUseCaseInterface interface {
-	Handle(dailyData DailyData) error
-}
-
 type SaveDailyDataUseCaseInteractor struct {
 	noteRepository      repositories.NoteRepositoryInterface
 	dailyDataRepository repositories.DailyDataRepositoryInterface
