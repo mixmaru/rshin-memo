@@ -9,7 +9,7 @@ import (
 func TestCreateNoteUseCaseInteractor_Handle(t *testing.T) {
 	t.Run("存在しないNoteNameが1つ含まれている場合正常終了する", func(t *testing.T) {
 		// 準備
-		interactor := NewSaveDailyDataUseCaseInteractor(
+		interactor := NewSaveDailyDataUseCase(
 			&repositories.NoteRepositoryMock{},
 			&repositories.DailyDataRepositoryMock{},
 		)
@@ -28,7 +28,7 @@ func TestCreateNoteUseCaseInteractor_Handle(t *testing.T) {
 
 	t.Run("存在しないNoteNameがない場合正常終了する", func(t *testing.T) {
 		// 準備
-		interactor := NewSaveDailyDataUseCaseInteractor(
+		interactor := NewSaveDailyDataUseCase(
 			&repositories.NoteRepositoryMock{},
 			&repositories.DailyDataRepositoryMock{},
 		)

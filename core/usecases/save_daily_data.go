@@ -7,16 +7,16 @@ import (
 	"time"
 )
 
-type SaveDailyDataUseCaseInteractor struct {
+type SaveDailyDataUseCase struct {
 	noteRepository      repositories.NoteRepositoryInterface
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 }
 
-func NewSaveDailyDataUseCaseInteractor(noteRepository repositories.NoteRepositoryInterface, dailyDataRepository repositories.DailyDataRepositoryInterface) *SaveDailyDataUseCaseInteractor {
-	return &SaveDailyDataUseCaseInteractor{noteRepository: noteRepository, dailyDataRepository: dailyDataRepository}
+func NewSaveDailyDataUseCase(noteRepository repositories.NoteRepositoryInterface, dailyDataRepository repositories.DailyDataRepositoryInterface) *SaveDailyDataUseCase {
+	return &SaveDailyDataUseCase{noteRepository: noteRepository, dailyDataRepository: dailyDataRepository}
 }
 
-func (c *SaveDailyDataUseCaseInteractor) Handle(dailyData DailyData) error {
+func (c *SaveDailyDataUseCase) Handle(dailyData DailyData) error {
 	// dailyListの作成
 	date, err := time.ParseInLocation("2006-01-02", dailyData.Date, time.Local)
 	if err != nil {

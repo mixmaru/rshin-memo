@@ -8,7 +8,7 @@ import (
 
 func TestGetAllDailyListUsecaseInteractor_Handle(t *testing.T) {
 	////// 準備
-	useCase := NewGetAllDailyListUsecaseInteractor(&repositories.DailyDataRepositoryMock{})
+	useCase := NewGetAllDailyListUsecase(&repositories.DailyDataRepositoryMock{})
 
 	////// 実行
 	dailyList, err := useCase.Handle()

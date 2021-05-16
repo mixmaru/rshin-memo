@@ -2,15 +2,15 @@ package usecases
 
 import "github.com/mixmaru/rshin-memo/core/repositories"
 
-type GetNoteUseCaseInteractor struct {
+type GetNoteUseCase struct {
 	noteRepository repositories.NoteRepositoryInterface
 }
 
-func NewGetNoteUseCaseInteractor(noteRepository repositories.NoteRepositoryInterface) *GetNoteUseCaseInteractor {
-	return &GetNoteUseCaseInteractor{noteRepository: noteRepository}
+func NewGetNoteUseCase(noteRepository repositories.NoteRepositoryInterface) *GetNoteUseCase {
+	return &GetNoteUseCase{noteRepository: noteRepository}
 }
 
-func (g *GetNoteUseCaseInteractor) Handle(noteName string) (text string, notExist bool, err error) {
+func (g *GetNoteUseCase) Handle(noteName string) (text string, notExist bool, err error) {
 	// repositoryに問い合わせ
 	note, err := g.noteRepository.GetByNoteName(noteName)
 	if err != nil {

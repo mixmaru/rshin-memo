@@ -13,12 +13,12 @@ const DAILY_LIST_VIEW = "daily_list"
 
 type DailyListView struct {
 	gui                    *gocui.Gui
-	getAllDailyListUsecase *usecases.GetAllDailyListUsecaseInteractor
+	getAllDailyListUsecase *usecases.GetAllDailyListUsecase
 	view                   *gocui.View
 	dailyList              []usecases.DailyData
 }
 
-func NewDailyListView(gui *gocui.Gui, getAllDailyListUsecase *usecases.GetAllDailyListUsecaseInteractor) *DailyListView {
+func NewDailyListView(gui *gocui.Gui, getAllDailyListUsecase *usecases.GetAllDailyListUsecase) *DailyListView {
 	retObj := &DailyListView{
 		gui:                    gui,
 		getAllDailyListUsecase: getAllDailyListUsecase,
@@ -88,7 +88,20 @@ func (d *DailyListView) GetDateOnCursor() (string, error) {
 	return dateText, nil
 }
 
-func (d *DailyListView) GenerateNewDailyData(newNoteName string) (usecases.DailyData, error) {
+func (d *DailyListView) GenerateNewDailyDataToNextCursor(newNoteName string) (usecases.DailyData, error) {
+	return d.generateNewDailyData(newNoteName, next_cursor)
+}
+
+func (d *DailyListView) GenerateNewDailyDataToPrevCursor(newNoteName string) (usecases.DailyData, error) {
+	return d.generateNewDailyData(newNoteName, prev_cursor)
+}
+
+const (
+	prev_cursor = iota
+	next_cursor
+)
+
+func (d *DailyListView) generateNewDailyData(newNoteName string, insertPlace int) (usecases.DailyData, error) {
 	// カーソル位置の日付を取得する
 	date, err := d.GetDateOnCursor()
 	if err != nil {
@@ -99,8 +112,16 @@ func (d *DailyListView) GenerateNewDailyData(newNoteName string) (usecases.Daily
 	for _, dailyDate := range d.dailyList {
 		if dailyDate.Date == date {
 			// カーソル位置の下にnewNoteNameを追加する
+			var insertNum int
 			_, cursorNum := d.view.Cursor()
-			insertNum := cursorNum - count
+			switch insertPlace {
+			case prev_cursor:
+				insertNum = cursorNum - count - 1
+			case next_cursor:
+				insertNum = cursorNum - count
+			default:
+				return usecases.DailyData{}, errors.Errorf("想定外の値が使われた。insertPlace: %v", insertPlace)
+			}
 			newNotes := []string{}
 			newNotes = append(newNotes, dailyDate.Notes[:insertNum+1]...)
 			newNotes = append(newNotes, newNoteName)
@@ -111,6 +132,7 @@ func (d *DailyListView) GenerateNewDailyData(newNoteName string) (usecases.Daily
 		count += len(dailyDate.Notes)
 	}
 	return usecases.DailyData{}, errors.New("カーソル位置の日付のdailydataが取得できなかった。想定外エラー")
+
 }
 
 func (d *DailyListView) Reload() error {

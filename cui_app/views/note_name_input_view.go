@@ -9,7 +9,7 @@ import (
 const NOTE_NAME_INPUT_VIEW = "note_name_input"
 
 type NoteNameInputView struct {
-	gui *gocui.Gui
+	gui  *gocui.Gui
 	view *gocui.View
 }
 
@@ -21,10 +21,10 @@ func NewNoteNameinputView(gui *gocui.Gui) *NoteNameInputView {
 }
 
 // dailyListViewの新規作成
-func (n *NoteNameInputView) Create() error{
+func (n *NoteNameInputView) Create() error {
 	width, height := n.gui.Size()
 	v, err := createOrResizeView(n.gui, NOTE_NAME_INPUT_VIEW, width/2-20, height/2-1, width/2+20, height/2+1)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	n.view = v
@@ -61,7 +61,8 @@ func (n *NoteNameInputView) Delete() error {
 
 type Editor struct {
 }
-func (e *Editor)Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+
+func (e *Editor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 	switch {
 	case ch != 0 && mod == 0:
 		text := utils.ConvertStringForView(string(ch))
