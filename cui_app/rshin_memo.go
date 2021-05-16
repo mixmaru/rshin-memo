@@ -231,6 +231,12 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 		if err != nil {
 			return err
 		}
+
+		// 追加されたNoteが表示されるようにDailyListをリフレッシュ
+		err = r.dailyListView.Reload()
+		if err != nil {
+			return err
+		}
 	}
 
 	err = r.dailyListView.Focus()
