@@ -2,15 +2,15 @@ package usecases
 
 import "github.com/mixmaru/rshin-memo/core/repositories"
 
-type GetAllDailyListUsecaseInteractor struct {
+type GetAllDailyListUsecase struct {
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 }
 
-func NewGetAllDailyListUsecaseInteractor(dailyDataRepository repositories.DailyDataRepositoryInterface) *GetAllDailyListUsecaseInteractor {
-	return &GetAllDailyListUsecaseInteractor{dailyDataRepository: dailyDataRepository}
+func NewGetAllDailyListUsecase(dailyDataRepository repositories.DailyDataRepositoryInterface) *GetAllDailyListUsecase {
+	return &GetAllDailyListUsecase{dailyDataRepository: dailyDataRepository}
 }
 
-func (i *GetAllDailyListUsecaseInteractor) Handle() ([]DailyData, error) {
+func (i *GetAllDailyListUsecase) Handle() ([]DailyData, error) {
 	entities, err := i.dailyDataRepository.Get()
 	if err != nil {
 		return nil, err

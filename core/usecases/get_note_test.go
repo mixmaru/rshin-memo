@@ -9,7 +9,7 @@ import (
 func TestGetNoteUseCaseInteractor_Handle(t *testing.T) {
 	t.Run("対象データがある時、noteTextが帰ってくる", func(t *testing.T) {
 		// 準備
-		interactor := NewGetNoteUseCaseInteractor(&repositories.NoteRepositoryMock{})
+		interactor := NewGetNoteUseCase(&repositories.NoteRepositoryMock{})
 		// 実行
 		noteText, notExist, err := interactor.Handle(repositories.EXIST_NOTE_NAME)
 		assert.NoError(t, err)
@@ -21,7 +21,7 @@ func TestGetNoteUseCaseInteractor_Handle(t *testing.T) {
 
 	t.Run("対象データがない時、noteTextはカラ文字、notExistにtrueが入る", func(t *testing.T) {
 		// 準備
-		interactor := NewGetNoteUseCaseInteractor(&repositories.NoteRepositoryMock{})
+		interactor := NewGetNoteUseCase(&repositories.NoteRepositoryMock{})
 		// 実行
 		noteText, notExist, err := interactor.Handle(repositories.NOT_EXIST_NOTE_NAME)
 		assert.NoError(t, err)

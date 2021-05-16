@@ -21,8 +21,8 @@ type RshinMemo struct {
 	noteNameInputView  *views.NoteNameInputView
 	alreadyInitialized bool
 
-	getNoteUseCase       *usecases.GetNoteUseCaseInteractor
-	saveDailyDataUseCase *usecases.SaveDailyDataUseCaseInteractor
+	getNoteUseCase       *usecases.GetNoteUseCase
+	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
 }
 
 func NewRshinMemo(
@@ -45,10 +45,10 @@ func NewRshinMemo(
 	rshinMemo.gui = g
 	rshinMemo.memoDirPath = filepath.Join(homedir, "rshin_memo")
 	rshinMemo.alreadyInitialized = false
-	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, usecases.NewGetAllDailyListUsecaseInteractor(dailyDataRepository))
+	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, usecases.NewGetAllDailyListUsecase(dailyDataRepository))
 	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
-	rshinMemo.getNoteUseCase = usecases.NewGetNoteUseCaseInteractor(noteRepository)
-	rshinMemo.saveDailyDataUseCase = usecases.NewSaveDailyDataUseCaseInteractor(noteRepository, dailyDataRepository)
+	rshinMemo.getNoteUseCase = usecases.NewGetNoteUseCase(noteRepository)
+	rshinMemo.saveDailyDataUseCase = usecases.NewSaveDailyDataUseCase(noteRepository, dailyDataRepository)
 	return rshinMemo
 }
 
