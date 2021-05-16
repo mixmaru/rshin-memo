@@ -40,19 +40,9 @@ func (d *DailyListView) Create() error {
 	d.view.SelBgColor = gocui.ColorGreen
 	d.view.SelFgColor = gocui.ColorBlack
 
-	dailyList, err := d.loadAllDailyList()
+	err = d.Reload()
 	if err != nil {
 		return err
-	}
-	d.dailyList = dailyList
-
-	for _, dailyData := range d.dailyList {
-		for _, note := range dailyData.Notes {
-			_, err = fmt.Fprintln(d.view, dailyData.Date+"\t"+utils.ConvertStringForView(note))
-			if err != nil {
-				return errors.Wrapf(err, "テキスト出力失敗。%+v", dailyData)
-			}
-		}
 	}
 
 	return nil
@@ -121,4 +111,25 @@ func (d *DailyListView) GenerateNewDailyData(newNoteName string) (usecases.Daily
 		count += len(dailyDate.Notes)
 	}
 	return usecases.DailyData{}, errors.New("カーソル位置の日付のdailydataが取得できなかった。想定外エラー")
+}
+
+func (d *DailyListView) Reload() error {
+	d.view.Clear()
+	d.dailyList = nil
+
+	dailyList, err := d.loadAllDailyList()
+	if err != nil {
+		return err
+	}
+	d.dailyList = dailyList
+
+	for _, dailyData := range d.dailyList {
+		for _, note := range dailyData.Notes {
+			_, err = fmt.Fprintln(d.view, dailyData.Date+"\t"+utils.ConvertStringForView(note))
+			if err != nil {
+				return errors.Wrapf(err, "テキスト出力失敗。%+v", dailyData)
+			}
+		}
+	}
+	return nil
 }

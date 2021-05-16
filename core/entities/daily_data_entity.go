@@ -32,6 +32,10 @@ func (d *DailyDataEntity) Date() time.Time {
 	return d.date
 }
 
+func (d *DailyDataEntity) DateStr() string {
+	return d.date.Format("2006-01-02")
+}
+
 func (d *DailyDataEntity) NoteNames() []string {
 	return d.noteNames
 }

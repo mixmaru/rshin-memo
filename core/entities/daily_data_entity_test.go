@@ -46,3 +46,15 @@ func TestNewDailyDataEntityByLoadedData(t *testing.T) {
 		"note2",
 	}, entity.NoteNames())
 }
+
+func TestDailyDataEntity_DateStr(t *testing.T) {
+	entity := NewDailyDataEntity(
+		time.Date(2021, 1, 1, 12, 0, 0, 0, time.Local),
+		[]string{
+			"Note1",
+			"Note2",
+			"Note3",
+		},
+	)
+	assert.Equal(t, "2021-01-01", entity.DateStr())
+}

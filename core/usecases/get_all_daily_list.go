@@ -1,12 +1,31 @@
 package usecases
 
+import "github.com/mixmaru/rshin-memo/core/repositories"
+
 type GetAllDailyListUsecaseInterface interface {
 	Handle() ([]DailyData, error)
 }
 
-type GetAllDailyListUsecaseInteractor struct{}
+type GetAllDailyListUsecaseInteractor struct {
+	dailyDataRepository repositories.DailyDataRepositoryInterface
+}
+
+func NewGetAllDailyListUsecaseInteractor(dailyDataRepository repositories.DailyDataRepositoryInterface) *GetAllDailyListUsecaseInteractor {
+	return &GetAllDailyListUsecaseInteractor{dailyDataRepository: dailyDataRepository}
+}
 
 func (i *GetAllDailyListUsecaseInteractor) Handle() ([]DailyData, error) {
-	// 実際にファイルからデータを取得する処理を書く。TDDで。
-	return nil, nil
+	entities, err := i.dailyDataRepository.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	retData := []DailyData{}
+	for _, entity := range entities {
+		retData = append(retData, DailyData{
+			Date:  entity.DateStr(),
+			Notes: entity.NoteNames(),
+		})
+	}
+	return retData, nil
 }
