@@ -2,10 +2,6 @@ package usecases
 
 import "github.com/mixmaru/rshin-memo/core/repositories"
 
-type GetAllDailyListUsecaseInterface interface {
-	Handle() ([]DailyData, error)
-}
-
 type GetAllDailyListUsecaseInteractor struct {
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/mixmaru/rshin-memo/cui_app/views"
@@ -20,14 +21,13 @@ type RshinMemo struct {
 	noteNameInputView  *views.NoteNameInputView
 	alreadyInitialized bool
 
-	getNoteUseCase       usecases.GetNoteUseCaseInterface
-	saveDailyDataUseCase usecases.SaveDailyDataUseCaseInterface
+	getNoteUseCase       *usecases.GetNoteUseCaseInteractor
+	saveDailyDataUseCase *usecases.SaveDailyDataUseCaseInteractor
 }
 
 func NewRshinMemo(
-	getAllDailyListUsecase usecases.GetAllDailyListUsecaseInterface,
-	getNoteUseCase usecases.GetNoteUseCaseInterface,
-	createNoteUseCase usecases.SaveDailyDataUseCaseInterface,
+	dailyDataRepository repositories.DailyDataRepositoryInterface,
+	noteRepository repositories.NoteRepositoryInterface,
 ) *RshinMemo {
 
 	homedir, err := os.UserHomeDir()
@@ -45,10 +45,10 @@ func NewRshinMemo(
 	rshinMemo.gui = g
 	rshinMemo.memoDirPath = filepath.Join(homedir, "rshin_memo")
 	rshinMemo.alreadyInitialized = false
-	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, getAllDailyListUsecase)
+	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, usecases.NewGetAllDailyListUsecaseInteractor(dailyDataRepository))
 	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
-	rshinMemo.getNoteUseCase = getNoteUseCase
-	rshinMemo.saveDailyDataUseCase = createNoteUseCase
+	rshinMemo.getNoteUseCase = usecases.NewGetNoteUseCaseInteractor(noteRepository)
+	rshinMemo.saveDailyDataUseCase = usecases.NewSaveDailyDataUseCaseInteractor(noteRepository, dailyDataRepository)
 	return rshinMemo
 }
 
