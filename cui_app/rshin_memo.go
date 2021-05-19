@@ -163,41 +163,32 @@ func (r *RshinMemo) setEventActions() error {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
 
-	// DateInputView
-	if err := r.gui.SetKeybinding(views.DATE_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.addNote); err != nil {
-		return errors.Wrap(err, "Enterキーバインド失敗")
-	}
 	return nil
 }
 func (r *RshinMemo) displayDateInputViewForNext(g *gocui.Gui, v *gocui.View) error {
 	// inputViewを表示する
-	r.dateInputView.Create()
-	r.dateInputView.Focus()
 	r.addRowMode = ADD_ROW_NEXT_MODE
-	return nil
+	return r.displayNoteNameInputView()
 }
 
-func (r *RshinMemo) displayDateInputViewForPrev(g *gocui.Gui, v *gocui.View) error {
-	// inputViewを表示する
-	r.dateInputView.Create()
-	r.dateInputView.Focus()
+func (r *RshinMemo) displayDataInputViewForPrev(g *gocui.Gui, v *gocui.View) error {
 	r.addRowMode = ADD_ROW_PREV_MODE
+	return r.displayNoteNameInputView()
+}
+
+func (r *RshinMemo) displayNoteNameInputView() error {
+	// note名入力viewの表示
+	err := r.noteNameInputView.Create()
+	if err != nil {
+		return err
+	}
+	// フォーカスの移動
+	err = r.noteNameInputView.Focus()
+	if err != nil {
+		return errors.Wrap(err, "フォーカス移動失敗")
+	}
 	return nil
 }
-
-func (r *RshinMemo) displayDateInputViewForPrev(g *gocui.Gui, v *gocui.View) error {
-
-}
-
-//func (r *RshinMemo) addNoteNextRow(g *gocui.Gui, v *gocui.View) error {
-//	r.addRowMode = ADD_ROW_NEXT_MODE
-//	return r.addNote()
-//}
-//
-//func (r *RshinMemo) addNotePrevRow(g *gocui.Gui, v *gocui.View) error {
-//	r.addRowMode = ADD_ROW_PREV_MODE
-//	return r.addNote()
-//}
 
 func (r *RshinMemo) addNote() error {
 	// note名入力viewの表示
@@ -250,6 +241,11 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 	// 入力内容を取得
 	noteName, err := r.noteNameInputView.GetInputNoteName()
+
+	// バリデーション
+	if !r.valid(noteName) {
+		return nil
+	}
 
 	if err != nil {
 		return err
@@ -304,6 +300,10 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 		return err
 	}
 	return nil
+}
+
+func (r *RshinMemo) valid(noteName string) bool {
+	return true
 }
 
 // vimで対象noteを開く
