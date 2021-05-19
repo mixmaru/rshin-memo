@@ -150,30 +150,54 @@ func (r *RshinMemo) setEventActions() error {
 	}
 
 	// daily_listでカーソルの下行に新規list追加
-	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'o', gocui.ModNone, r.addNoteNextRow); err != nil {
-		return errors.Wrap(err, "Enterキーバインド失敗")
+	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'o', gocui.ModNone, r.displayDateInputViewForNext); err != nil {
+		return errors.Wrap(err, "oキーバインド失敗")
 	}
 	// daily_listでカーソルの上行に新規list追加
-	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'O', gocui.ModNone, r.addNotePrevRow); err != nil {
-		return errors.Wrap(err, "Enterキーバインド失敗")
+	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'O', gocui.ModNone, r.displayDataInputViewForPrev); err != nil {
+		return errors.Wrap(err, "Oキーバインド失敗")
 	}
 
 	// inputNoteNameViewでのEnterキー
 	if err := r.gui.SetKeybinding(views.NOTE_NAME_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.createNote); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
+
+	// DateInputView
+	if err := r.gui.SetKeybinding(views.DATE_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.addNote); err != nil {
+		return errors.Wrap(err, "Enterキーバインド失敗")
+	}
+	return nil
+}
+func (r *RshinMemo) displayDateInputViewForNext(g *gocui.Gui, v *gocui.View) error {
+	// inputViewを表示する
+	r.dateInputView.Create()
+	r.dateInputView.Focus()
+	r.addRowMode = ADD_ROW_NEXT_MODE
 	return nil
 }
 
-func (r *RshinMemo) addNoteNextRow(g *gocui.Gui, v *gocui.View) error {
-	r.addRowMode = ADD_ROW_NEXT_MODE
-	return r.addNote()
+func (r *RshinMemo) displayDateInputViewForPrev(g *gocui.Gui, v *gocui.View) error {
+	// inputViewを表示する
+	r.dateInputView.Create()
+	r.dateInputView.Focus()
+	r.addRowMode = ADD_ROW_PREV_MODE
+	return nil
 }
 
-func (r *RshinMemo) addNotePrevRow(g *gocui.Gui, v *gocui.View) error {
-	r.addRowMode = ADD_ROW_PREV_MODE
-	return r.addNote()
+func (r *RshinMemo) displayDateInputViewForPrev(g *gocui.Gui, v *gocui.View) error {
+
 }
+
+//func (r *RshinMemo) addNoteNextRow(g *gocui.Gui, v *gocui.View) error {
+//	r.addRowMode = ADD_ROW_NEXT_MODE
+//	return r.addNote()
+//}
+//
+//func (r *RshinMemo) addNotePrevRow(g *gocui.Gui, v *gocui.View) error {
+//	r.addRowMode = ADD_ROW_PREV_MODE
+//	return r.addNote()
+//}
 
 func (r *RshinMemo) addNote() error {
 	// note名入力viewの表示
