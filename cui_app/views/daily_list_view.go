@@ -211,7 +211,7 @@ func (d *DailyListView) GetInsertDateRangePrevCursor() (DateRange, error) {
 	if err != nil {
 		return DateRange{}, err
 	}
-	err = retDateRange.SetToByString(toDateString)
+	err = retDateRange.SetFromByString(toDateString)
 	if err != nil {
 		return DateRange{}, err
 	}
