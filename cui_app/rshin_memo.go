@@ -279,7 +279,14 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 
 func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 	// 入力内容を取得
+	date, err := r.dateInputView.GetInputString()
+	if err != nil {
+		return err
+	}
 	noteName, err := r.noteNameInputView.GetInputNoteName()
+	if err != nil {
+		return err
+	}
 
 	if err != nil {
 		return err
@@ -295,12 +302,12 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 		// 対象日付のdailyListを取得作成
 		var dailyData usecases.DailyData
 		if r.addRowMode == ADD_ROW_PREV_MODE {
-			dailyData, err = r.dailyListView.GenerateNewDailyDataToPrevCursor(noteName)
+			dailyData, err = r.dailyListView.GenerateNewDailyDataToPrevCursor(noteName, date)
 			if err != nil {
 				return err
 			}
 		} else {
-			dailyData, err = r.dailyListView.GenerateNewDailyDataToNextCursor(noteName)
+			dailyData, err = r.dailyListView.GenerateNewDailyDataToNextCursor(noteName, date)
 			if err != nil {
 				return err
 			}
