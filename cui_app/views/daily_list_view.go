@@ -97,7 +97,12 @@ func (d *DailyListView) GetDateOnCursorNext() (string, error) {
 }
 
 func (d *DailyListView) GetDateOnCursorPrev() (string, error) {
-	return "", errors.New("未実装")
+	_, y := d.view.Cursor()
+	text, err := d.view.Line(y - 1)
+	if err != nil {
+		return "", errors.Wrap(err, "選択行の前の行のtextの取得に失敗")
+	}
+	return getDateString(text), nil
 }
 
 func getDateString(text string) string {
