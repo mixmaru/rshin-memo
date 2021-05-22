@@ -155,3 +155,18 @@ func (d *DailyListView) Reload() error {
 	}
 	return nil
 }
+// numは0始まりでカウント
+func IsEndOfDateList(num int, dailyList []usecases.DailyData) bool {
+	num++ // 比較簡略化のため1追加しておく
+	for _, dailyData := range dailyList {
+		if len(dailyData.Notes) == num {
+			return true
+		} else if len(dailyData.Notes) < num {
+			num -= len(dailyData.Notes)
+		} else {
+			return false
+		}
+	}
+	return false
+}
+

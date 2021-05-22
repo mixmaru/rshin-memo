@@ -1,6 +1,7 @@
 package views
 
 import (
+	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -75,5 +76,40 @@ func TestDateRange_IsIn(t *testing.T) {
 		assert.True(t, dateRange.IsIn(equalDate))
 		afterDate := time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local)
 		assert.True(t, dateRange.IsIn(afterDate))
+	})
+}
+
+func TestIsEndOfDateList(t *testing.T) {
+	dailyList := []usecases.DailyData{
+		{
+			Date: "2021-03-30",
+			Notes: []string{
+				"a",
+				"b",
+				"c",
+			},
+		},
+		{
+			Date: "2021-03-29",
+			Notes: []string{
+				"a",
+				"b",
+			},
+		},
+	}
+
+	t.Run("日の末noteを指す番号だったらTrue", func(t *testing.T) {
+		assert.True(t, IsEndOfDateList(2, dailyList))
+		assert.True(t, IsEndOfDateList(4, dailyList))
+	})
+
+	t.Run("日の末noteを指す番号でなければfalse", func(t *testing.T) {
+		assert.False(t, IsEndOfDateList(0, dailyList))
+		assert.False(t, IsEndOfDateList(3, dailyList))
+	})
+
+	t.Run("範囲以外だったらfalse", func(t *testing.T) {
+		assert.False(t, IsEndOfDateList(-1, dailyList))
+		assert.False(t, IsEndOfDateList(10, dailyList))
 	})
 }
