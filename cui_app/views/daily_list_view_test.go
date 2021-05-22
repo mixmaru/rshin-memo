@@ -113,3 +113,39 @@ func TestIsEndOfDateList(t *testing.T) {
 		assert.False(t, IsEndOfDateList(10, dailyList))
 	})
 }
+
+func TestIsFirstOfDateList(t *testing.T) {
+	dailyList := []usecases.DailyData{
+		{
+			Date: "2021-03-30",
+			Notes: []string{
+				"a",
+				"b",
+				"c",
+			},
+		},
+		{
+			Date: "2021-03-29",
+			Notes: []string{
+				"a",
+				"b",
+			},
+		},
+	}
+
+	t.Run("日の先頭noteを指す番号だったらTrue", func(t *testing.T) {
+		assert.True(t, IsFirstOfDateList(0, dailyList))
+		assert.True(t, IsFirstOfDateList(3, dailyList))
+	})
+
+	t.Run("日の末noteを指す番号でなければfalse", func(t *testing.T) {
+		assert.False(t, IsFirstOfDateList(1, dailyList))
+		assert.False(t, IsFirstOfDateList(2, dailyList))
+		assert.False(t, IsFirstOfDateList(4, dailyList))
+	})
+
+	t.Run("範囲以外だったらfalse", func(t *testing.T) {
+		assert.False(t, IsEndOfDateList(-1, dailyList))
+		assert.False(t, IsEndOfDateList(10, dailyList))
+	})
+}

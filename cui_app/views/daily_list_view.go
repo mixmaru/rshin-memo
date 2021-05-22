@@ -96,6 +96,10 @@ func (d *DailyListView) GetDateOnCursorNext() (string, error) {
 	return getDateString(text), nil
 }
 
+func (d *DailyListView) GetDateOnCursorPrev() (string, error) {
+	return "", errors.New("未実装")
+}
+
 func getDateString(text string) string {
 	// \tで分割して日付を取得
 	return strings.Split(text, "\t")[0]
@@ -195,6 +199,32 @@ func (d *DailyListView) GetInsertDateRangeNextCursor() (DateRange, error) {
 	return retDateRange, nil
 }
 
+func (d *DailyListView) GetInsertDateRangePrevCursor() (DateRange, error) {
+	retDateRange := DateRange{}
+	// カーソル位置の日付を取得する
+	toDateString, err := d.GetDateOnCursor()
+	if err != nil {
+		return DateRange{}, err
+	}
+	err = retDateRange.SetToByString(toDateString)
+	if err != nil {
+		return DateRange{}, err
+	}
+
+	// if カーソルがデータの先頭でなければ一つ前の日付を取得する
+	if _, y := d.view.Cursor(); !IsFirstOfDateList(y, d.dailyList) {
+		fromDateString, err := d.GetDateOnCursorPrev()
+		if err != nil {
+			return DateRange{}, err
+		}
+		err = retDateRange.SetFromByString(fromDateString)
+		if err != nil {
+			return DateRange{}, err
+		}
+	}
+	return retDateRange, nil
+}
+
 // numは0始まりでカウント
 func IsEndOfDateList(num int, dailyList []usecases.DailyData) bool {
 	num++ // 比較簡略化のため1追加しておく
@@ -210,8 +240,20 @@ func IsEndOfDateList(num int, dailyList []usecases.DailyData) bool {
 	return false
 }
 
-func (d *DailyListView) GetInsertDateRangePrevCursor() (DateRange, error) {
-	return DateRange{}, errors.Errorf("未実装")
+// numは0始まりでカウント
+func IsFirstOfDateList(num int, dailyList []usecases.DailyData) bool {
+	num++ // 比較簡略化のため1追加しておく
+	if num == 1 {
+		return true
+	}
+	for _, dailyData := range dailyList {
+		if len(dailyData.Notes)+1 == num {
+			return true
+		} else {
+			num -= len(dailyData.Notes)
+		}
+	}
+	return false
 }
 
 type DateRange struct {
