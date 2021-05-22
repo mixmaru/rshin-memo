@@ -7,6 +7,7 @@ import (
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/pkg/errors"
 	"strings"
+	"time"
 )
 
 const DAILY_LIST_VIEW = "daily_list"
@@ -83,9 +84,21 @@ func (d *DailyListView) GetDateOnCursor() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "選択行のtextの取得に失敗")
 	}
-	// \tで分割してノート名を取得
-	dateText := strings.Split(text, "\t")[0]
-	return dateText, nil
+	return getDateString(text), nil
+}
+
+func (d *DailyListView) GetDateOnCursorNext() (string, error) {
+	_, y := d.view.Cursor()
+	text, err := d.view.Line(y + 1)
+	if err != nil {
+		return "", errors.Wrap(err, "選択行の次の行のtextの取得に失敗")
+	}
+	return getDateString(text), nil
+}
+
+func getDateString(text string) string {
+	// \tで分割して日付を取得
+	return strings.Split(text, "\t")[0]
 }
 
 func (d *DailyListView) GenerateNewDailyDataToNextCursor(newNoteName string) (usecases.DailyData, error) {
@@ -155,6 +168,33 @@ func (d *DailyListView) Reload() error {
 	}
 	return nil
 }
+
+func (d *DailyListView) GetInsertDateRangeNextCursor() (DateRange, error) {
+	retDateRange := DateRange{}
+	// カーソル位置の日付を取得する
+	toDateString, err := d.GetDateOnCursor()
+	if err != nil {
+		return DateRange{}, err
+	}
+	err = retDateRange.SetToByString(toDateString)
+	if err != nil {
+		return DateRange{}, err
+	}
+
+	// if カーソルがデータの末でなければ一つ次の日付を取得する
+	if _, y := d.view.Cursor(); !IsEndOfDateList(y, d.dailyList) {
+		fromDateString, err := d.GetDateOnCursorNext()
+		if err != nil {
+			return DateRange{}, err
+		}
+		err = retDateRange.SetFromByString(fromDateString)
+		if err != nil {
+			return DateRange{}, err
+		}
+	}
+	return retDateRange, nil
+}
+
 // numは0始まりでカウント
 func IsEndOfDateList(num int, dailyList []usecases.DailyData) bool {
 	num++ // 比較簡略化のため1追加しておく
@@ -170,3 +210,42 @@ func IsEndOfDateList(num int, dailyList []usecases.DailyData) bool {
 	return false
 }
 
+func (d *DailyListView) GetInsertDateRangePrevCursor() (DateRange, error) {
+	return DateRange{}, errors.Errorf("未実装")
+}
+
+type DateRange struct {
+	From time.Time
+	To   time.Time
+}
+
+func (d *DateRange) IsIn(targetDate time.Time) bool {
+	if !d.From.IsZero() {
+		if targetDate.Before(d.From) {
+			return false
+		}
+	}
+	if !d.To.IsZero() {
+		if targetDate.After(d.To) {
+			return false
+		}
+	}
+	return true
+}
+
+func (d *DateRange) SetFromByString(dateStr string) error {
+	var err error
+	d.From, err = time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
+}
+func (d *DateRange) SetToByString(dateStr string) error {
+	var err error
+	d.To, err = time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
+}
