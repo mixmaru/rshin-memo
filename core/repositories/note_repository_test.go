@@ -112,3 +112,63 @@ func TestNoteRepository_Save(t *testing.T) {
 		assert.Equal(t, "上書きされた内容", string(bytes))
 	})
 }
+
+func TestNoteRepository_GetAllNotes(t *testing.T) {
+	thisDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+	targetDirPath := filepath.Join(thisDir, "test", "TestNoteRepository_GetAllNotes")
+
+	t.Run("あるとき", func(t *testing.T) {
+		////// 準備
+		if _, err := os.Stat(targetDirPath); err == nil {
+			// あれば一旦削除して作り直す
+			err = os.RemoveAll(targetDirPath)
+		}
+		err = os.Mkdir(targetDirPath, 0777)
+		if err != nil {
+			t.Fatalf("%+v", err)
+		}
+
+		repository := NewNoteRepository(targetDirPath)
+		// なんこかNoteを追加しておく
+		newNoteEntityA := entities.NewNoteEntity("noteA", "noteAの内容")
+		newNoteEntityB := entities.NewNoteEntity("noteB", "noteBの内容")
+		err = repository.Save(newNoteEntityA)
+		if err != nil {
+			assert.Failf(t, "%+v", err.Error())
+		}
+		err = repository.Save(newNoteEntityB)
+		if err != nil {
+			assert.Failf(t, "%+v", err.Error())
+		}
+
+		result, err := repository.GetAllNotesOnlyName()
+		assert.NoError(t, err)
+		expected := []*entities.NoteEntity{
+			entities.NewNoteEntity("noteA", ""),
+			entities.NewNoteEntity("noteB", ""),
+		}
+
+		assert.EqualValues(t, expected, result)
+	})
+
+	t.Run("ないとき", func(t *testing.T) {
+		////// 準備
+		if _, err := os.Stat(targetDirPath); err == nil {
+			// あれば一旦削除して作り直す
+			err = os.RemoveAll(targetDirPath)
+		}
+		err = os.Mkdir(targetDirPath, 0777)
+		if err != nil {
+			t.Fatalf("%+v", err)
+		}
+
+		repository := NewNoteRepository(targetDirPath)
+		result, err := repository.GetAllNotesOnlyName()
+		assert.NoError(t, err)
+
+		assert.Len(t, result, 0)
+	})
+}

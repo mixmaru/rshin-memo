@@ -21,9 +21,11 @@ type RshinMemo struct {
 	dailyListView      *views.DailyListView
 	noteNameInputView  *views.NoteNameInputView
 	dateInputView      *views.DateInputView
+	noteSelectView     *views.NoteSelectView
 	alreadyInitialized bool
 
 	getNoteUseCase       *usecases.GetNoteUseCase
+	getAllNotesUseCase   *usecases.GetAllNotesUseCase
 	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
 
 	addRowMode AddRowMode
@@ -59,7 +61,10 @@ func NewRshinMemo(
 	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, usecases.NewGetAllDailyListUsecase(dailyDataRepository))
 	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
 	rshinMemo.dateInputView = views.NewDateInputView(rshinMemo.gui)
+	rshinMemo.noteSelectView = views.NewNoteSelectView(rshinMemo.gui)
+
 	rshinMemo.getNoteUseCase = usecases.NewGetNoteUseCase(noteRepository)
+	rshinMemo.getAllNotesUseCase = usecases.NewGetAllNotesUseCase(noteRepository)
 	rshinMemo.saveDailyDataUseCase = usecases.NewSaveDailyDataUseCase(noteRepository, dailyDataRepository)
 	return rshinMemo
 }
@@ -164,14 +169,6 @@ func (r *RshinMemo) setEventActions() error {
 	if err := r.gui.SetKeybinding(views.DATE_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.displayNoteNameInputView); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
-	//// daily_listでカーソルの下行に新規list追加
-	//if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'o', gocui.ModNone, r.displayDateInputViewForNext); err != nil {
-	//	return errors.Wrap(err, "oキーバインド失敗")
-	//}
-	//// daily_listでカーソルの上行に新規list追加
-	//if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'O', gocui.ModNone, r.displayDataInputViewForPrev); err != nil {
-	//	return errors.Wrap(err, "Oキーバインド失敗")
-	//}
 
 	// inputNoteNameViewでのEnterキー
 	if err := r.gui.SetKeybinding(views.NOTE_NAME_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.createNote); err != nil {
@@ -216,16 +213,28 @@ func (r *RshinMemo) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) error 
 	if !result {
 		return nil
 	}
-	// note名入力viewの表示
-	err = r.noteNameInputView.Create()
+
+	// noteSelectViewの表示
+	allNotes, err := r.getAllNotesUseCase.Handle()
+	err = r.noteSelectView.Create(allNotes)
 	if err != nil {
 		return err
 	}
-	// フォーカスの移動
-	err = r.noteNameInputView.Focus()
+	err = r.noteSelectView.Focus()
 	if err != nil {
-		return errors.Wrap(err, "フォーカス移動失敗")
+		return err
 	}
+
+	// note名入力viewの表示
+	//err = r.noteNameInputView.Create()
+	//if err != nil {
+	//	return err
+	//}
+	//// フォーカスの移動
+	//err = r.noteNameInputView.Focus()
+	//if err != nil {
+	//	return errors.Wrap(err, "フォーカス移動失敗")
+	//}
 	return nil
 }
 
