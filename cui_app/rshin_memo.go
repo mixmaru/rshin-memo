@@ -25,7 +25,7 @@ type RshinMemo struct {
 	alreadyInitialized bool
 
 	getNoteUseCase       *usecases.GetNoteUseCase
-	getAllNoteUseCase    *usecases.GetAllNoteUseCase
+	getAllNotesUseCase   *usecases.GetAllNotesUseCase
 	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
 
 	addRowMode AddRowMode
@@ -62,7 +62,9 @@ func NewRshinMemo(
 	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
 	rshinMemo.dateInputView = views.NewDateInputView(rshinMemo.gui)
 	rshinMemo.noteSelectView = views.NewNoteSelectView(rshinMemo.gui)
+
 	rshinMemo.getNoteUseCase = usecases.NewGetNoteUseCase(noteRepository)
+	rshinMemo.getAllNotesUseCase = usecases.NewGetAllNotesUseCase(noteRepository)
 	rshinMemo.saveDailyDataUseCase = usecases.NewSaveDailyDataUseCase(noteRepository, dailyDataRepository)
 	return rshinMemo
 }
@@ -213,7 +215,7 @@ func (r *RshinMemo) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) error 
 	}
 
 	// noteSelectViewの表示
-	allNotes, err := r.getAllNoteUseCase.Handle()
+	allNotes, err := r.getAllNotesUseCase.Handle()
 	err = r.noteSelectView.Create(allNotes)
 	if err != nil {
 		return err
