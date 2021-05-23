@@ -130,31 +130,6 @@ func (d *DailyListView) generateNewDailyData(newNoteName string, date string, in
 		insertLineNum++
 	}
 	return generateNewDailyData(d.dailyList, newNoteName, date, insertLineNum)
-	// dateでdailyDateを取得して返す
-	//count := 0
-	//for _, dailyDate := range d.dailyList {
-	//	if dailyDate.Date == date {
-	//		// カーソル位置の下にnewNoteNameを追加する
-	//		var insertNum int
-	//		_, cursorNum := d.view.Cursor()
-	//		switch insertPlace {
-	//		case prev_cursor:
-	//			insertNum = cursorNum - count - 1
-	//		case next_cursor:
-	//			insertNum = cursorNum - count
-	//		default:
-	//			return usecases.DailyData{}, errors.Errorf("想定外の値が使われた。insertPlace: %v", insertPlace)
-	//		}
-	//		newNotes := []string{}
-	//		newNotes = append(newNotes, dailyDate.Notes[:insertNum+1]...)
-	//		newNotes = append(newNotes, newNoteName)
-	//		newNotes = append(newNotes, dailyDate.Notes[insertNum+1:]...)
-	//		dailyDate.Notes = newNotes
-	//		return dailyDate, nil
-	//	}
-	//	count += len(dailyDate.Notes)
-	//}
-	//return usecases.DailyData{}, errors.New("カーソル位置の日付のdailydataが取得できなかった。想定外エラー")
 }
 
 /*
@@ -301,7 +276,7 @@ func (d *DailyListView) GetInsertDateRangePrevCursor() (DateRange, error) {
 	}
 
 	// if カーソルがデータの先頭でなければ一つ前の日付を取得する
-	if _, y := d.view.Cursor(); !IsFirstOfDateList(y, d.dailyList) {
+	if _, y := d.view.Cursor(); y > 0 {
 		fromDateString, err := d.GetDateOnCursorPrev()
 		if err != nil {
 			return DateRange{}, err
@@ -324,22 +299,6 @@ func IsEndOfDateList(num int, dailyList []usecases.DailyData) bool {
 			num -= len(dailyData.Notes)
 		} else {
 			return false
-		}
-	}
-	return false
-}
-
-// numは0始まりでカウント
-func IsFirstOfDateList(num int, dailyList []usecases.DailyData) bool {
-	num++ // 比較簡略化のため1追加しておく
-	if num == 1 {
-		return true
-	}
-	for _, dailyData := range dailyList {
-		if len(dailyData.Notes)+1 == num {
-			return true
-		} else {
-			num -= len(dailyData.Notes)
 		}
 	}
 	return false
