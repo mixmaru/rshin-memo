@@ -186,18 +186,6 @@ func generateNewDailyData(dailyList []usecases.DailyData, newNoteName string, da
 		}
 	}
 
-	/**
-	if len(dailyList) == 0
-		dailyListに追加して終わり
-		return
-
-	if insertLineNum == 0
-		新しく先頭にdailyDateをつくるのか、最初のdailyDateの先頭に挿入するのか判断しないといけない
-		if dailyList[1].Date != date
-			先頭にあたらしくdailyDateを追加して返す
-			return
-	*/
-
 	insertLineNum++ // lenと比較しやすくするため+1する
 	newNotes := []string{}
 	for index, dailyData := range dailyList {
@@ -230,6 +218,9 @@ func generateNewDailyData(dailyList []usecases.DailyData, newNoteName string, da
 				}
 			} else if insertLineNum <= len(dailyData.Notes) {
 				// このdailyDataのnoteの途中に挿入
+				if dailyData.Date != date {
+					return usecases.DailyData{}, errors.Errorf("dateと挿入位置に矛盾があります。date: %v, dailyData: %v", date, dailyData)
+				}
 				newNotes = append(newNotes, dailyData.Notes[:insertLineNum-1]...)
 				newNotes = append(newNotes, newNoteName)
 				newNotes = append(newNotes, dailyData.Notes[insertLineNum-1:]...)
@@ -239,46 +230,15 @@ func generateNewDailyData(dailyList []usecases.DailyData, newNoteName string, da
 				return usecases.DailyData{}, errors.New("想定外")
 			}
 		}
-		//if insertLineNum == 1 {
-		//	// このdailyDataの先頭noteに追加して返す
-		//	newNotes = append(newNotes, newNoteName)
-		//	newNotes = append(newNotes, dailyData.Notes...)
-		//	dailyData.Notes = newNotes
-		//	return dailyData, nil
-		//	//} else if insertLineNum > len(dailyData.Notes) {
-		//	//	// noteListの数よりinsert位置があとなので次のdailyDateを確認する
-		//	//	insertLineNum -= len(dailyData.Notes)
-		//	//	continue
-		//} else if insertLineNum == len(dailyData.Notes)+1 {
-		//	// このnoteの末尾or次のdailyDataのnoteの先頭が挿入位置なので、どちらなのか判断しないといけない。
-		//	if dailyData.Date == date {
-		//		// このdailyDataの末尾に挿入
-		//		dailyData.Notes = append(dailyData.Notes, newNoteName)
-		//		return dailyData, nil
-		//	} else {
-		//		insertLineNum -= len(dailyData.Notes)
-		//		continue
-		//	}
-		//}
-		/*
-			if insertLineNum + 1 == 1
-				このdailyDataの先頭noteに追加して返す
-			return
-			elseif insertLineNum + 1 > len(note)
-			noteListの数よりinsert位置があとなので次のdailyDateを確認する
-			insertLineNum -= len(note)
-			continue
-			else if insertlineNum + 1 == len(note)
-				このnoteの末尾or次のdailyDataのnoteの先頭が挿入位置なので、どちらなのか判断しないといけない。
-			if dailyDate.Date == date
-				この末尾に挿入
-			else
-			次のdailyDataのnoteの先頭に挿入
-			insertLineNum -= len(note)
-			continue
-		*/
 	}
-	return usecases.DailyData{}, errors.New("想定外エラー")
+	// どこにも挿入されずにここまで来たということは末尾に新dailyDateを追加するということなので新dailyDataを作って返す
+	newDailyData := usecases.DailyData{
+		Date: date,
+		Notes: []string{
+			newNoteName,
+		},
+	}
+	return newDailyData, nil
 }
 
 func (d *DailyListView) Reload() error {

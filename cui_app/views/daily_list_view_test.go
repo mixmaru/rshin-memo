@@ -234,7 +234,7 @@ func Test_generateNewDailyData(t *testing.T) {
 		assert.Equal(t, expected, result)
 
 		dailyList = createTestDailyList()
-		result, err = generateNewDailyData(dailyList, "newNote", "2021-03-28", 3)
+		result, err = generateNewDailyData(dailyList, "newNote", "2021-03-29", 3)
 		assert.NoError(t, err)
 		expected = usecases.DailyData{
 			Date: "2021-03-29",
@@ -275,129 +275,46 @@ func Test_generateNewDailyData(t *testing.T) {
 		assert.Equal(t, expected, result)
 	})
 
-	//t.Run("日付の先頭位置に別日の挿入", func(t *testing.T) {
-	//	dailyList = []usecases.DailyData{
-	//		{
-	//			Date: "2021-03-30",
-	//			Notes: []string{
-	//				"a",
-	//				"b",
-	//				"c",
-	//			},
-	//		},
-	//		{
-	//			Date: "2021-03-28",
-	//			Notes: []string{
-	//				"a",
-	//				"b",
-	//			},
-	//		},
-	//	}
-	//
-	//	result, err := generateNewDailyData(dailyList, "newNote", "2021-04-01", 0)
-	//	assert.NoError(t, err)
-	//	expected := []usecases.DailyData{
-	//		{
-	//			Date: "2021-04-01",
-	//			Notes: []string{
-	//				"newNote",
-	//			},
-	//		},
-	//		{
-	//			Date: "2021-03-30",
-	//			Notes: []string{
-	//				"a",
-	//				"b",
-	//				"c",
-	//			},
-	//		},
-	//		{
-	//			Date: "2021-03-28",
-	//			Notes: []string{
-	//				"a",
-	//				"b",
-	//			},
-	//		},
-	//	}
-	//	assert.Equal(t, expected, result)
-	//
-	//	result, err = generateNewDailyData(dailyList, "newNote", "2021-03-29", 3)
-	//	assert.NoError(t, err)
-	//	expected = []usecases.DailyData{
-	//		{
-	//			Date: "2021-03-30",
-	//			Notes: []string{
-	//				"a",
-	//				"b",
-	//				"c",
-	//			},
-	//		},
-	//		{
-	//			Date: "2021-03-29",
-	//			Notes: []string{
-	//				"newNote",
-	//			},
-	//		},
-	//		{
-	//			Date: "2021-03-28",
-	//			Notes: []string{
-	//				"a",
-	//				"b",
-	//			},
-	//		},
-	//	}
-	//	assert.Equal(t, expected, result)
-	//})
-	//
-	//t.Run("日付の末尾位置に別日の挿入", func(t *testing.T) {
-	//	dailyList = []usecases.DailyData{
-	//		{
-	//			Date: "2021-03-30",
-	//			Notes: []string{
-	//				"a",
-	//				"b",
-	//				"c",
-	//			},
-	//		},
-	//		{
-	//			Date: "2021-03-28",
-	//			Notes: []string{
-	//				"a",
-	//				"b",
-	//			},
-	//		},
-	//	}
-	//
-	//	result, err := generateNewDailyData(dailyList, "newNote", "2021-03-27", 5)
-	//	assert.NoError(t, err)
-	//	expected := []usecases.DailyData{
-	//		{
-	//			Date: "2021-03-30",
-	//			Notes: []string{
-	//				"a",
-	//				"b",
-	//				"c",
-	//			},
-	//		},
-	//		{
-	//			Date: "2021-03-28",
-	//			Notes: []string{
-	//				"a",
-	//				"b",
-	//			},
-	//		},
-	//		{
-	//			Date: "2021-03-27",
-	//			Notes: []string{
-	//				"newNote",
-	//			},
-	//		},
-	//	}
-	//	assert.Equal(t, expected, result)
-	//})
-	//
-	//t.Run("異なる日付の位置に挿入しようとするとエラー", func(t *testing.T) {
-	//	_, err := generateNewDailyData(dailyList, "newNote", "2021-01-27", 2)
-	//	assert.Error(t, err)
-	//})
+	t.Run("日付の先頭位置に別日の挿入", func(t *testing.T) {
+		dailyList := createTestDailyList()
+		result, err := generateNewDailyData(dailyList, "newNote", "2021-04-01", 0)
+		assert.NoError(t, err)
+		expected := usecases.DailyData{
+			Date: "2021-04-01",
+			Notes: []string{
+				"newNote",
+			},
+		}
+		assert.Equal(t, expected, result)
+
+		dailyList = createTestDailyList()
+		result, err = generateNewDailyData(dailyList, "newNote", "2021-03-28", 4)
+		assert.NoError(t, err)
+		expected = usecases.DailyData{
+			Date: "2021-03-28",
+			Notes: []string{
+				"newNote",
+			},
+		}
+		assert.Equal(t, expected, result)
+	})
+
+	t.Run("日付の末尾位置に別日の挿入", func(t *testing.T) {
+		dailyList := createTestDailyList()
+		result, err := generateNewDailyData(dailyList, "newNote", "2021-03-26", 6)
+		assert.NoError(t, err)
+		expected := usecases.DailyData{
+			Date: "2021-03-26",
+			Notes: []string{
+				"newNote",
+			},
+		}
+		assert.Equal(t, expected, result)
+	})
+
+	t.Run("異なる日付の位置に挿入しようとするとエラー", func(t *testing.T) {
+		dailyList := createTestDailyList()
+		_, err := generateNewDailyData(dailyList, "newNote", "2021-01-27", 1)
+		assert.Error(t, err)
+	})
 }
