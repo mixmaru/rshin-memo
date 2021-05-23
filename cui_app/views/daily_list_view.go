@@ -174,7 +174,7 @@ func generateNewDailyData(dailyList []usecases.DailyData, newNoteName string, da
 
 	if insertLineNum == 0 {
 		//新しく先頭にdailyDateをつくるのか、最初のdailyDateの先頭に挿入するのか判断しないといけない
-		if dailyList[1].Date != date {
+		if dailyList[0].Date != date {
 			// 新しいdailyDataを作成する
 			retDailyData := usecases.DailyData{
 				Date: date,
@@ -196,24 +196,50 @@ func generateNewDailyData(dailyList []usecases.DailyData, newNoteName string, da
 		if dailyList[1].Date != date
 			先頭にあたらしくdailyDateを追加して返す
 			return
+	*/
 
-	dailyListを回す
-		if insertLineNum + 1 == 1
-			このdailyDataの先頭noteに追加して返す
+	insertLineNum++ // lenと比較しやすくするため+1する
+	newNotes := []string{}
+	for _, dailyData := range dailyList {
+		if insertLineNum == 1 {
+			// このdailyDataの先頭noteに追加して返す
+			newNotes = append(newNotes, newNoteName)
+			newNotes = append(newNotes, dailyData.Notes...)
+			dailyData.Notes = newNotes
+			return dailyData, nil
+		} else if insertLineNum > len(dailyData.Notes) {
+			// noteListの数よりinsert位置があとなので次のdailyDateを確認する
+			insertLineNum -= len(dailyData.Notes)
+			continue
+		} else if insertLineNum == len(dailyData.Notes)+1 {
+			// このnoteの末尾or次のdailyDataのnoteの先頭が挿入位置なので、どちらなのか判断しないといけない。
+			if dailyData.Date == date {
+				// このdailyDataの末尾に挿入
+				dailyData.Notes = append(dailyData.Notes, newNoteName)
+				return dailyData, nil
+			} else {
+				insertLineNum -= len(dailyData.Notes)
+				continue
+			}
+		}
+		/*
+			if insertLineNum + 1 == 1
+				このdailyDataの先頭noteに追加して返す
 			return
-		elseif insertLineNum + 1 > len(note)
+			elseif insertLineNum + 1 > len(note)
 			noteListの数よりinsert位置があとなので次のdailyDateを確認する
 			insertLineNum -= len(note)
 			continue
-		else if insertlineNum + 1 == len(note)
-			このnoteの末尾or次のdailyDataのnoteの先頭が挿入位置なので、どちらなのか判断しないといけない。
+			else if insertlineNum + 1 == len(note)
+				このnoteの末尾or次のdailyDataのnoteの先頭が挿入位置なので、どちらなのか判断しないといけない。
 			if dailyDate.Date == date
 				この末尾に挿入
 			else
-				次のdailyDataのnoteの先頭に挿入
-				insertLineNum -= len(note)
-				continue
-	*/
+			次のdailyDataのnoteの先頭に挿入
+			insertLineNum -= len(note)
+			continue
+		*/
+	}
 	return usecases.DailyData{}, errors.New("想定外エラー")
 }
 
