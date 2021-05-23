@@ -12,7 +12,7 @@ func NewGetAllNotesUseCase(noteRepository repositories.NoteRepositoryInterface) 
 
 func (g *GetAllNotesUseCase) Handle() ([]string, error) {
 	// repositoryに問い合わせ
-	notes, err := g.noteRepository.GetAllNotes()
+	notes, err := g.noteRepository.GetAllNotesOnlyName()
 	if err != nil {
 		return nil, err
 	}

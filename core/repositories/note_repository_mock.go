@@ -29,7 +29,7 @@ func (n *NoteRepositoryMock) GetByNoteName(noteName string) (*entities.NoteEntit
 	}
 }
 
-func (n *NoteRepositoryMock) GetAllNotes() ([]*entities.NoteEntity, error) {
+func (n *NoteRepositoryMock) GetAllNotesOnlyName() ([]*entities.NoteEntity, error) {
 	retEntity := []*entities.NoteEntity{
 		entities.NewNoteEntity("NoteA", "内容A"),
 		entities.NewNoteEntity("NoteB", "内容B"),
