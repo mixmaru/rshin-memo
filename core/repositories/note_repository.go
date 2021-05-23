@@ -10,6 +10,7 @@ import (
 
 type NoteRepositoryInterface interface {
 	GetByNoteName(noteName string) (*entities.NoteEntity, error)
+	GetAllNotes() ([]*entities.NoteEntity, error)
 	Save(entity *entities.NoteEntity) error
 }
 

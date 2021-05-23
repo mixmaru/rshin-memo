@@ -25,6 +25,7 @@ type RshinMemo struct {
 	alreadyInitialized bool
 
 	getNoteUseCase       *usecases.GetNoteUseCase
+	getAllNoteUseCase    *usecases.GetAllNoteUseCase
 	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
 
 	addRowMode AddRowMode
@@ -210,8 +211,10 @@ func (r *RshinMemo) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) error 
 	if !result {
 		return nil
 	}
+
 	// noteSelectViewの表示
-	err = r.noteSelectView.Create()
+	allNotes, err := r.getAllNoteUseCase.Handle()
+	err = r.noteSelectView.Create(allNotes)
 	if err != nil {
 		return err
 	}
