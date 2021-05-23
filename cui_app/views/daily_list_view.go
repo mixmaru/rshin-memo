@@ -201,27 +201,57 @@ func generateNewDailyData(dailyList []usecases.DailyData, newNoteName string, da
 	insertLineNum++ // lenと比較しやすくするため+1する
 	newNotes := []string{}
 	for _, dailyData := range dailyList {
-		if insertLineNum == 1 {
-			// このdailyDataの先頭noteに追加して返す
-			newNotes = append(newNotes, newNoteName)
-			newNotes = append(newNotes, dailyData.Notes...)
-			dailyData.Notes = newNotes
-			return dailyData, nil
-		} else if insertLineNum > len(dailyData.Notes) {
+		if insertLineNum > len(dailyData.Notes) {
 			// noteListの数よりinsert位置があとなので次のdailyDateを確認する
 			insertLineNum -= len(dailyData.Notes)
 			continue
-		} else if insertLineNum == len(dailyData.Notes)+1 {
-			// このnoteの末尾or次のdailyDataのnoteの先頭が挿入位置なので、どちらなのか判断しないといけない。
-			if dailyData.Date == date {
-				// このdailyDataの末尾に挿入
-				dailyData.Notes = append(dailyData.Notes, newNoteName)
+		} else {
+			if insertLineNum == 1 {
+				// このdailyDataの先頭noteに追加して返す
+				newNotes = append(newNotes, newNoteName)
+				newNotes = append(newNotes, dailyData.Notes...)
+				dailyData.Notes = newNotes
 				return dailyData, nil
-			} else {
-				insertLineNum -= len(dailyData.Notes)
-				continue
+			} else if insertLineNum <= len(dailyData.Notes) {
+				// このdailyDataのnoteの途中に挿入
+				newNotes = append(newNotes, dailyData.Notes[:insertLineNum-1]...)
+				newNotes = append(newNotes, newNoteName)
+				newNotes = append(newNotes, dailyData.Notes[insertLineNum-1:]...)
+				dailyData.Notes = newNotes
+				return dailyData, nil
+			} else if insertLineNum == len(dailyData.Notes)+1 {
+				// このnoteの末尾or次のdailyDataのnoteの先頭が挿入位置なので、どちらなのか判断しないといけない。
+				if dailyData.Date == date {
+					// このdailyDataの末尾に挿入
+					dailyData.Notes = append(dailyData.Notes, newNoteName)
+					return dailyData, nil
+				} else {
+					insertLineNum -= len(dailyData.Notes)
+					continue
+				}
 			}
 		}
+		//if insertLineNum == 1 {
+		//	// このdailyDataの先頭noteに追加して返す
+		//	newNotes = append(newNotes, newNoteName)
+		//	newNotes = append(newNotes, dailyData.Notes...)
+		//	dailyData.Notes = newNotes
+		//	return dailyData, nil
+		//	//} else if insertLineNum > len(dailyData.Notes) {
+		//	//	// noteListの数よりinsert位置があとなので次のdailyDateを確認する
+		//	//	insertLineNum -= len(dailyData.Notes)
+		//	//	continue
+		//} else if insertLineNum == len(dailyData.Notes)+1 {
+		//	// このnoteの末尾or次のdailyDataのnoteの先頭が挿入位置なので、どちらなのか判断しないといけない。
+		//	if dailyData.Date == date {
+		//		// このdailyDataの末尾に挿入
+		//		dailyData.Notes = append(dailyData.Notes, newNoteName)
+		//		return dailyData, nil
+		//	} else {
+		//		insertLineNum -= len(dailyData.Notes)
+		//		continue
+		//	}
+		//}
 		/*
 			if insertLineNum + 1 == 1
 				このdailyDataの先頭noteに追加して返す
