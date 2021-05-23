@@ -200,18 +200,34 @@ func generateNewDailyData(dailyList []usecases.DailyData, newNoteName string, da
 
 	insertLineNum++ // lenと比較しやすくするため+1する
 	newNotes := []string{}
-	for _, dailyData := range dailyList {
+	for index, dailyData := range dailyList {
 		if insertLineNum > len(dailyData.Notes) {
 			// noteListの数よりinsert位置があとなので次のdailyDateを確認する
 			insertLineNum -= len(dailyData.Notes)
 			continue
 		} else {
 			if insertLineNum == 1 {
-				// このdailyDataの先頭noteに追加して返す
-				newNotes = append(newNotes, newNoteName)
-				newNotes = append(newNotes, dailyData.Notes...)
-				dailyData.Notes = newNotes
-				return dailyData, nil
+				// このdailyDataの先頭noteに追加すべきなのか、一つ前のdailyDataの末尾noteに追加すべきなのか判断しないといけない
+				if index > 0 && dailyList[index-1].Date == date {
+					// 一つ前の末尾に追加
+					dailyList[index-1].Notes = append(dailyList[index-1].Notes, newNoteName)
+					return dailyList[index-1], nil
+				} else if dailyData.Date == date {
+					// このdailyDataの先頭についか
+					newNotes = append(newNotes, newNoteName)
+					newNotes = append(newNotes, dailyData.Notes...)
+					dailyData.Notes = newNotes
+					return dailyData, nil
+				} else {
+					// 新しくdailyDataを作成する
+					newDailyData := usecases.DailyData{
+						Date: date,
+						Notes: []string{
+							newNoteName,
+						},
+					}
+					return newDailyData, nil
+				}
 			} else if insertLineNum <= len(dailyData.Notes) {
 				// このdailyDataのnoteの途中に挿入
 				newNotes = append(newNotes, dailyData.Notes[:insertLineNum-1]...)
@@ -219,16 +235,8 @@ func generateNewDailyData(dailyList []usecases.DailyData, newNoteName string, da
 				newNotes = append(newNotes, dailyData.Notes[insertLineNum-1:]...)
 				dailyData.Notes = newNotes
 				return dailyData, nil
-			} else if insertLineNum == len(dailyData.Notes)+1 {
-				// このnoteの末尾or次のdailyDataのnoteの先頭が挿入位置なので、どちらなのか判断しないといけない。
-				if dailyData.Date == date {
-					// このdailyDataの末尾に挿入
-					dailyData.Notes = append(dailyData.Notes, newNoteName)
-					return dailyData, nil
-				} else {
-					insertLineNum -= len(dailyData.Notes)
-					continue
-				}
+			} else {
+				return usecases.DailyData{}, errors.New("想定外")
 			}
 		}
 		//if insertLineNum == 1 {

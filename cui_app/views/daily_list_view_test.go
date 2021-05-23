@@ -150,7 +150,7 @@ func TestIsFirstOfDateList(t *testing.T) {
 	})
 }
 
-func Test_generateNewDailyData(t *testing.T) {
+func createTestDailyList() []usecases.DailyData {
 	dailyList := []usecases.DailyData{
 		{
 			Date: "2021-03-30",
@@ -174,8 +174,12 @@ func Test_generateNewDailyData(t *testing.T) {
 			},
 		},
 	}
+	return dailyList
+}
 
+func Test_generateNewDailyData(t *testing.T) {
 	t.Run("先頭に新規追加", func(t *testing.T) {
+		dailyList := createTestDailyList()
 		result, err := generateNewDailyData(dailyList, "newNote", "2021-04-01", 0)
 		assert.NoError(t, err)
 		expected := usecases.DailyData{
@@ -188,6 +192,7 @@ func Test_generateNewDailyData(t *testing.T) {
 	})
 
 	t.Run("日付の先頭位置への挿入", func(t *testing.T) {
+		dailyList := createTestDailyList()
 		result, err := generateNewDailyData(dailyList, "newNote", "2021-03-30", 0)
 		assert.NoError(t, err)
 		expected := usecases.DailyData{
@@ -200,7 +205,8 @@ func Test_generateNewDailyData(t *testing.T) {
 		}
 		assert.Equal(t, expected, result)
 
-		result, err = generateNewDailyData(dailyList, "newNote", "2021-03-28", 2)
+		dailyList = createTestDailyList()
+		result, err = generateNewDailyData(dailyList, "newNote", "2021-03-29", 2)
 		assert.NoError(t, err)
 		expected = usecases.DailyData{
 			Date: "2021-03-29",
@@ -214,6 +220,7 @@ func Test_generateNewDailyData(t *testing.T) {
 	})
 
 	t.Run("日付の中間位置への挿入", func(t *testing.T) {
+		dailyList := createTestDailyList()
 		result, err := generateNewDailyData(dailyList, "newNote", "2021-03-30", 1)
 		assert.NoError(t, err)
 		expected := usecases.DailyData{
@@ -226,6 +233,7 @@ func Test_generateNewDailyData(t *testing.T) {
 		}
 		assert.Equal(t, expected, result)
 
+		dailyList = createTestDailyList()
 		result, err = generateNewDailyData(dailyList, "newNote", "2021-03-28", 3)
 		assert.NoError(t, err)
 		expected = usecases.DailyData{
@@ -240,6 +248,7 @@ func Test_generateNewDailyData(t *testing.T) {
 	})
 
 	t.Run("日付の末尾位置への挿入", func(t *testing.T) {
+		dailyList := createTestDailyList()
 		result, err := generateNewDailyData(dailyList, "newNote", "2021-03-30", 2)
 		assert.NoError(t, err)
 		expected := usecases.DailyData{
@@ -252,6 +261,7 @@ func Test_generateNewDailyData(t *testing.T) {
 		}
 		assert.Equal(t, expected, result)
 
+		dailyList = createTestDailyList()
 		result, err = generateNewDailyData(dailyList, "newNote", "2021-03-29", 4)
 		assert.NoError(t, err)
 		expected = usecases.DailyData{
