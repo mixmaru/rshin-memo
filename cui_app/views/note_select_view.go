@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/pkg/errors"
 )
 
@@ -39,9 +40,9 @@ func (n *NoteSelectView) Create(notes []string) error {
 }
 
 func (n *NoteSelectView) setContents(notes []string) {
-	fmt.Fprintln(n.view, "新規追加")
+	fmt.Fprintln(n.view, utils.ConvertStringForView("新規追加"))
 	for _, note := range notes {
-		fmt.Fprintln(n.view, note)
+		fmt.Fprintln(n.view, utils.ConvertStringForView(note))
 	}
 }
 

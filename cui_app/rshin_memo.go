@@ -175,6 +175,20 @@ func (r *RshinMemo) setEventActions() error {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
 
+	// noteSelectView
+	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
+		return errors.Wrap(err, "KeyArrowDownキーバインド失敗")
+	}
+	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, 'j', gocui.ModNone, r.cursorDown); err != nil {
+		return errors.Wrap(err, "jキーバインド失敗")
+	}
+	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, gocui.KeyArrowUp, gocui.ModNone, r.cursorUp); err != nil {
+		return errors.Wrap(err, "KeyArrowUpキーバインド失敗")
+	}
+	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
+		return errors.Wrap(err, "kキーバイーンド失敗")
+	}
+
 	return nil
 }
 func (r *RshinMemo) displayDateInputViewForNext(g *gocui.Gui, v *gocui.View) error {
