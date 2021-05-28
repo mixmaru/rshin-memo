@@ -188,8 +188,8 @@ func (r *RshinMemo) setEventActions() error {
 	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
 		return errors.Wrap(err, "kキーバイーンド失敗")
 	}
-	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, gocui.KeyEnter, gocui.ModNone, r.insertExistNoteToDailyList); err != nil {
-		return errors.Wrap(err, "kキーバイーンド失敗")
+	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, gocui.KeyEnter, gocui.ModNone, r.insertNoteToDailyList); err != nil {
+		return errors.Wrap(err, "enterキーバイーンド失敗")
 	}
 
 	return nil
@@ -338,10 +338,26 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 	if err != nil {
 		return err
 	}
+	err = r.noteSelectView.Delete()
+	if err != nil {
+		return err
+	}
+	err = r.dateInputView.Delete()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (r *RshinMemo) insertExistNoteToDailyList(g *gocui.Gui, v *gocui.View) error {
+func (r *RshinMemo) insertNoteToDailyList(g *gocui.Gui, v *gocui.View) error {
+	if r.noteSelectView.IsSelectedNewNote() {
+		return r.addNote()
+	} else {
+		return r.insertExistedNoteToDailyList()
+	}
+}
+
+func (r *RshinMemo) insertExistedNoteToDailyList() error {
 	// noteNameを取得
 	noteName := r.noteSelectView.GetNoteNameOnCursor()
 	// 入力日を取得

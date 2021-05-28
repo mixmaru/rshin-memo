@@ -69,3 +69,12 @@ func (n *NoteSelectView) Delete() error {
 	}
 	return nil
 }
+
+func (n *NoteSelectView) IsSelectedNewNote() bool {
+	_, y := n.view.Cursor()
+	if y == 0 {
+		return true
+	} else {
+		return false
+	}
+}
