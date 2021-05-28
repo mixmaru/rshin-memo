@@ -61,3 +61,11 @@ func (n *NoteSelectView) GetNoteNameOnCursor() string {
 	noteName := n.notes[y-1]
 	return noteName
 }
+
+func (n *NoteSelectView) Delete() error {
+	err := n.gui.DeleteView(NOTE_SELECT_VIEW)
+	if err != nil {
+		return errors.Wrapf(err, "Viewの削除に失敗。%v", NOTE_NAME_INPUT_VIEW)
+	}
+	return nil
+}

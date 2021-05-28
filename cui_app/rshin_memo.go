@@ -359,6 +359,16 @@ func (r *RshinMemo) insertExistNoteToDailyList(g *gocui.Gui, v *gocui.View) erro
 		return err
 	}
 
+	// 不要なviewを閉じる
+	err = r.noteSelectView.Delete()
+	if err != nil {
+		return err
+	}
+	err = r.dateInputView.Delete()
+	if err != nil {
+		return err
+	}
+
 	// 追加されたNoteが表示されるようにDailyListをリフレッシュ
 	err = r.dailyListView.Reload()
 	if err != nil {
