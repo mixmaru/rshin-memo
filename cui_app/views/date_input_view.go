@@ -52,7 +52,7 @@ func (n *DateInputView) GetInputString() (string, error) {
 }
 
 func (n *DateInputView) Delete() error {
-	err := n.gui.DeleteView(NOTE_NAME_INPUT_VIEW)
+	err := n.gui.DeleteView(DATE_INPUT_VIEW)
 	if err != nil {
 		return errors.Wrapf(err, "Viewの削除に失敗。%v", NOTE_NAME_INPUT_VIEW)
 	}

@@ -10,8 +10,9 @@ import (
 const NOTE_SELECT_VIEW = "note_select"
 
 type NoteSelectView struct {
-	gui  *gocui.Gui
-	view *gocui.View
+	gui   *gocui.Gui
+	view  *gocui.View
+	notes []string
 }
 
 func NewNoteSelectView(gui *gocui.Gui) *NoteSelectView {
@@ -23,6 +24,7 @@ func NewNoteSelectView(gui *gocui.Gui) *NoteSelectView {
 
 // 新規作成
 func (n *NoteSelectView) Create(notes []string) error {
+	n.notes = notes
 	width, height := n.gui.Size()
 	v, err := createOrResizeView(n.gui, NOTE_SELECT_VIEW, width/2-25, 0, width/2+25, height-1)
 	if err != nil {
@@ -34,14 +36,14 @@ func (n *NoteSelectView) Create(notes []string) error {
 	n.view.SelBgColor = gocui.ColorGreen
 	n.view.SelFgColor = gocui.ColorBlack
 
-	n.setContents(notes)
+	n.setContents()
 
 	return nil
 }
 
-func (n *NoteSelectView) setContents(notes []string) {
+func (n *NoteSelectView) setContents() {
 	fmt.Fprintln(n.view, utils.ConvertStringForView("新規追加"))
-	for _, note := range notes {
+	for _, note := range n.notes {
 		fmt.Fprintln(n.view, utils.ConvertStringForView(note))
 	}
 }
@@ -52,4 +54,27 @@ func (n *NoteSelectView) Focus() error {
 		return errors.Wrap(err, "フォーカス移動失敗")
 	}
 	return nil
+}
+
+func (n *NoteSelectView) GetNoteNameOnCursor() string {
+	_, y := n.view.Cursor()
+	noteName := n.notes[y-1]
+	return noteName
+}
+
+func (n *NoteSelectView) Delete() error {
+	err := n.gui.DeleteView(NOTE_SELECT_VIEW)
+	if err != nil {
+		return errors.Wrapf(err, "Viewの削除に失敗。%v", NOTE_NAME_INPUT_VIEW)
+	}
+	return nil
+}
+
+func (n *NoteSelectView) IsSelectedNewNote() bool {
+	_, y := n.view.Cursor()
+	if y == 0 {
+		return true
+	} else {
+		return false
+	}
 }
