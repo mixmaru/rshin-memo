@@ -22,6 +22,7 @@ type RshinMemo struct {
 	noteNameInputView  *views.NoteNameInputView
 	dateInputView      *views.DateInputView
 	noteSelectView     *views.NoteSelectView
+	dateSelectView     *views.DateSelectView
 	alreadyInitialized bool
 
 	getNoteUseCase       *usecases.GetNoteUseCase
@@ -29,6 +30,8 @@ type RshinMemo struct {
 	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
 
 	addRowMode AddRowMode
+
+	selectedDate string
 }
 
 type AddRowMode int
@@ -62,6 +65,7 @@ func NewRshinMemo(
 	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
 	rshinMemo.dateInputView = views.NewDateInputView(rshinMemo.gui)
 	rshinMemo.noteSelectView = views.NewNoteSelectView(rshinMemo.gui)
+	rshinMemo.dateSelectView = views.NewDateSelectView(rshinMemo.gui)
 
 	rshinMemo.getNoteUseCase = usecases.NewGetNoteUseCase(noteRepository)
 	rshinMemo.getAllNotesUseCase = usecases.NewGetAllNotesUseCase(noteRepository)
@@ -192,18 +196,91 @@ func (r *RshinMemo) setEventActions() error {
 		return errors.Wrap(err, "enterキーバイーンド失敗")
 	}
 
+	// dateSelectView
+	if err := r.gui.SetKeybinding(views.DATE_SELECT_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
+		return errors.Wrap(err, "キーバインド失敗")
+	}
+	if err := r.gui.SetKeybinding(views.DATE_SELECT_VIEW, 'j', gocui.ModNone, r.cursorDown); err != nil {
+		return errors.Wrap(err, "キーバインド失敗")
+	}
+	if err := r.gui.SetKeybinding(views.DATE_SELECT_VIEW, gocui.KeyArrowUp, gocui.ModNone, r.cursorUp); err != nil {
+		return errors.Wrap(err, "キーバインド失敗")
+	}
+	if err := r.gui.SetKeybinding(views.DATE_SELECT_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
+	if err := r.gui.SetKeybinding(views.DATE_SELECT_VIEW, gocui.KeyEnter, gocui.ModNone, r.decisionDate); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
+
+	return nil
+}
+
+func (r *RshinMemo) decisionDate(g *gocui.Gui, v *gocui.View) error {
+	if r.dateSelectView.IsSelectedHandInput() {
+		// dateInputViewの表示
+		err := r.displayDateInputView()
+		if err != nil {
+			return err
+		}
+	} else {
+		r.selectedDate = r.dateSelectView.GetDateOnCursor()
+		// noteSelectViewの表示
+		allNotes, err := r.getAllNotesUseCase.Handle()
+		err = r.noteSelectView.Create(allNotes)
+		if err != nil {
+			return err
+		}
+		err = r.noteSelectView.Focus()
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (r *RshinMemo) displayDateInputViewForNext(g *gocui.Gui, v *gocui.View) error {
 	// inputViewを表示する
 	r.addRowMode = ADD_ROW_NEXT_MODE
-	return r.displayDateInputView()
+	return r.displayDateSelectView()
 }
 
 func (r *RshinMemo) displayDataInputViewForPrev(g *gocui.Gui, v *gocui.View) error {
 	r.addRowMode = ADD_ROW_PREV_MODE
-	return r.displayDateInputView()
+	return r.displayDateSelectView()
+}
+
+func (r *RshinMemo) displayDateSelectView() error {
+	var dateRange views.DateRange
+	var err error
+	switch r.addRowMode {
+	case ADD_ROW_PREV_MODE:
+		dateRange, err = r.dailyListView.GetInsertDateRangePrevCursor()
+		if err != nil {
+			return err
+		}
+	case ADD_ROW_NEXT_MODE:
+		dateRange, err = r.dailyListView.GetInsertDateRangeNextCursor()
+		if err != nil {
+			return err
+		}
+	default:
+		return errors.Errorf("考慮外の値が使われた。addRowMode: %v", r.addRowMode)
+	}
+
+	dates, err := dateRange.GetSomeDateInRange(30)
+	if err != nil {
+		return err
+	}
+	err = r.dateSelectView.Create(dates)
+	if err != nil {
+		return err
+	}
+	err = r.dateSelectView.Focus()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *RshinMemo) displayDateInputView() error {
@@ -231,6 +308,8 @@ func (r *RshinMemo) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) error 
 	if !result {
 		return nil
 	}
+
+	r.selectedDate = dateString
 
 	// noteSelectViewの表示
 	allNotes, err := r.getAllNotesUseCase.Handle()
@@ -296,10 +375,6 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 
 func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 	// 入力内容を取得
-	date, err := r.dateInputView.GetInputString()
-	if err != nil {
-		return err
-	}
 	noteName, err := r.noteNameInputView.GetInputNoteName()
 	if err != nil {
 		return err
@@ -313,7 +388,7 @@ func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
 		// すでに同名のNoteが存在する
 		// todo: エラーメッセージビューへメッセージを表示する
 	} else {
-		if err := r.createNewDailyList(noteName, date); err != nil {
+		if err := r.createNewDailyList(noteName, r.selectedDate); err != nil {
 			return err
 		}
 
@@ -361,16 +436,12 @@ func (r *RshinMemo) insertExistedNoteToDailyList() error {
 	// noteNameを取得
 	noteName := r.noteSelectView.GetNoteNameOnCursor()
 	// 入力日を取得
-	date, err := r.dateInputView.GetInputString()
-	if err != nil {
+
+	if err := r.createNewDailyList(noteName, r.selectedDate); err != nil {
 		return err
 	}
 
-	if err := r.createNewDailyList(noteName, date); err != nil {
-		return err
-	}
-
-	err = r.openVim(noteName)
+	err := r.openVim(noteName)
 	if err != nil {
 		return err
 	}
@@ -380,10 +451,10 @@ func (r *RshinMemo) insertExistedNoteToDailyList() error {
 	if err != nil {
 		return err
 	}
-	err = r.dateInputView.Delete()
-	if err != nil {
-		return err
-	}
+	//err = r.dateInputView.Delete()
+	//if err != nil {
+	//	return err
+	//}
 
 	// 追加されたNoteが表示されるようにDailyListをリフレッシュ
 	err = r.dailyListView.Reload()
