@@ -291,7 +291,8 @@ func TestDateRange_GetSomeDateInRange(t *testing.T) {
 		}
 
 		t.Run("指定numがRangeの範囲内ならnum個のDateが返ってくる", func(t *testing.T) {
-			result := d.GetSomeDateInRange(5)
+			result, err := d.GetSomeDateInRange(5)
+			assert.NoError(t, err)
 			expected := []time.Time{
 				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
 				time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
@@ -303,7 +304,8 @@ func TestDateRange_GetSomeDateInRange(t *testing.T) {
 		})
 
 		t.Run("指定numがRangeの範囲と同じならnum個のDateが返ってくる", func(t *testing.T) {
-			result := d.GetSomeDateInRange(7)
+			result, err := d.GetSomeDateInRange(7)
+			assert.NoError(t, err)
 			expected := []time.Time{
 				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
 				time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
@@ -317,7 +319,8 @@ func TestDateRange_GetSomeDateInRange(t *testing.T) {
 		})
 
 		t.Run("指定numがRangeの範囲外ならRangeの最大個のDateが返ってくる", func(t *testing.T) {
-			result := d.GetSomeDateInRange(10)
+			result, err := d.GetSomeDateInRange(10)
+			assert.NoError(t, err)
 			expected := []time.Time{
 				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
 				time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
@@ -332,10 +335,41 @@ func TestDateRange_GetSomeDateInRange(t *testing.T) {
 	})
 
 	t.Run("Fromだけが設定されているRange：", func(t *testing.T) {
+		d := &DateRange{
+			From: time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+		}
 
+		t.Run("Fromからの指定num個のDateが返ってくる", func(t *testing.T) {
+			result, err := d.GetSomeDateInRange(3)
+			assert.NoError(t, err)
+			expected := []time.Time{
+				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 3, 0, 0, 0, 0, time.Local),
+			}
+			assert.Equal(t, expected, result)
+		})
 	})
 
 	t.Run("Toだけが設定されているRange：", func(t *testing.T) {
+		d := &DateRange{
+			To: time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+		}
+		t.Run("Toまでの指定num個のDateが返ってくる", func(t *testing.T) {
+			result, err := d.GetSomeDateInRange(3)
+			assert.NoError(t, err)
+			expected := []time.Time{
+				time.Date(2020, 12, 30, 0, 0, 0, 0, time.Local),
+				time.Date(2020, 12, 31, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+			}
+			assert.Equal(t, expected, result)
+		})
 
+	})
+	t.Run("ToもFromも設定されていないRangeの場合errorが返る：", func(t *testing.T) {
+		d := &DateRange{}
+		_, err := d.GetSomeDateInRange(4)
+		assert.Error(t, err)
 	})
 }

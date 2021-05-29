@@ -310,16 +310,25 @@ type DateRange struct {
 }
 
 // 日付の範囲から最大指定個数の日をスライスで返す
-func (d *DateRange) GetSomeDateInRange(num int) []time.Time {
+func (d *DateRange) GetSomeDateInRange(num int) ([]time.Time, error) {
 	retDates := []time.Time{}
+	var startData time.Time
+	if !d.From.IsZero() {
+		startData = d.From
+	} else if !d.To.IsZero() {
+		startData = d.To.AddDate(0, 0, -(num - 1))
+	} else {
+		return nil, errors.Errorf("このDateRangeはFromもToも設定されていませんので実行できません。%+v", d)
+	}
+
 	for i := 0; i < num; i++ {
-		date := d.From.AddDate(0, 0, i)
+		date := startData.AddDate(0, 0, i)
 		if !d.To.IsZero() && date.After(d.To) {
 			break
 		}
 		retDates = append(retDates, date)
 	}
-	return retDates
+	return retDates, nil
 }
 
 func (d *DateRange) IsIn(targetDate time.Time) bool {
