@@ -282,3 +282,60 @@ func Test_generateNewDailyData(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestDateRange_GetSomeDateInRange(t *testing.T) {
+	t.Run("From, Toが設定されているRange：", func(t *testing.T) {
+		d := &DateRange{
+			From: time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+			To:   time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
+		}
+
+		t.Run("指定numがRangeの範囲内ならnum個のDateが返ってくる", func(t *testing.T) {
+			result := d.GetSomeDateInRange(5)
+			expected := []time.Time{
+				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 3, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 4, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+			}
+			assert.Equal(t, expected, result)
+		})
+
+		t.Run("指定numがRangeの範囲と同じならnum個のDateが返ってくる", func(t *testing.T) {
+			result := d.GetSomeDateInRange(7)
+			expected := []time.Time{
+				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 3, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 4, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
+			}
+			assert.Equal(t, expected, result)
+		})
+
+		t.Run("指定numがRangeの範囲外ならRangeの最大個のDateが返ってくる", func(t *testing.T) {
+			result := d.GetSomeDateInRange(10)
+			expected := []time.Time{
+				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 3, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 4, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
+			}
+			assert.Equal(t, expected, result)
+		})
+	})
+
+	t.Run("Fromだけが設定されているRange：", func(t *testing.T) {
+
+	})
+
+	t.Run("Toだけが設定されているRange：", func(t *testing.T) {
+
+	})
+}

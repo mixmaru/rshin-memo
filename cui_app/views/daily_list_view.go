@@ -309,6 +309,19 @@ type DateRange struct {
 	To   time.Time
 }
 
+// 日付の範囲から最大指定個数の日をスライスで返す
+func (d *DateRange) GetSomeDateInRange(num int) []time.Time {
+	retDates := []time.Time{}
+	for i := 0; i < num; i++ {
+		date := d.From.AddDate(0, 0, i)
+		if !d.To.IsZero() && date.After(d.To) {
+			break
+		}
+		retDates = append(retDates, date)
+	}
+	return retDates
+}
+
 func (d *DateRange) IsIn(targetDate time.Time) bool {
 	if !d.From.IsZero() {
 		if targetDate.Before(d.From) {
