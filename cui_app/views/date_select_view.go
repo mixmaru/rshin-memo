@@ -5,6 +5,7 @@ import (
 	"github.com/jroimartin/gocui"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/pkg/errors"
+	"sort"
 	"time"
 )
 
@@ -25,6 +26,9 @@ func NewDateSelectView(gui *gocui.Gui) *DateSelectView {
 
 // 新規作成
 func (n *DateSelectView) Create(dates []time.Time) error {
+	sort.Slice(dates, func(i, j int) bool {
+		return dates[i].After(dates[j])
+	})
 	n.dates = dates
 	width, height := n.gui.Size()
 	v, err := createOrResizeView(n.gui, DATE_SELECT_VIEW, width/2-25, 0, width/2+25, height-1)
@@ -43,7 +47,7 @@ func (n *DateSelectView) Create(dates []time.Time) error {
 }
 
 func (n *DateSelectView) setContents() {
-	fmt.Fprintln(n.view, utils.ConvertStringForView("その他の日"))
+	fmt.Fprintln(n.view, utils.ConvertStringForView("手入力する"))
 	for _, date := range n.dates {
 		fmt.Fprintln(n.view, utils.ConvertStringForView(date.Format("2006-01-02")))
 	}

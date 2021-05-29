@@ -22,6 +22,7 @@ type RshinMemo struct {
 	noteNameInputView  *views.NoteNameInputView
 	dateInputView      *views.DateInputView
 	noteSelectView     *views.NoteSelectView
+	dateSelectView     *views.DateSelectView
 	alreadyInitialized bool
 
 	getNoteUseCase       *usecases.GetNoteUseCase
@@ -62,6 +63,7 @@ func NewRshinMemo(
 	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
 	rshinMemo.dateInputView = views.NewDateInputView(rshinMemo.gui)
 	rshinMemo.noteSelectView = views.NewNoteSelectView(rshinMemo.gui)
+	rshinMemo.dateSelectView = views.NewDateSelectView(rshinMemo.gui)
 
 	rshinMemo.getNoteUseCase = usecases.NewGetNoteUseCase(noteRepository)
 	rshinMemo.getAllNotesUseCase = usecases.NewGetAllNotesUseCase(noteRepository)
@@ -198,12 +200,45 @@ func (r *RshinMemo) setEventActions() error {
 func (r *RshinMemo) displayDateInputViewForNext(g *gocui.Gui, v *gocui.View) error {
 	// inputViewを表示する
 	r.addRowMode = ADD_ROW_NEXT_MODE
-	return r.displayDateInputView()
+	return r.displayDateSelectView()
 }
 
 func (r *RshinMemo) displayDataInputViewForPrev(g *gocui.Gui, v *gocui.View) error {
 	r.addRowMode = ADD_ROW_PREV_MODE
-	return r.displayDateInputView()
+	return r.displayDateSelectView()
+}
+
+func (r *RshinMemo) displayDateSelectView() error {
+	var dateRange views.DateRange
+	var err error
+	switch r.addRowMode {
+	case ADD_ROW_PREV_MODE:
+		dateRange, err = r.dailyListView.GetInsertDateRangePrevCursor()
+		if err != nil {
+			return err
+		}
+	case ADD_ROW_NEXT_MODE:
+		dateRange, err = r.dailyListView.GetInsertDateRangeNextCursor()
+		if err != nil {
+			return err
+		}
+	default:
+		return errors.Errorf("考慮外の値が使われた。addRowMode: %v", r.addRowMode)
+	}
+
+	dates, err := dateRange.GetSomeDateInRange(30)
+	if err != nil {
+		return err
+	}
+	err = r.dateSelectView.Create(dates)
+	if err != nil {
+		return err
+	}
+	err = r.dateSelectView.Focus()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *RshinMemo) displayDateInputView() error {
