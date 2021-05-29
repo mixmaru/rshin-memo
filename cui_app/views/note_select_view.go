@@ -56,10 +56,14 @@ func (n *NoteSelectView) Focus() error {
 	return nil
 }
 
-func (n *NoteSelectView) GetNoteNameOnCursor() string {
+func (n *NoteSelectView) GetNoteNameOnCursor() (string, error) {
 	_, y := n.view.Cursor()
-	noteName := n.notes[y-1]
-	return noteName
+	noteName, err := n.view.Line(y)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return utils.ConvertStringForLogic(noteName), nil
 }
 
 func (n *NoteSelectView) Delete() error {

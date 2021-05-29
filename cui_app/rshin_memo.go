@@ -434,14 +434,16 @@ func (r *RshinMemo) insertNoteToDailyList(g *gocui.Gui, v *gocui.View) error {
 
 func (r *RshinMemo) insertExistedNoteToDailyList() error {
 	// noteNameを取得
-	noteName := r.noteSelectView.GetNoteNameOnCursor()
-	// 入力日を取得
+	noteName, err := r.noteSelectView.GetNoteNameOnCursor()
+	if err != nil {
+		return err
+	}
 
 	if err := r.createNewDailyList(noteName, r.selectedDate); err != nil {
 		return err
 	}
 
-	err := r.openVim(noteName)
+	err = r.openVim(noteName)
 	if err != nil {
 		return err
 	}
