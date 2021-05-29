@@ -74,7 +74,7 @@ func (n *DateSelectView) Delete() error {
 	return nil
 }
 
-func (n *DateSelectView) IsSelectedOtherDate() bool {
+func (n *DateSelectView) IsSelectedHandInput() bool {
 	_, y := n.view.Cursor()
 	if y == 0 {
 		return true
