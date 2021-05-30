@@ -2,20 +2,39 @@ package views
 
 import (
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/mixmaru/rshin-memo/cui_app/dto"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/pkg/errors"
+	"path/filepath"
 )
 
 const NOTE_NAME_INPUT_VIEW = "note_name_input"
 
 type NoteNameInputView struct {
-	gui  *gocui.Gui
-	view *gocui.View
+	gui          *gocui.Gui
+	view         *gocui.View
+	insertData   dto.InsertData
+	memoDirPath  string
+	WhenFinished func() error // call when finish
+
+	getNoteUseCase       *usecases.GetNoteUseCase
+	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
 }
 
-func NewNoteNameinputView(gui *gocui.Gui) *NoteNameInputView {
+func NewNoteNameinputView(
+	gui *gocui.Gui,
+	memoDirPath string,
+	insertData dto.InsertData,
+	getNoteUseCase *usecases.GetNoteUseCase,
+	saveDailyDataUseCase *usecases.SaveDailyDataUseCase,
+) *NoteNameInputView {
 	retObj := &NoteNameInputView{
-		gui: gui,
+		gui:                  gui,
+		insertData:           insertData,
+		memoDirPath:          memoDirPath,
+		getNoteUseCase:       getNoteUseCase,
+		saveDailyDataUseCase: saveDailyDataUseCase,
 	}
 	return retObj
 }
@@ -31,6 +50,11 @@ func (n *NoteNameInputView) Create() error {
 
 	n.view.Editable = true
 	n.view.Editor = &Editor{}
+
+	// inputNoteNameViewでのEnterキー
+	if err := n.gui.SetKeybinding(NOTE_NAME_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, n.createNote); err != nil {
+		return errors.WithStack(err)
+	}
 	return nil
 }
 
@@ -55,6 +79,46 @@ func (n *NoteNameInputView) Delete() error {
 	err := n.gui.DeleteView(NOTE_NAME_INPUT_VIEW)
 	if err != nil {
 		return errors.Wrapf(err, "Viewの削除に失敗。%v", NOTE_NAME_INPUT_VIEW)
+	}
+	return nil
+}
+
+func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
+	// 入力内容を取得
+	noteName, err := n.GetInputNoteName()
+	if err != nil {
+		return err
+	}
+	n.insertData.SetNoteName(noteName)
+
+	// 同名Noteが存在しないかcheck
+	_, notExist, err := n.getNoteUseCase.Handle(noteName)
+	if err != nil {
+		return err
+	} else if !notExist {
+		// すでに同名のNoteが存在する
+		// todo: エラーメッセージビューへメッセージを表示する
+	} else {
+		if err := n.createNewDailyList(n.insertData); err != nil {
+			return err
+		}
+
+		err = utils.OpenVim(filepath.Join(n.memoDirPath, noteName+".txt"))
+		if err != nil {
+			return err
+		}
+	}
+
+	return n.WhenFinished()
+}
+
+func (n *NoteNameInputView) createNewDailyList(insertData dto.InsertData) error {
+	dailyData := insertData.GenerateNewDailyData()
+	// Note作成を依頼
+	err := n.saveDailyDataUseCase.Handle(dailyData)
+	if err != nil {
+		// todo: エラーメッセージビューへメッセージを表示する
+		return err
 	}
 	return nil
 }

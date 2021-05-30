@@ -4,22 +4,22 @@ import (
 	"github.com/jroimartin/gocui"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/mixmaru/rshin-memo/cui_app/dto"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/mixmaru/rshin-memo/cui_app/views"
 	"github.com/pkg/errors"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 )
 
 type RshinMemo struct {
-	memoDirPath        string
-	gui                *gocui.Gui
-	dailyListView      *views.DailyListView
-	noteNameInputView  *views.NoteNameInputView
+	memoDirPath   string
+	gui           *gocui.Gui
+	dailyListView *views.DailyListView
+	//noteNameInputView  *views.NoteNameInputView
 	dateInputView      *views.DateInputView
 	noteSelectView     *views.NoteSelectView
 	dateSelectView     *views.DateSelectView
@@ -32,6 +32,7 @@ type RshinMemo struct {
 	addRowMode AddRowMode
 
 	selectedDate string
+	insertData   dto.InsertData
 }
 
 type AddRowMode int
@@ -62,7 +63,7 @@ func NewRshinMemo(
 	rshinMemo.memoDirPath = filepath.Join(homedir, "rshin_memo")
 	rshinMemo.alreadyInitialized = false
 	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, usecases.NewGetAllDailyListUsecase(dailyDataRepository))
-	rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
+	//rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
 	rshinMemo.dateInputView = views.NewDateInputView(rshinMemo.gui)
 	rshinMemo.noteSelectView = views.NewNoteSelectView(rshinMemo.gui)
 	rshinMemo.dateSelectView = views.NewDateSelectView(rshinMemo.gui)
@@ -173,11 +174,11 @@ func (r *RshinMemo) setEventActions() error {
 	if err := r.gui.SetKeybinding(views.DATE_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.displayNoteNameInputView); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
-
-	// inputNoteNameViewでのEnterキー
-	if err := r.gui.SetKeybinding(views.NOTE_NAME_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.createNote); err != nil {
-		return errors.Wrap(err, "Enterキーバインド失敗")
-	}
+	//
+	//// inputNoteNameViewでのEnterキー
+	//if err := r.gui.SetKeybinding(views.NOTE_NAME_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.createNote); err != nil {
+	//	return errors.Wrap(err, "Enterキーバインド失敗")
+	//}
 
 	// noteSelectView
 	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
@@ -327,12 +328,52 @@ func (r *RshinMemo) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) error 
 
 func (r *RshinMemo) addNote() error {
 	// note名入力viewの表示
-	err := r.noteNameInputView.Create()
+	// todo: fix
+	r.insertData = dto.InsertData{}
+	r.insertData.SetTargetDailyData(usecases.DailyData{
+		Date: "2021-02-10",
+		Notes: []string{
+			"note1",
+			"note2",
+			"note3",
+		},
+	})
+	r.insertData.SetNoteName("newNote")
+	err := r.insertData.SetInsertNum(1)
+	if err != nil {
+		return err
+	}
+	view := views.NewNoteNameinputView(r.gui, r.memoDirPath, r.insertData, r.getNoteUseCase, r.saveDailyDataUseCase)
+	view.WhenFinished = func() error {
+		err = r.dailyListView.Reload()
+		if err != nil {
+			return err
+		}
+		err = r.dailyListView.Focus()
+		if err != nil {
+			return err
+		}
+
+		err = view.Delete()
+		if err != nil {
+			return err
+		}
+		err = r.noteSelectView.Delete()
+		if err != nil {
+			return err
+		}
+		err = r.dateInputView.Delete()
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	err = view.Create()
 	if err != nil {
 		return err
 	}
 	// フォーカスの移動
-	err = r.noteNameInputView.Focus()
+	err = view.Focus()
 	if err != nil {
 		return errors.Wrap(err, "フォーカス移動失敗")
 	}
@@ -373,56 +414,57 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
-	// 入力内容を取得
-	noteName, err := r.noteNameInputView.GetInputNoteName()
-	if err != nil {
-		return err
-	}
-
-	// 同名Noteが存在しないかcheck
-	_, notExist, err := r.getNoteUseCase.Handle(noteName)
-	if err != nil {
-		return err
-	} else if !notExist {
-		// すでに同名のNoteが存在する
-		// todo: エラーメッセージビューへメッセージを表示する
-	} else {
-		if err := r.createNewDailyList(noteName, r.selectedDate); err != nil {
-			return err
-		}
-
-		err = r.openVim(noteName)
-		if err != nil {
-			return err
-		}
-
-		// 追加されたNoteが表示されるようにDailyListをリフレッシュ
-		err = r.dailyListView.Reload()
-		if err != nil {
-			return err
-		}
-	}
-
-	err = r.dailyListView.Focus()
-	if err != nil {
-		return err
-	}
-
-	err = r.noteNameInputView.Delete()
-	if err != nil {
-		return err
-	}
-	err = r.noteSelectView.Delete()
-	if err != nil {
-		return err
-	}
-	err = r.dateInputView.Delete()
-	if err != nil {
-		return err
-	}
-	return nil
-}
+//
+//func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
+//	// 入力内容を取得
+//	noteName, err := r.noteNameInputView.GetInputNoteName()
+//	if err != nil {
+//		return err
+//	}
+//
+//	// 同名Noteが存在しないかcheck
+//	_, notExist, err := r.getNoteUseCase.Handle(noteName)
+//	if err != nil {
+//		return err
+//	} else if !notExist {
+//		// すでに同名のNoteが存在する
+//		// todo: エラーメッセージビューへメッセージを表示する
+//	} else {
+//		if err := r.createNewDailyList(noteName, r.selectedDate); err != nil {
+//			return err
+//		}
+//
+//		err = r.openVim(noteName)
+//		if err != nil {
+//			return err
+//		}
+//
+//		// 追加されたNoteが表示されるようにDailyListをリフレッシュ
+//		err = r.dailyListView.Reload()
+//		if err != nil {
+//			return err
+//		}
+//	}
+//
+//	err = r.dailyListView.Focus()
+//	if err != nil {
+//		return err
+//	}
+//
+//	err = r.noteNameInputView.Delete()
+//	if err != nil {
+//		return err
+//	}
+//	err = r.noteSelectView.Delete()
+//	if err != nil {
+//		return err
+//	}
+//	err = r.dateInputView.Delete()
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}
 
 func (r *RshinMemo) insertNoteToDailyList(g *gocui.Gui, v *gocui.View) error {
 	if r.noteSelectView.IsSelectedNewNote() {
@@ -528,15 +570,16 @@ func (r *RshinMemo) valid(dateString string) (bool, error) {
 
 // vimで対象noteを開く
 func (r *RshinMemo) openVim(noteName string) error {
-	c := exec.Command("vim", filepath.Join(r.memoDirPath, noteName+".txt"))
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	err := c.Run()
-	if err != nil {
-		return errors.Wrap(err, "vim起動エラー")
-	}
-	return nil
+	return utils.OpenVim(filepath.Join(r.memoDirPath, noteName+".txt"))
+	//c := exec.Command("vim", filepath.Join(r.memoDirPath, noteName+".txt"))
+	//c.Stdin = os.Stdin
+	//c.Stdout = os.Stdout
+	//c.Stderr = os.Stderr
+	//err := c.Run()
+	//if err != nil {
+	//	return errors.Wrap(err, "vim起動エラー")
+	//}
+	//return nil
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
