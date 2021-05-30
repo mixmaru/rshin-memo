@@ -11,12 +11,17 @@ import (
 
 const NOTE_NAME_INPUT_VIEW = "note_name_input"
 
+type Deletable interface {
+	Delete() error
+}
+
 type NoteNameInputView struct {
-	gui          *gocui.Gui
-	view         *gocui.View
-	insertData   dto.InsertData
-	memoDirPath  string
-	WhenFinished func() error // call when finish
+	gui                      *gocui.Gui
+	view                     *gocui.View
+	insertData               dto.InsertData
+	memoDirPath              string
+	WhenFinished             func() error // call when finish
+	ViewsToCloseWhenFinished []Deletable
 
 	getNoteUseCase       *usecases.GetNoteUseCase
 	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
@@ -109,7 +114,17 @@ func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
 		}
 	}
 
-	return n.WhenFinished()
+	err = n.WhenFinished()
+	if err != nil {
+		return err
+	}
+	for _, view := range n.ViewsToCloseWhenFinished {
+		err := view.Delete()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (n *NoteNameInputView) createNewDailyList(insertData dto.InsertData) error {

@@ -353,21 +353,11 @@ func (r *RshinMemo) addNote() error {
 		if err != nil {
 			return err
 		}
-
-		err = view.Delete()
-		if err != nil {
-			return err
-		}
-		err = r.noteSelectView.Delete()
-		if err != nil {
-			return err
-		}
-		err = r.dateInputView.Delete()
-		if err != nil {
-			return err
-		}
 		return nil
 	}
+	view.ViewsToCloseWhenFinished = append(view.ViewsToCloseWhenFinished, view)
+	view.ViewsToCloseWhenFinished = append(view.ViewsToCloseWhenFinished, r.noteSelectView)
+	view.ViewsToCloseWhenFinished = append(view.ViewsToCloseWhenFinished, r.dateInputView)
 	err = view.Create()
 	if err != nil {
 		return err
