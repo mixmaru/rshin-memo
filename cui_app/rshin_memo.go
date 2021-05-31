@@ -16,10 +16,9 @@ import (
 )
 
 type RshinMemo struct {
-	memoDirPath   string
-	gui           *gocui.Gui
-	dailyListView *views.DailyListView
-	//noteNameInputView  *views.NoteNameInputView
+	memoDirPath        string
+	gui                *gocui.Gui
+	dailyListView      *views.DailyListView
 	dateInputView      *views.DateInputView
 	noteSelectView     *views.NoteSelectView
 	dateSelectView     *views.DateSelectView
@@ -63,7 +62,6 @@ func NewRshinMemo(
 	rshinMemo.memoDirPath = filepath.Join(homedir, "rshin_memo")
 	rshinMemo.alreadyInitialized = false
 	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui, usecases.NewGetAllDailyListUsecase(dailyDataRepository))
-	//rshinMemo.noteNameInputView = views.NewNoteNameinputView(rshinMemo.gui)
 	rshinMemo.dateInputView = views.NewDateInputView(rshinMemo.gui)
 	rshinMemo.noteSelectView = views.NewNoteSelectView(rshinMemo.gui)
 	rshinMemo.dateSelectView = views.NewDateSelectView(rshinMemo.gui)
@@ -145,56 +143,49 @@ func (r *RshinMemo) setEventActions() error {
 
 	// daily_listのカーソル移動
 	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
-		return errors.Wrap(err, "KeyArrowDownキーバインド失敗")
+		return errors.Wrap(err, "キーバインド失敗")
 	}
 	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'j', gocui.ModNone, r.cursorDown); err != nil {
-		return errors.Wrap(err, "jキーバインド失敗")
+		return errors.Wrap(err, "キーバインド失敗")
 	}
 	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, gocui.KeyArrowUp, gocui.ModNone, r.cursorUp); err != nil {
-		return errors.Wrap(err, "KeyArrowUpキーバインド失敗")
+		return errors.Wrap(err, "キーバインド失敗")
 	}
 	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
-		return errors.Wrap(err, "kキーバイーンド失敗")
+		return errors.Wrap(err, "キーバイーンド失敗")
 	}
-
 	// daily_listでのエンターキー
 	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, gocui.KeyEnter, gocui.ModNone, r.openNote); err != nil {
-		return errors.Wrap(err, "Enterキーバインド失敗")
+		return errors.Wrap(err, "キーバインド失敗")
 	}
-
 	// daily_listでカーソルの下行に新規list追加
 	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'o', gocui.ModNone, r.displayDateInputViewForNext); err != nil {
-		return errors.Wrap(err, "oキーバインド失敗")
+		return errors.Wrap(err, "キーバインド失敗")
 	}
 	// daily_listでカーソルの上行に新規list追加
 	if err := r.gui.SetKeybinding(views.DAILY_LIST_VIEW, 'O', gocui.ModNone, r.displayDataInputViewForPrev); err != nil {
-		return errors.Wrap(err, "Oキーバインド失敗")
+		return errors.Wrap(err, "キーバインド失敗")
 	}
 	// DateInputViewでのEnterキー
 	if err := r.gui.SetKeybinding(views.DATE_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.displayNoteNameInputView); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
-	//
-	//// inputNoteNameViewでのEnterキー
-	//if err := r.gui.SetKeybinding(views.NOTE_NAME_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, r.createNote); err != nil {
-	//	return errors.Wrap(err, "Enterキーバインド失敗")
-	//}
 
 	// noteSelectView
 	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, gocui.KeyArrowDown, gocui.ModNone, r.cursorDown); err != nil {
-		return errors.Wrap(err, "KeyArrowDownキーバインド失敗")
+		return errors.Wrap(err, "キーバインド失敗")
 	}
 	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, 'j', gocui.ModNone, r.cursorDown); err != nil {
-		return errors.Wrap(err, "jキーバインド失敗")
+		return errors.Wrap(err, "キーバインド失敗")
 	}
 	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, gocui.KeyArrowUp, gocui.ModNone, r.cursorUp); err != nil {
-		return errors.Wrap(err, "KeyArrowUpキーバインド失敗")
+		return errors.Wrap(err, "キーバインド失敗")
 	}
 	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, 'k', gocui.ModNone, r.cursorUp); err != nil {
-		return errors.Wrap(err, "kキーバイーンド失敗")
+		return errors.Wrap(err, "キーバイーンド失敗")
 	}
 	if err := r.gui.SetKeybinding(views.NOTE_SELECT_VIEW, gocui.KeyEnter, gocui.ModNone, r.insertNoteToDailyList); err != nil {
-		return errors.Wrap(err, "enterキーバイーンド失敗")
+		return errors.Wrap(err, "キーバイーンド失敗")
 	}
 
 	// dateSelectView
@@ -327,25 +318,9 @@ func (r *RshinMemo) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) error 
 }
 
 func (r *RshinMemo) addNote() error {
-	// note名入力viewの表示
-	// todo: fix
-	r.insertData = dto.InsertData{}
-	r.insertData.SetTargetDailyData(usecases.DailyData{
-		Date: "2021-02-10",
-		Notes: []string{
-			"note1",
-			"note2",
-			"note3",
-		},
-	})
-	r.insertData.SetNoteName("newNote")
-	err := r.insertData.SetInsertNum(1)
-	if err != nil {
-		return err
-	}
 	view := views.NewNoteNameinputView(r.gui, r.memoDirPath, r.insertData, r.getNoteUseCase, r.saveDailyDataUseCase)
 	view.WhenFinished = func() error {
-		err = r.dailyListView.Reload()
+		err := r.dailyListView.Reload()
 		if err != nil {
 			return err
 		}
@@ -358,7 +333,7 @@ func (r *RshinMemo) addNote() error {
 	view.ViewsToCloseWhenFinished = append(view.ViewsToCloseWhenFinished, view)
 	view.ViewsToCloseWhenFinished = append(view.ViewsToCloseWhenFinished, r.noteSelectView)
 	view.ViewsToCloseWhenFinished = append(view.ViewsToCloseWhenFinished, r.dateInputView)
-	err = view.Create()
+	err := view.Create()
 	if err != nil {
 		return err
 	}
@@ -470,8 +445,9 @@ func (r *RshinMemo) insertExistedNoteToDailyList() error {
 	if err != nil {
 		return err
 	}
+	r.insertData.SetNoteName(noteName)
 
-	if err := r.createNewDailyList(noteName, r.selectedDate); err != nil {
+	if err := r.createNewDailyList(); err != nil {
 		return err
 	}
 
@@ -503,22 +479,23 @@ func (r *RshinMemo) insertExistedNoteToDailyList() error {
 	return nil
 }
 
-func (r *RshinMemo) createNewDailyList(noteName string, date string) error {
-	var dailyData usecases.DailyData
-	var err error
-	if r.addRowMode == ADD_ROW_PREV_MODE {
-		dailyData, err = r.dailyListView.GenerateNewDailyDataToPrevCursor(noteName, date)
-		if err != nil {
-			return err
-		}
-	} else {
-		dailyData, err = r.dailyListView.GenerateNewDailyDataToNextCursor(noteName, date)
-		if err != nil {
-			return err
-		}
-	}
+func (r *RshinMemo) createNewDailyList() error {
+	//var dailyData usecases.DailyData
+	//var err error
+	//if r.addRowMode == ADD_ROW_PREV_MODE {
+	//	dailyData, err = r.dailyListView.GenerateNewDailyDataToPrevCursor(noteName, date)
+	//	if err != nil {
+	//		return err
+	//	}
+	//} else {
+	//	dailyData, err = r.dailyListView.GenerateNewDailyDataToNextCursor(noteName, date)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
 	// Note作成を依頼
-	err = r.saveDailyDataUseCase.Handle(dailyData)
+	dailyData := r.insertData.GenerateNewDailyData()
+	err := r.saveDailyDataUseCase.Handle(dailyData)
 	if err != nil {
 		// todo: エラーメッセージビューへメッセージを表示する
 		return err

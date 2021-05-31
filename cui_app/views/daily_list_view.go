@@ -289,6 +289,15 @@ func (d *DailyListView) GetInsertDateRangePrevCursor() (DateRange, error) {
 	return retDateRange, nil
 }
 
+func (d *DailyListView) GetDailyDataByDate(dateStr string) usecases.DailyData {
+	for _, dailyData := range d.dailyList {
+		if dailyData.Date == dateStr {
+			return dailyData
+		}
+	}
+	return usecases.DailyData{}
+}
+
 // numは0始まりでカウント
 func IsEndOfDateList(num int, dailyList []usecases.DailyData) bool {
 	num++ // 比較簡略化のため1追加しておく
@@ -353,6 +362,7 @@ func (d *DateRange) SetFromByString(dateStr string) error {
 	}
 	return err
 }
+
 func (d *DateRange) SetToByString(dateStr string) error {
 	var err error
 	d.To, err = time.Parse("2006-01-02", dateStr)
