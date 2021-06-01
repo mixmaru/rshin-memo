@@ -110,111 +110,27 @@ func getDateString(text string) string {
 	return strings.Split(text, "\t")[0]
 }
 
-func (d *DailyListView) GenerateNewDailyDataToNextCursor(newNoteName string, date string) (usecases.DailyData, error) {
-	return d.generateNewDailyData(newNoteName, date, next_cursor)
-}
-
-func (d *DailyListView) GenerateNewDailyDataToPrevCursor(newNoteName string, date string) (usecases.DailyData, error) {
-	return d.generateNewDailyData(newNoteName, date, prev_cursor)
-}
+//func (d *DailyListView) GenerateNewDailyDataToNextCursor(newNoteName string, date string) (usecases.DailyData, error) {
+//	return d.generateNewDailyData(newNoteName, date, next_cursor)
+//}
+//
+//func (d *DailyListView) GenerateNewDailyDataToPrevCursor(newNoteName string, date string) (usecases.DailyData, error) {
+//	return d.generateNewDailyData(newNoteName, date, prev_cursor)
+//}
 
 const (
 	prev_cursor = iota
 	next_cursor
 )
 
-func (d *DailyListView) generateNewDailyData(newNoteName string, date string, insertPlace int) (usecases.DailyData, error) {
-	// カーソル位置を取得
-	_, insertLineNum := d.view.Cursor()
-	if insertPlace == next_cursor {
-		insertLineNum++
-	}
-	return generateNewDailyData(d.dailyList, newNoteName, date, insertLineNum)
-}
-
-/*
-dailyListとdate文字列と新Note名と挿入希望位置を渡すとdailyDataを生成して返す
-*/
-func generateNewDailyData(dailyList []usecases.DailyData, newNoteName string, date string, insertLineNum int) (usecases.DailyData, error) {
-	if len(dailyList) == 0 {
-		// 新しいdailyDataを作成する
-		retDailyData := usecases.DailyData{
-			Date: date,
-			Notes: []string{
-				newNoteName,
-			},
-		}
-		return retDailyData, nil
-	}
-
-	if insertLineNum == 0 {
-		//新しく先頭にdailyDateをつくるのか、最初のdailyDateの先頭に挿入するのか判断しないといけない
-		if dailyList[0].Date != date {
-			// 新しいdailyDataを作成する
-			retDailyData := usecases.DailyData{
-				Date: date,
-				Notes: []string{
-					newNoteName,
-				},
-			}
-			return retDailyData, nil
-		}
-	}
-
-	insertLineNum++ // lenと比較しやすくするため+1する
-	newNotes := []string{}
-	for index, dailyData := range dailyList {
-		if insertLineNum > len(dailyData.Notes) {
-			// noteListの数よりinsert位置があとなので次のdailyDateを確認する
-			insertLineNum -= len(dailyData.Notes)
-			continue
-		} else {
-			if insertLineNum == 1 {
-				// このdailyDataの先頭noteに追加すべきなのか、一つ前のdailyDataの末尾noteに追加すべきなのか判断しないといけない
-				if index > 0 && dailyList[index-1].Date == date {
-					// 一つ前の末尾に追加
-					dailyList[index-1].Notes = append(dailyList[index-1].Notes, newNoteName)
-					return dailyList[index-1], nil
-				} else if dailyData.Date == date {
-					// このdailyDataの先頭についか
-					newNotes = append(newNotes, newNoteName)
-					newNotes = append(newNotes, dailyData.Notes...)
-					dailyData.Notes = newNotes
-					return dailyData, nil
-				} else {
-					// 新しくdailyDataを作成する
-					newDailyData := usecases.DailyData{
-						Date: date,
-						Notes: []string{
-							newNoteName,
-						},
-					}
-					return newDailyData, nil
-				}
-			} else if insertLineNum <= len(dailyData.Notes) {
-				// このdailyDataのnoteの途中に挿入
-				if dailyData.Date != date {
-					return usecases.DailyData{}, errors.Errorf("dateと挿入位置に矛盾があります。date: %v, dailyData: %v", date, dailyData)
-				}
-				newNotes = append(newNotes, dailyData.Notes[:insertLineNum-1]...)
-				newNotes = append(newNotes, newNoteName)
-				newNotes = append(newNotes, dailyData.Notes[insertLineNum-1:]...)
-				dailyData.Notes = newNotes
-				return dailyData, nil
-			} else {
-				return usecases.DailyData{}, errors.New("想定外")
-			}
-		}
-	}
-	// どこにも挿入されずにここまで来たということは末尾に新dailyDateを追加するということなので新dailyDataを作って返す
-	newDailyData := usecases.DailyData{
-		Date: date,
-		Notes: []string{
-			newNoteName,
-		},
-	}
-	return newDailyData, nil
-}
+//func (d *DailyListView) generateNewDailyData(newNoteName string, date string, insertPlace int) (usecases.DailyData, error) {
+//	// カーソル位置を取得
+//	_, insertLineNum := d.view.Cursor()
+//	if insertPlace == next_cursor {
+//		insertLineNum++
+//	}
+//	return generateNewDailyData(d.dailyList, newNoteName, date, insertLineNum)
+//}
 
 func (d *DailyListView) Reload() error {
 	d.view.Clear()
@@ -297,6 +213,43 @@ func (d *DailyListView) GetDailyDataByDate(dateStr string) usecases.DailyData {
 	}
 	return usecases.DailyData{}
 }
+
+func (d *DailyListView) OnCursorRowPosition() (int, error) {
+	_, y := d.view.Cursor()
+	selectedNoteName, err := d.view.Line(y)
+	if err != nil {
+		return 0, err
+	}
+	selectedNoteName = utils.ConvertStringForLogic(selectedNoteName)
+	for i, dailyData := range d.dailyList {
+		for n, noteName := range dailyData.Notes {
+			if noteName == selectedNoteName {
+				return i + n, nil
+			}
+		}
+	}
+	return 0, errors.New("カーソル上のNoteNameが見当たらない")
+}
+
+func (d *DailyListView) GetDailyList() []usecases.DailyData {
+	return d.dailyList
+}
+
+//func (d *DailyListView) GetTargetDailyData() (usecases.DailyData, error) {
+//	// カーソル位置から対象のdailyDataを取得する
+//	_, y := d.view.Cursor()
+//	targetDataStr, err := d.view.Line(y)
+//	if err != nil {
+//		return usecases.DailyData{}, err
+//	}
+//	targetDataStr = utils.ConvertStringForLogic(targetDataStr)
+//	for _, dailyData := range d.dailyList {
+//		if dailyData.Date == targetDataStr {
+//			return dailyData, nil
+//		}
+//	}
+//	return usecases.DailyData{}, errors.New("想定外エラー")
+//}
 
 // numは0始まりでカウント
 func IsEndOfDateList(num int, dailyList []usecases.DailyData) bool {
