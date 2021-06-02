@@ -390,58 +390,6 @@ func (r *RshinMemo) openNote(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-//
-//func (r *RshinMemo) createNote(gui *gocui.Gui, view *gocui.View) error {
-//	// 入力内容を取得
-//	noteName, err := r.noteNameInputView.GetInputNoteName()
-//	if err != nil {
-//		return err
-//	}
-//
-//	// 同名Noteが存在しないかcheck
-//	_, notExist, err := r.getNoteUseCase.Handle(noteName)
-//	if err != nil {
-//		return err
-//	} else if !notExist {
-//		// すでに同名のNoteが存在する
-//		// todo: エラーメッセージビューへメッセージを表示する
-//	} else {
-//		if err := r.createNewDailyList(noteName, r.selectedDate); err != nil {
-//			return err
-//		}
-//
-//		err = r.openVim(noteName)
-//		if err != nil {
-//			return err
-//		}
-//
-//		// 追加されたNoteが表示されるようにDailyListをリフレッシュ
-//		err = r.dailyListView.Reload()
-//		if err != nil {
-//			return err
-//		}
-//	}
-//
-//	err = r.dailyListView.Focus()
-//	if err != nil {
-//		return err
-//	}
-//
-//	err = r.noteNameInputView.Delete()
-//	if err != nil {
-//		return err
-//	}
-//	err = r.noteSelectView.Delete()
-//	if err != nil {
-//		return err
-//	}
-//	err = r.dateInputView.Delete()
-//	if err != nil {
-//		return err
-//	}
-//	return nil
-//}
-
 func (r *RshinMemo) insertNoteToDailyList(g *gocui.Gui, v *gocui.View) error {
 	if r.noteSelectView.IsSelectedNewNote() {
 		return r.addNote()
@@ -491,19 +439,6 @@ func (r *RshinMemo) insertExistedNoteToDailyList() error {
 }
 
 func (r *RshinMemo) createNewDailyList() error {
-	//var dailyData usecases.DailyData
-	//var err error
-	//if r.addRowMode == ADD_ROW_PREV_MODE {
-	//	dailyData, err = r.dailyListView.GenerateNewDailyDataToPrevCursor(noteName, date)
-	//	if err != nil {
-	//		return err
-	//	}
-	//} else {
-	//	dailyData, err = r.dailyListView.GenerateNewDailyDataToNextCursor(noteName, date)
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
 	// Note作成を依頼
 	dailyData, err := r.insertData.GenerateNewDailyData()
 	if err != nil {
@@ -552,15 +487,6 @@ func (r *RshinMemo) valid(dateString string) (bool, error) {
 // vimで対象noteを開く
 func (r *RshinMemo) openVim(noteName string) error {
 	return utils.OpenVim(filepath.Join(r.memoDirPath, noteName+".txt"))
-	//c := exec.Command("vim", filepath.Join(r.memoDirPath, noteName+".txt"))
-	//c.Stdin = os.Stdin
-	//c.Stdout = os.Stdout
-	//c.Stderr = os.Stderr
-	//err := c.Run()
-	//if err != nil {
-	//	return errors.Wrap(err, "vim起動エラー")
-	//}
-	//return nil
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
