@@ -32,6 +32,7 @@ type RshinMemo struct {
 
 	selectedDate string
 	insertData   dto.InsertData
+	openViews    []views.Deletable
 }
 
 type AddRowMode int
@@ -227,6 +228,7 @@ func (r *RshinMemo) decisionDate(g *gocui.Gui, v *gocui.View) error {
 		if err != nil {
 			return err
 		}
+		r.openViews = append(r.openViews, r.noteSelectView)
 		err = r.noteSelectView.Focus()
 		if err != nil {
 			return err
@@ -282,6 +284,7 @@ func (r *RshinMemo) displayDateSelectView() error {
 		return err
 	}
 	err = r.dateSelectView.Create(dates)
+	r.openViews = append(r.openViews, r.dateSelectView)
 	if err != nil {
 		return err
 	}
@@ -295,6 +298,7 @@ func (r *RshinMemo) displayDateSelectView() error {
 func (r *RshinMemo) displayDateInputView() error {
 	// note名入力viewの表示
 	err := r.dateInputView.Create()
+	r.openViews = append(r.openViews, r.dateInputView)
 	if err != nil {
 		return err
 	}
@@ -321,6 +325,7 @@ func (r *RshinMemo) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) error 
 	// noteSelectViewの表示
 	allNotes, err := r.getAllNotesUseCase.Handle()
 	err = r.noteSelectView.Create(allNotes)
+	r.openViews = append(r.openViews, r.noteSelectView)
 	if err != nil {
 		return err
 	}
@@ -333,7 +338,7 @@ func (r *RshinMemo) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) error 
 }
 
 func (r *RshinMemo) addNote() error {
-	view := views.NewNoteNameinputView(r.gui, r.memoDirPath, r.insertData, r.getNoteUseCase, r.saveDailyDataUseCase)
+	view := views.NewNoteNameInputView(r.gui, r.memoDirPath, r.insertData, r.getNoteUseCase, r.saveDailyDataUseCase)
 	view.WhenFinished = func() error {
 		err := r.dailyListView.Reload()
 		if err != nil {
@@ -345,9 +350,7 @@ func (r *RshinMemo) addNote() error {
 		}
 		return nil
 	}
-	view.ViewsToCloseWhenFinished = append(view.ViewsToCloseWhenFinished, view)
-	view.ViewsToCloseWhenFinished = append(view.ViewsToCloseWhenFinished, r.noteSelectView)
-	view.ViewsToCloseWhenFinished = append(view.ViewsToCloseWhenFinished, r.dateInputView)
+	view.ViewsToCloseWhenFinished = append(view.ViewsToCloseWhenFinished, r.openViews...)
 	err := view.Create()
 	if err != nil {
 		return err
@@ -408,6 +411,7 @@ func (r *RshinMemo) insertExistedNoteToDailyList() error {
 	if err != nil {
 		return err
 	}
+	r.openViews = append(r.openViews, r.noteSelectView)
 	r.insertData.NoteName = noteName
 
 	if err := r.createNewDailyList(); err != nil {
