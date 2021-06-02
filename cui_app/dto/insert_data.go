@@ -13,20 +13,6 @@ type InsertData struct {
 }
 
 func (i *InsertData) GenerateNewDailyData() (usecases.DailyData, error) {
-	//var retDailyData usecases.DailyData
-	//retDailyData.Date = i.targetDailyData.Date
-	//for index, noteName := range i.targetDailyData.Notes {
-	//	if index == i.InsertNum() {
-	//		retDailyData.Notes = append(retDailyData.Notes, i.NoteName())
-	//	}
-	//	retDailyData.Notes = append(retDailyData.Notes, noteName)
-	//}
-	//if i.insertNum == len(i.targetDailyData.Notes) {
-	//	// 末への追加
-	//	retDailyData.Notes = append(retDailyData.Notes, i.NoteName())
-	//}
-	//return retDailyData
-	//return usecases.DailyData{}
 	retDailyData, err := generateNewDailyData(i.TargetDailyData, i.NoteName, i.DateStr, i.InsertNum)
 	if err != nil {
 		return usecases.DailyData{}, err

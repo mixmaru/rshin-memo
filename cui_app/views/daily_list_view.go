@@ -115,27 +115,10 @@ func getNoteString(text string) string {
 	return strings.Split(text, "\t")[1]
 }
 
-//func (d *DailyListView) GenerateNewDailyDataToNextCursor(newNoteName string, date string) (usecases.DailyData, error) {
-//	return d.generateNewDailyData(newNoteName, date, next_cursor)
-//}
-//
-//func (d *DailyListView) GenerateNewDailyDataToPrevCursor(newNoteName string, date string) (usecases.DailyData, error) {
-//	return d.generateNewDailyData(newNoteName, date, prev_cursor)
-//}
-
 const (
 	prev_cursor = iota
 	next_cursor
 )
-
-//func (d *DailyListView) generateNewDailyData(newNoteName string, date string, insertPlace int) (usecases.DailyData, error) {
-//	// カーソル位置を取得
-//	_, insertLineNum := d.view.Cursor()
-//	if insertPlace == next_cursor {
-//		insertLineNum++
-//	}
-//	return generateNewDailyData(d.dailyList, newNoteName, date, insertLineNum)
-//}
 
 func (d *DailyListView) Reload() error {
 	d.view.Clear()
@@ -245,22 +228,6 @@ func (d *DailyListView) OnCursorRowPosition() (int, error) {
 func (d *DailyListView) GetDailyList() []usecases.DailyData {
 	return d.dailyList
 }
-
-//func (d *DailyListView) GetTargetDailyData() (usecases.DailyData, error) {
-//	// カーソル位置から対象のdailyDataを取得する
-//	_, y := d.view.Cursor()
-//	targetDataStr, err := d.view.Line(y)
-//	if err != nil {
-//		return usecases.DailyData{}, err
-//	}
-//	targetDataStr = utils.ConvertStringForLogic(targetDataStr)
-//	for _, dailyData := range d.dailyList {
-//		if dailyData.Date == targetDataStr {
-//			return dailyData, nil
-//		}
-//	}
-//	return usecases.DailyData{}, errors.New("想定外エラー")
-//}
 
 // numは0始まりでカウント
 func IsEndOfDateList(num int, dailyList []usecases.DailyData) bool {
