@@ -7,6 +7,44 @@ import (
 )
 
 func TestInsertData_GenerateNewDailyData(t *testing.T) {
+	t.Run("際どいところに突っ込む", func(t *testing.T) {
+		insertData := InsertData{
+			InsertNum: 3,
+			NoteName:  "newNote",
+			DateStr:   "2021-01-10",
+			TargetDailyData: []usecases.DailyData{
+				{
+					Date: "2021-01-10",
+					Notes: []string{
+						"note1-1",
+						"note1-2",
+						"note1-3",
+					},
+				},
+				{
+					Date: "2021-01-09",
+					Notes: []string{
+						"note2-1",
+						"note2-2",
+						"note2-3",
+					},
+				},
+			},
+		}
+		got, err := insertData.GenerateNewDailyData()
+		assert.NoError(t, err)
+		expect := usecases.DailyData{
+			Date: "2021-01-10",
+			Notes: []string{
+				"note1-1",
+				"note1-2",
+				"note1-3",
+				"newNote",
+			},
+		}
+		assert.Equal(t, expect, got)
+	})
+
 	t.Run("間に突っ込む", func(t *testing.T) {
 		insertData := InsertData{}
 		insertData.TargetDailyData = []usecases.DailyData{
