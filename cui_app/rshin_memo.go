@@ -216,7 +216,11 @@ func (r *RshinMemo) decisionDate(g *gocui.Gui, v *gocui.View) error {
 			return err
 		}
 	} else {
-		r.insertData.DateStr = r.dateSelectView.GetDateOnCursor()
+		var err error
+		r.insertData.DateStr, err = r.dateSelectView.GetDateOnCursor()
+		if err != nil {
+			return err
+		}
 		// noteSelectViewの表示
 		allNotes, err := r.getAllNotesUseCase.Handle()
 		err = r.noteSelectView.Create(allNotes)
