@@ -154,7 +154,14 @@ func (d *DailyListView) GetInsertDateRangeNextCursor() (DateRange, error) {
 	}
 
 	// if カーソルがデータの末でなければ一つ次の日付を取得する
-	if _, y := d.view.Cursor(); !IsEndOfDateList(y, d.dailyList) {
+	_, y := d.view.Cursor()
+	line, err := d.view.Line(y)
+	if err != nil {
+		return DateRange{}, errors.WithStack(err)
+	}
+	date := getDateString(line)
+	note := getNoteString(utils.ConvertStringForLogic(line))
+	if !isLastNote(d.dailyList, date, note) {
 		fromDateString, err := d.GetDateOnCursorNext()
 		if err != nil {
 			return DateRange{}, err
@@ -229,16 +236,12 @@ func (d *DailyListView) GetDailyList() []usecases.DailyData {
 	return d.dailyList
 }
 
-// numは0始まりでカウント
-func IsEndOfDateList(num int, dailyList []usecases.DailyData) bool {
-	num++ // 比較簡略化のため1追加しておく
-	for _, dailyData := range dailyList {
-		if len(dailyData.Notes) == num {
+func isLastNote(dailyList []usecases.DailyData, date, note string) bool {
+	lastDailyData := dailyList[len(dailyList)-1]
+	if lastDailyData.Date == date {
+		lastNote := lastDailyData.Notes[len(lastDailyData.Notes)-1]
+		if lastNote == note {
 			return true
-		} else if len(dailyData.Notes) < num {
-			num -= len(dailyData.Notes)
-		} else {
-			return false
 		}
 	}
 	return false

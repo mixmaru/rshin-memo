@@ -61,9 +61,13 @@ func (n *DateSelectView) Focus() error {
 	return nil
 }
 
-func (n *DateSelectView) GetDateOnCursor() string {
+func (n *DateSelectView) GetDateOnCursor() (string, error) {
 	_, y := n.view.Cursor()
-	return n.dates[y-1].Format("2006-01-02")
+	line, err := n.view.Line(y)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return line, nil
 }
 
 func (n *DateSelectView) Delete() error {

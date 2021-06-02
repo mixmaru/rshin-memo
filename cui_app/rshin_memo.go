@@ -216,7 +216,11 @@ func (r *RshinMemo) decisionDate(g *gocui.Gui, v *gocui.View) error {
 			return err
 		}
 	} else {
-		r.insertData.DateStr = r.dateSelectView.GetDateOnCursor()
+		var err error
+		r.insertData.DateStr, err = r.dateSelectView.GetDateOnCursor()
+		if err != nil {
+			return err
+		}
 		// noteSelectViewの表示
 		allNotes, err := r.getAllNotesUseCase.Handle()
 		err = r.noteSelectView.Create(allNotes)
@@ -238,7 +242,7 @@ func (r *RshinMemo) displayDateInputViewForNext(g *gocui.Gui, v *gocui.View) err
 		return err
 	}
 	r.insertData.InsertNum = insertNum + 1
-	//r.addRowMode = ADD_ROW_NEXT_MODE
+	r.addRowMode = ADD_ROW_NEXT_MODE
 	return r.displayDateSelectView()
 }
 
@@ -249,7 +253,7 @@ func (r *RshinMemo) displayDataInputViewForPrev(g *gocui.Gui, v *gocui.View) err
 		return err
 	}
 	r.insertData.InsertNum = insertNum
-	//r.addRowMode = ADD_ROW_PREV_MODE
+	r.addRowMode = ADD_ROW_PREV_MODE
 	return r.displayDateSelectView()
 }
 
