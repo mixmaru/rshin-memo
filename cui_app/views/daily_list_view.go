@@ -221,10 +221,10 @@ func (d *DailyListView) OnCursorRowPosition() (int, error) {
 	for _, dailyData := range d.dailyList {
 		if dailyData.Date == selectedDateStr {
 			for _, noteName := range dailyData.Notes {
-				rowPosition += 1
 				if noteName == selectedNoteName {
 					return rowPosition, nil
 				}
+				rowPosition += 1
 			}
 		}
 		rowPosition += len(dailyData.Notes)
