@@ -94,7 +94,7 @@ func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
 	if err != nil {
 		return err
 	}
-	n.insertData.SetNoteName(noteName)
+	n.insertData.NoteName = noteName
 
 	// 同名Noteが存在しないかcheck
 	_, notExist, err := n.getNoteUseCase.Handle(noteName)
@@ -128,9 +128,12 @@ func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
 }
 
 func (n *NoteNameInputView) createNewDailyList(insertData dto.InsertData) error {
-	dailyData := insertData.GenerateNewDailyData()
+	dailyData, err := insertData.GenerateNewDailyData()
+	if err != nil {
+		return err
+	}
 	// Note作成を依頼
-	err := n.saveDailyDataUseCase.Handle(dailyData)
+	err = n.saveDailyDataUseCase.Handle(dailyData)
 	if err != nil {
 		// todo: エラーメッセージビューへメッセージを表示する
 		return err

@@ -216,7 +216,7 @@ func (r *RshinMemo) decisionDate(g *gocui.Gui, v *gocui.View) error {
 			return err
 		}
 	} else {
-		r.selectedDate = r.dateSelectView.GetDateOnCursor()
+		r.insertData.DateStr = r.dateSelectView.GetDateOnCursor()
 		// noteSelectViewの表示
 		allNotes, err := r.getAllNotesUseCase.Handle()
 		err = r.noteSelectView.Create(allNotes)
@@ -232,17 +232,30 @@ func (r *RshinMemo) decisionDate(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (r *RshinMemo) displayDateInputViewForNext(g *gocui.Gui, v *gocui.View) error {
-	// inputViewを表示する
-	r.addRowMode = ADD_ROW_NEXT_MODE
+	r.insertData = dto.InsertData{}
+	insertNum, err := r.dailyListView.OnCursorRowPosition()
+	if err != nil {
+		return err
+	}
+	r.insertData.InsertNum = insertNum + 1
+	//r.addRowMode = ADD_ROW_NEXT_MODE
 	return r.displayDateSelectView()
 }
 
 func (r *RshinMemo) displayDataInputViewForPrev(g *gocui.Gui, v *gocui.View) error {
-	r.addRowMode = ADD_ROW_PREV_MODE
+	r.insertData = dto.InsertData{}
+	insertNum, err := r.dailyListView.OnCursorRowPosition()
+	if err != nil {
+		return err
+	}
+	r.insertData.InsertNum = insertNum
+	//r.addRowMode = ADD_ROW_PREV_MODE
 	return r.displayDateSelectView()
 }
 
 func (r *RshinMemo) displayDateSelectView() error {
+	r.insertData.TargetDailyData = r.dailyListView.GetDailyList()
+
 	var dateRange views.DateRange
 	var err error
 	switch r.addRowMode {
@@ -300,8 +313,6 @@ func (r *RshinMemo) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) error 
 	if !result {
 		return nil
 	}
-
-	r.selectedDate = dateString
 
 	// noteSelectViewの表示
 	allNotes, err := r.getAllNotesUseCase.Handle()
@@ -445,7 +456,7 @@ func (r *RshinMemo) insertExistedNoteToDailyList() error {
 	if err != nil {
 		return err
 	}
-	r.insertData.SetNoteName(noteName)
+	r.insertData.NoteName = noteName
 
 	if err := r.createNewDailyList(); err != nil {
 		return err
@@ -494,8 +505,11 @@ func (r *RshinMemo) createNewDailyList() error {
 	//	}
 	//}
 	// Note作成を依頼
-	dailyData := r.insertData.GenerateNewDailyData()
-	err := r.saveDailyDataUseCase.Handle(dailyData)
+	dailyData, err := r.insertData.GenerateNewDailyData()
+	if err != nil {
+		return err
+	}
+	err = r.saveDailyDataUseCase.Handle(dailyData)
 	if err != nil {
 		// todo: エラーメッセージビューへメッセージを表示する
 		return err

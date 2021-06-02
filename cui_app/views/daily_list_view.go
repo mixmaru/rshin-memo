@@ -110,6 +110,11 @@ func getDateString(text string) string {
 	return strings.Split(text, "\t")[0]
 }
 
+func getNoteString(text string) string {
+	// \tで分割してNote名を取得
+	return strings.Split(text, "\t")[1]
+}
+
 //func (d *DailyListView) GenerateNewDailyDataToNextCursor(newNoteName string, date string) (usecases.DailyData, error) {
 //	return d.generateNewDailyData(newNoteName, date, next_cursor)
 //}
@@ -216,17 +221,23 @@ func (d *DailyListView) GetDailyDataByDate(dateStr string) usecases.DailyData {
 
 func (d *DailyListView) OnCursorRowPosition() (int, error) {
 	_, y := d.view.Cursor()
-	selectedNoteName, err := d.view.Line(y)
+	lineStr, err := d.view.Line(y)
 	if err != nil {
 		return 0, err
 	}
-	selectedNoteName = utils.ConvertStringForLogic(selectedNoteName)
-	for i, dailyData := range d.dailyList {
-		for n, noteName := range dailyData.Notes {
-			if noteName == selectedNoteName {
-				return i + n, nil
+	selectedDateStr := getDateString(utils.ConvertStringForLogic(lineStr))
+	selectedNoteName := getNoteString(utils.ConvertStringForLogic(lineStr))
+	rowPosition := 0
+	for _, dailyData := range d.dailyList {
+		if dailyData.Date == selectedDateStr {
+			for _, noteName := range dailyData.Notes {
+				rowPosition += 1
+				if noteName == selectedNoteName {
+					return rowPosition, nil
+				}
 			}
 		}
+		rowPosition += len(dailyData.Notes)
 	}
 	return 0, errors.New("カーソル上のNoteNameが見当たらない")
 }
