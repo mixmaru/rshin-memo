@@ -27,7 +27,7 @@ type NoteNameInputView struct {
 	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
 }
 
-func NewNoteNameinputView(
+func NewNoteNameInputView(
 	gui *gocui.Gui,
 	memoDirPath string,
 	insertData dto.InsertData,
@@ -41,6 +41,7 @@ func NewNoteNameinputView(
 		getNoteUseCase:       getNoteUseCase,
 		saveDailyDataUseCase: saveDailyDataUseCase,
 	}
+	retObj.ViewsToCloseWhenFinished = append(retObj.ViewsToCloseWhenFinished, retObj)
 	return retObj
 }
 
