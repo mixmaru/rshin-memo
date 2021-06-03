@@ -3,8 +3,11 @@ package views
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/mixmaru/rshin-memo/cui_app/dto"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/pkg/errors"
+	"path/filepath"
 )
 
 const NOTE_SELECT_VIEW = "note_select"
@@ -13,11 +16,30 @@ type NoteSelectView struct {
 	gui   *gocui.Gui
 	view  *gocui.View
 	notes []string
+
+	insertData           dto.InsertData
+	openViews            []Deletable
+	memoDirPath          string
+	getNoteUseCase       *usecases.GetNoteUseCase
+	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
+	WhenFinished         func() error
 }
 
-func NewNoteSelectView(gui *gocui.Gui) *NoteSelectView {
+func NewNoteSelectView(
+	gui *gocui.Gui,
+	insertData dto.InsertData,
+	openViews []Deletable,
+	memoDirPath string,
+	getNoteUseCase *usecases.GetNoteUseCase,
+	saveDailyDataUseCase *usecases.SaveDailyDataUseCase,
+) *NoteSelectView {
 	retObj := &NoteSelectView{
-		gui: gui,
+		gui:                  gui,
+		insertData:           insertData,
+		openViews:            openViews,
+		memoDirPath:          memoDirPath,
+		getNoteUseCase:       getNoteUseCase,
+		saveDailyDataUseCase: saveDailyDataUseCase,
 	}
 	return retObj
 }
@@ -30,6 +52,7 @@ func (n *NoteSelectView) Create(notes []string) error {
 	if err != nil {
 		return err
 	}
+	n.openViews = append(n.openViews, n)
 	n.view = v
 
 	n.view.Highlight = true
@@ -38,6 +61,100 @@ func (n *NoteSelectView) Create(notes []string) error {
 
 	n.setContents()
 
+	err = n.setEvents()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (n *NoteSelectView) setEvents() error {
+	if err := n.gui.SetKeybinding(NOTE_SELECT_VIEW, gocui.KeyArrowDown, gocui.ModNone, cursorDown); err != nil {
+		return errors.Wrap(err, "キーバインド失敗")
+	}
+	if err := n.gui.SetKeybinding(NOTE_SELECT_VIEW, 'j', gocui.ModNone, cursorDown); err != nil {
+		return errors.Wrap(err, "キーバインド失敗")
+	}
+	if err := n.gui.SetKeybinding(NOTE_SELECT_VIEW, gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
+		return errors.Wrap(err, "キーバインド失敗")
+	}
+	if err := n.gui.SetKeybinding(NOTE_SELECT_VIEW, 'k', gocui.ModNone, cursorUp); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
+	if err := n.gui.SetKeybinding(NOTE_SELECT_VIEW, gocui.KeyEnter, gocui.ModNone, n.insertNoteToDailyList); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
+	return nil
+}
+
+func (n *NoteSelectView) insertNoteToDailyList(g *gocui.Gui, v *gocui.View) error {
+	if n.isSelectedNewNote() {
+		return n.addNote()
+	} else {
+		return n.insertExistedNoteToDailyList()
+	}
+}
+
+func (n *NoteSelectView) addNote() error {
+	noteNameInputView := NewNoteNameInputView(n.gui, n.memoDirPath, n.insertData, n.getNoteUseCase, n.saveDailyDataUseCase)
+	noteNameInputView.WhenFinished = n.WhenFinished
+	noteNameInputView.ViewsToCloseWhenFinished = append(noteNameInputView.ViewsToCloseWhenFinished, n.openViews...)
+	err := noteNameInputView.Create()
+	if err != nil {
+		return err
+	}
+	// フォーカスの移動
+	err = noteNameInputView.Focus()
+	if err != nil {
+		return errors.Wrap(err, "フォーカス移動失敗")
+	}
+	return nil
+}
+
+func (n *NoteSelectView) insertExistedNoteToDailyList() error {
+	// noteNameを取得
+	noteName, err := n.GetNoteNameOnCursor()
+	if err != nil {
+		return err
+	}
+	//r.openViews = append(r.openViews, r.noteSelectView)
+	n.insertData.NoteName = noteName
+
+	if err := n.createNewDailyList(); err != nil {
+		return err
+	}
+
+	err = utils.OpenVim(filepath.Join(n.memoDirPath, noteName+".txt"))
+	if err != nil {
+		return err
+	}
+
+	// 不要なviewを閉じる
+	for _, view := range n.openViews {
+		err := view.Delete()
+		if err != nil {
+			return err
+		}
+	}
+
+	err = n.WhenFinished()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (n *NoteSelectView) createNewDailyList() error {
+	// Note作成を依頼
+	dailyData, err := n.insertData.GenerateNewDailyData()
+	if err != nil {
+		return err
+	}
+	err = n.saveDailyDataUseCase.Handle(dailyData)
+	if err != nil {
+		// todo: エラーメッセージビューへメッセージを表示する
+		return err
+	}
 	return nil
 }
 
@@ -74,11 +191,21 @@ func (n *NoteSelectView) Delete() error {
 	return nil
 }
 
-func (n *NoteSelectView) IsSelectedNewNote() bool {
+func (n *NoteSelectView) isSelectedNewNote() bool {
 	_, y := n.view.Cursor()
 	if y == 0 {
 		return true
 	} else {
 		return false
 	}
+}
+
+func cursorDown(g *gocui.Gui, v *gocui.View) error {
+	v.MoveCursor(0, 1, false)
+	return nil
+}
+
+func cursorUp(g *gocui.Gui, v *gocui.View) error {
+	v.MoveCursor(0, -1, false)
+	return nil
 }
