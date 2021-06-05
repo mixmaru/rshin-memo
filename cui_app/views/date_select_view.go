@@ -3,6 +3,8 @@ package views
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/mixmaru/rshin-memo/cui_app/dto"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/pkg/errors"
 	"sort"
@@ -12,20 +14,52 @@ import (
 const DATE_SELECT_VIEW = "date_select"
 
 type DateSelectView struct {
-	gui   *gocui.Gui
-	view  *gocui.View
-	dates []time.Time
+	gui       *gocui.Gui
+	view      *gocui.View
+	dates     []time.Time
+	dateRange DateRange
+
+	insertData  dto.InsertData
+	memoDirPath string
+	addRowMode  AddRowMode
+
+	getAllNotesUseCase   *usecases.GetAllNotesUseCase
+	getNoteUseCase       *usecases.GetNoteUseCase
+	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
+
+	openViews    []Deletable
+	WhenFinished func() error
 }
 
-func NewDateSelectView(gui *gocui.Gui) *DateSelectView {
+func NewDateSelectView(
+	gui *gocui.Gui,
+	openView []Deletable,
+	insertData dto.InsertData,
+	dateRange DateRange,
+	memoDirPath string,
+	getAllNotesUseCase *usecases.GetAllNotesUseCase,
+	getNoteUseCase *usecases.GetNoteUseCase,
+	saveDailyDataUseCase *usecases.SaveDailyDataUseCase,
+) *DateSelectView {
 	retObj := &DateSelectView{
-		gui: gui,
+		gui:                  gui,
+		openViews:            openView,
+		insertData:           insertData,
+		dateRange:            dateRange,
+		memoDirPath:          memoDirPath,
+		getAllNotesUseCase:   getAllNotesUseCase,
+		getNoteUseCase:       getNoteUseCase,
+		saveDailyDataUseCase: saveDailyDataUseCase,
 	}
 	return retObj
 }
 
 // 新規作成
-func (n *DateSelectView) Create(dates []time.Time) error {
+func (n *DateSelectView) Create() error {
+	dates, err := n.dateRange.GetSomeDateInRange(30)
+	if err != nil {
+		return err
+	}
 	sort.Slice(dates, func(i, j int) bool {
 		return dates[i].After(dates[j])
 	})
@@ -42,7 +76,32 @@ func (n *DateSelectView) Create(dates []time.Time) error {
 	n.view.SelFgColor = gocui.ColorBlack
 
 	n.setContents()
+	err = n.setEvents()
+	if err != nil {
+		return err
+	}
 
+	n.openViews = append(n.openViews, n)
+	return nil
+}
+
+func (n *DateSelectView) setEvents() error {
+	// dateSelectView
+	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, gocui.KeyArrowDown, gocui.ModNone, cursorDown); err != nil {
+		return errors.Wrap(err, "キーバインド失敗")
+	}
+	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, 'j', gocui.ModNone, cursorDown); err != nil {
+		return errors.Wrap(err, "キーバインド失敗")
+	}
+	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
+		return errors.Wrap(err, "キーバインド失敗")
+	}
+	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, 'k', gocui.ModNone, cursorUp); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
+	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, gocui.KeyEnter, gocui.ModNone, n.decisionDate); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
 	return nil
 }
 
@@ -78,11 +137,72 @@ func (n *DateSelectView) Delete() error {
 	return nil
 }
 
-func (n *DateSelectView) IsSelectedHandInput() bool {
+func (n *DateSelectView) isSelectedHandInput() bool {
 	_, y := n.view.Cursor()
 	if y == 0 {
 		return true
 	} else {
 		return false
 	}
+}
+
+func (n *DateSelectView) decisionDate(g *gocui.Gui, v *gocui.View) error {
+	if n.isSelectedHandInput() {
+		// dateInputViewの表示
+		err := n.displayDateInputView()
+		if err != nil {
+			return err
+		}
+	} else {
+		var err error
+		n.insertData.DateStr, err = n.GetDateOnCursor()
+		if err != nil {
+			return err
+		}
+		// noteSelectViewの表示
+		allNotes, err := n.getAllNotesUseCase.Handle()
+		noteSelectView := NewNoteSelectView(
+			n.gui,
+			n.insertData,
+			n.openViews,
+			n.memoDirPath,
+			n.getNoteUseCase,
+			n.saveDailyDataUseCase,
+		)
+		err = noteSelectView.Create(allNotes)
+		if err != nil {
+			return err
+		}
+		noteSelectView.WhenFinished = n.WhenFinished
+		err = noteSelectView.Focus()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (n *DateSelectView) displayDateInputView() error {
+	// note名入力viewの表示
+	dateInputView := NewDateInputView(
+		n.gui,
+		n.insertData,
+		n.dateRange,
+		n.getAllNotesUseCase,
+		n.getNoteUseCase,
+		n.saveDailyDataUseCase,
+		n.memoDirPath,
+		n.openViews,
+	)
+	err := dateInputView.Create()
+	if err != nil {
+		return err
+	}
+	dateInputView.WhenFinished = n.WhenFinished
+	// フォーカスの移動
+	err = dateInputView.Focus()
+	if err != nil {
+		return errors.Wrap(err, "フォーカス移動失敗")
+	}
+	return nil
 }
