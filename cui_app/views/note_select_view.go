@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/mixmaru/rshin-memo/cui_app/dto"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
@@ -17,12 +18,14 @@ type NoteSelectView struct {
 	view  *gocui.View
 	notes []string
 
-	insertData           dto.InsertData
-	openViews            []Deletable
-	memoDirPath          string
-	getNoteUseCase       *usecases.GetNoteUseCase
-	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
-	WhenFinished         func() error
+	insertData  dto.InsertData
+	openViews   []Deletable
+	memoDirPath string
+
+	dailYDataRepository repositories.DailyDataRepositoryInterface
+	noteRepository      repositories.NoteRepositoryInterface
+
+	WhenFinished func() error
 }
 
 func NewNoteSelectView(
@@ -30,16 +33,16 @@ func NewNoteSelectView(
 	insertData dto.InsertData,
 	openViews []Deletable,
 	memoDirPath string,
-	getNoteUseCase *usecases.GetNoteUseCase,
-	saveDailyDataUseCase *usecases.SaveDailyDataUseCase,
+	dailYDataRepository repositories.DailyDataRepositoryInterface,
+	noteRepository repositories.NoteRepositoryInterface,
 ) *NoteSelectView {
 	retObj := &NoteSelectView{
-		gui:                  gui,
-		insertData:           insertData,
-		openViews:            openViews,
-		memoDirPath:          memoDirPath,
-		getNoteUseCase:       getNoteUseCase,
-		saveDailyDataUseCase: saveDailyDataUseCase,
+		gui:                 gui,
+		insertData:          insertData,
+		openViews:           openViews,
+		memoDirPath:         memoDirPath,
+		dailYDataRepository: dailYDataRepository,
+		noteRepository:      noteRepository,
 	}
 	return retObj
 }
@@ -96,7 +99,7 @@ func (n *NoteSelectView) insertNoteToDailyList(g *gocui.Gui, v *gocui.View) erro
 }
 
 func (n *NoteSelectView) addNote() error {
-	noteNameInputView := NewNoteNameInputView(n.gui, n.memoDirPath, n.insertData, n.getNoteUseCase, n.saveDailyDataUseCase)
+	noteNameInputView := NewNoteNameInputView(n.gui, n.memoDirPath, n.insertData, n.dailYDataRepository, n.noteRepository)
 	noteNameInputView.WhenFinished = n.WhenFinished
 	noteNameInputView.ViewsToCloseWhenFinished = append(noteNameInputView.ViewsToCloseWhenFinished, n.openViews...)
 	err := noteNameInputView.Create()
@@ -150,7 +153,8 @@ func (n *NoteSelectView) createNewDailyList() error {
 	if err != nil {
 		return err
 	}
-	err = n.saveDailyDataUseCase.Handle(dailyData)
+	useCase := usecases.NewSaveDailyDataUseCase(n.noteRepository, n.dailYDataRepository)
+	err = useCase.Handle(dailyData)
 	if err != nil {
 		// todo: エラーメッセージビューへメッセージを表示する
 		return err

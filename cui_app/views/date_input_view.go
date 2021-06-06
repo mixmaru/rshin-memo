@@ -2,6 +2,7 @@ package views
 
 import (
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/mixmaru/rshin-memo/cui_app/dto"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
@@ -22,37 +23,35 @@ type DateInputView struct {
 	gui  *gocui.Gui
 	view *gocui.View
 
-	insertData           dto.InsertData
-	getAllNotesUseCase   *usecases.GetAllNotesUseCase
-	getNoteUseCase       *usecases.GetNoteUseCase
-	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
-	addRowMode           AddRowMode
-	dateRange            DateRange
-	memoDirPath          string
-	openViews            []Deletable
+	insertData  dto.InsertData
+	addRowMode  AddRowMode
+	dateRange   DateRange
+	memoDirPath string
+	openViews   []Deletable
 
 	WhenFinished func() error
+
+	dailyDataRepository repositories.DailyDataRepositoryInterface
+	noteRepository      repositories.NoteRepositoryInterface
 }
 
 func NewDateInputView(
 	gui *gocui.Gui,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	getAllNotesUseCase *usecases.GetAllNotesUseCase,
-	getNoteUseCase *usecases.GetNoteUseCase,
-	saveDailyDataUseCase *usecases.SaveDailyDataUseCase,
 	memoDirPath string,
 	openViews []Deletable,
+	dailyDataRepository repositories.DailyDataRepositoryInterface,
+	noteRepository repositories.NoteRepositoryInterface,
 ) *DateInputView {
 	retObj := &DateInputView{
-		gui:                  gui,
-		insertData:           insertData,
-		dateRange:            dateRange,
-		openViews:            openViews,
-		memoDirPath:          memoDirPath,
-		getAllNotesUseCase:   getAllNotesUseCase,
-		getNoteUseCase:       getNoteUseCase,
-		saveDailyDataUseCase: saveDailyDataUseCase,
+		gui:                 gui,
+		insertData:          insertData,
+		dateRange:           dateRange,
+		openViews:           openViews,
+		memoDirPath:         memoDirPath,
+		dailyDataRepository: dailyDataRepository,
+		noteRepository:      noteRepository,
 	}
 	return retObj
 }
@@ -117,14 +116,15 @@ func (n *DateInputView) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) er
 	n.insertData.DateStr = dateString
 
 	// noteSelectViewの表示
-	allNotes, err := n.getAllNotesUseCase.Handle()
+	useCase := usecases.NewGetAllNotesUseCase(n.noteRepository)
+	allNotes, err := useCase.Handle()
 	noteSelectView := NewNoteSelectView(
 		n.gui,
 		n.insertData,
 		n.openViews,
 		n.memoDirPath,
-		n.getNoteUseCase,
-		n.saveDailyDataUseCase,
+		n.dailyDataRepository,
+		n.noteRepository,
 	)
 	err = noteSelectView.Create(allNotes)
 	if err != nil {
