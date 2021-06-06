@@ -14,25 +14,25 @@ import (
 const NOTE_SELECT_VIEW = "note_select"
 
 type NoteSelectView struct {
-	gui   *gocui.Gui
-	view  *gocui.View
-	notes []string
-
-	insertData  dto.InsertData
-	openViews   []Deletable
+	gui         *gocui.Gui
+	view        *gocui.View
 	memoDirPath string
+	notes       []string
+
+	insertData dto.InsertData
+
+	openViews    []Deletable
+	WhenFinished func() error
 
 	dailYDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
-
-	WhenFinished func() error
 }
 
 func NewNoteSelectView(
 	gui *gocui.Gui,
+	memoDirPath string,
 	insertData dto.InsertData,
 	openViews []Deletable,
-	memoDirPath string,
 	dailYDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *NoteSelectView {
@@ -122,7 +122,7 @@ func (n *NoteSelectView) addNote() error {
 
 func (n *NoteSelectView) insertExistedNoteToDailyList() error {
 	// noteNameを取得
-	noteName, err := n.GetNoteNameOnCursor()
+	noteName, err := n.getNoteNameOnCursor()
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func (n *NoteSelectView) Focus() error {
 	return nil
 }
 
-func (n *NoteSelectView) GetNoteNameOnCursor() (string, error) {
+func (n *NoteSelectView) getNoteNameOnCursor() (string, error) {
 	_, y := n.view.Cursor()
 	noteName, err := n.view.Line(y)
 	if err != nil {

@@ -166,9 +166,9 @@ func (n *DateSelectView) decisionDate(g *gocui.Gui, v *gocui.View) error {
 		// noteSelectViewの表示
 		noteSelectView := NewNoteSelectView(
 			n.gui,
+			n.memoDirPath,
 			n.insertData,
 			n.openViews,
-			n.memoDirPath,
 			n.dailyDataRepository,
 			n.noteRepository,
 		)

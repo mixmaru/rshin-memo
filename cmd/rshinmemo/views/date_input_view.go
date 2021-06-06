@@ -112,9 +112,9 @@ func (n *DateInputView) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) er
 	allNotes, err := useCase.Handle()
 	noteSelectView := NewNoteSelectView(
 		n.gui,
+		n.memoDirPath,
 		n.insertData,
 		n.openViews,
-		n.memoDirPath,
 		n.dailyDataRepository,
 		n.noteRepository,
 	)
