@@ -12,23 +12,15 @@ import (
 
 const DATE_INPUT_VIEW = "date_input"
 
-type AddRowMode int
-
-const (
-	ADD_ROW_PREV_MODE = iota
-	ADD_ROW_NEXT_MODE
-)
-
 type DateInputView struct {
-	gui  *gocui.Gui
-	view *gocui.View
-
-	insertData  dto.InsertData
-	addRowMode  AddRowMode
-	dateRange   DateRange
+	gui         *gocui.Gui
+	view        *gocui.View
 	memoDirPath string
-	openViews   []Deletable
 
+	insertData dto.InsertData
+	dateRange  DateRange
+
+	openViews    []Deletable
 	WhenFinished func() error
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface

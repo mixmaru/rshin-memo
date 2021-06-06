@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/jroimartin/gocui"
-	"github.com/mixmaru/rshin-memo/cmd/rshinmemo/dto"
 	"github.com/mixmaru/rshin-memo/cmd/rshinmemo/views"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/pkg/errors"
@@ -16,12 +15,6 @@ type RshinMemo struct {
 	gui                *gocui.Gui
 	dailyListView      *views.DailyListView
 	alreadyInitialized bool
-
-	addRowMode views.AddRowMode
-
-	selectedDate string
-	insertData   dto.InsertData
-	openViews    []views.Deletable
 }
 
 func NewRshinMemo(

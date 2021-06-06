@@ -22,7 +22,6 @@ type DateSelectView struct {
 
 	insertData  dto.InsertData
 	memoDirPath string
-	addRowMode  AddRowMode
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
