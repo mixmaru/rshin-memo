@@ -189,11 +189,6 @@ func getNoteString(text string) string {
 	return strings.Split(text, "\t")[1]
 }
 
-const (
-	prev_cursor = iota
-	next_cursor
-)
-
 func (d *DailyListView) Reload() error {
 	d.view.Clear()
 	d.dailyList = nil
@@ -274,15 +269,6 @@ func (d *DailyListView) GetInsertDateRangeCurrentCursor() (DateRange, error) {
 	return retDateRange, nil
 }
 
-func (d *DailyListView) GetDailyDataByDate(dateStr string) usecases.DailyData {
-	for _, dailyData := range d.dailyList {
-		if dailyData.Date == dateStr {
-			return dailyData
-		}
-	}
-	return usecases.DailyData{}
-}
-
 func (d *DailyListView) OnCursorRowPosition() (int, error) {
 	_, y := d.view.Cursor()
 	lineStr, err := d.view.Line(y)
@@ -304,10 +290,6 @@ func (d *DailyListView) OnCursorRowPosition() (int, error) {
 		rowPosition += len(dailyData.Notes)
 	}
 	return 0, errors.New("カーソル上のNoteNameが見当たらない")
-}
-
-func (d *DailyListView) GetDailyList() []usecases.DailyData {
-	return d.dailyList
 }
 
 func (d *DailyListView) displayDateInputViewForInsertingNextCursorPosition(g *gocui.Gui, v *gocui.View) error {
@@ -339,7 +321,7 @@ func (d *DailyListView) displayDataInputViewForInsertingCurrentCursorPosition(g 
 }
 
 func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRange DateRange) error {
-	insertData.TargetDailyData = d.GetDailyList()
+	insertData.TargetDailyData = d.dailyList
 	dateSelectView := NewDateSelectView(
 		d.gui,
 		[]Deletable{},
