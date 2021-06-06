@@ -14,7 +14,7 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-/cui_app/cui_app
+/cmd/rshinmemo/rshinmemo
 
 /_examples
 /core/repositories/test

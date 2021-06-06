@@ -2,10 +2,10 @@ package views
 
 import (
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/cmd/rshinmemo/dto"
+	"github.com/mixmaru/rshin-memo/cmd/rshinmemo/utils"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
-	"github.com/mixmaru/rshin-memo/cui_app/dto"
-	"github.com/mixmaru/rshin-memo/cui_app/utils"
 	"github.com/pkg/errors"
 	"time"
 )
