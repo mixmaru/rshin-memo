@@ -21,7 +21,6 @@ type DailyListView struct {
 	dailyList []usecases.DailyData
 
 	memoDirPath string
-	insertData  dto.InsertData
 	addRowMode  AddRowMode
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
@@ -37,7 +36,6 @@ func NewDailyListView(
 	retObj := &DailyListView{
 		gui:                 gui,
 		memoDirPath:         memoDirPath,
-		insertData:          dto.InsertData{},
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
 	}
@@ -318,9 +316,10 @@ func (d *DailyListView) displayDateInputViewForNext(g *gocui.Gui, v *gocui.View)
 	if err != nil {
 		return err
 	}
-	d.insertData.InsertNum = insertNum + 1
+	insertData := dto.InsertData{}
+	insertData.InsertNum = insertNum + 1
 	d.addRowMode = ADD_ROW_NEXT_MODE
-	return d.displayDateSelectView()
+	return d.displayDateSelectView(insertData)
 }
 
 func (d *DailyListView) displayDataInputViewForPrev(g *gocui.Gui, v *gocui.View) error {
@@ -328,13 +327,14 @@ func (d *DailyListView) displayDataInputViewForPrev(g *gocui.Gui, v *gocui.View)
 	if err != nil {
 		return err
 	}
-	d.insertData.InsertNum = insertNum
+	insertData := dto.InsertData{}
+	insertData.InsertNum = insertNum
 	d.addRowMode = ADD_ROW_PREV_MODE
-	return d.displayDateSelectView()
+	return d.displayDateSelectView(insertData)
 }
 
-func (d *DailyListView) displayDateSelectView() error {
-	d.insertData.TargetDailyData = d.GetDailyList()
+func (d *DailyListView) displayDateSelectView(insertData dto.InsertData) error {
+	insertData.TargetDailyData = d.GetDailyList()
 
 	var dateRange DateRange
 	var err error
@@ -356,7 +356,7 @@ func (d *DailyListView) displayDateSelectView() error {
 	dateSelectView := NewDateSelectView(
 		d.gui,
 		[]Deletable{},
-		d.insertData,
+		insertData,
 		dateRange,
 		d.memoDirPath,
 		d.dailyDataRepository,
