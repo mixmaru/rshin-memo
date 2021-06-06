@@ -9,33 +9,31 @@ import (
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/pkg/errors"
 	"sort"
-	"time"
 )
 
 const DATE_SELECT_VIEW = "date_select"
 
 type DateSelectView struct {
-	gui       *gocui.Gui
-	view      *gocui.View
-	dates     []time.Time
-	dateRange DateRange
-
-	insertData  dto.InsertData
+	gui         *gocui.Gui
+	view        *gocui.View
 	memoDirPath string
 
-	dailyDataRepository repositories.DailyDataRepositoryInterface
-	noteRepository      repositories.NoteRepositoryInterface
+	insertData dto.InsertData
+	dateRange  DateRange
 
 	openViews    []Deletable
 	WhenFinished func() error
+
+	dailyDataRepository repositories.DailyDataRepositoryInterface
+	noteRepository      repositories.NoteRepositoryInterface
 }
 
 func NewDateSelectView(
 	gui *gocui.Gui,
-	openView []Deletable,
+	memoDirPath string,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	memoDirPath string,
+	openView []Deletable,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *DateSelectView {
@@ -53,14 +51,6 @@ func NewDateSelectView(
 
 // 新規作成
 func (n *DateSelectView) Create() error {
-	dates, err := n.dateRange.GetSomeDateInRange(30)
-	if err != nil {
-		return err
-	}
-	sort.Slice(dates, func(i, j int) bool {
-		return dates[i].After(dates[j])
-	})
-	n.dates = dates
 	width, height := n.gui.Size()
 	v, err := createOrResizeView(n.gui, DATE_SELECT_VIEW, width/2-25, 0, width/2+25, height-1)
 	if err != nil {
@@ -72,7 +62,10 @@ func (n *DateSelectView) Create() error {
 	n.view.SelBgColor = gocui.ColorGreen
 	n.view.SelFgColor = gocui.ColorBlack
 
-	n.setContents()
+	err = n.setContents()
+	if err != nil {
+		return err
+	}
 	err = n.setEvents()
 	if err != nil {
 		return err
@@ -102,11 +95,22 @@ func (n *DateSelectView) setEvents() error {
 	return nil
 }
 
-func (n *DateSelectView) setContents() {
+func (n *DateSelectView) setContents() error {
 	fmt.Fprintln(n.view, utils.ConvertStringForView("手入力する"))
-	for _, date := range n.dates {
+
+	dates, err := n.dateRange.GetSomeDateInRange(30)
+	if err != nil {
+		return err
+	}
+	// 日付の並びをdailyListと合わせる
+	sort.Slice(dates, func(i, j int) bool {
+		return dates[i].After(dates[j])
+	})
+
+	for _, date := range dates {
 		fmt.Fprintln(n.view, utils.ConvertStringForView(date.Format("2006-01-02")))
 	}
+	return nil
 }
 
 func (n *DateSelectView) Focus() error {
@@ -117,7 +121,7 @@ func (n *DateSelectView) Focus() error {
 	return nil
 }
 
-func (n *DateSelectView) GetDateOnCursor() (string, error) {
+func (n *DateSelectView) getDateOnCursor() (string, error) {
 	_, y := n.view.Cursor()
 	line, err := n.view.Line(y)
 	if err != nil {
@@ -152,10 +156,13 @@ func (n *DateSelectView) decisionDate(g *gocui.Gui, v *gocui.View) error {
 		}
 	} else {
 		var err error
-		n.insertData.DateStr, err = n.GetDateOnCursor()
+		n.insertData.DateStr, err = n.getDateOnCursor()
 		if err != nil {
 			return err
 		}
+		// 全note名の取得
+		useCase := usecases.NewGetAllNotesUseCase(n.noteRepository)
+		allNotes, err := useCase.Handle()
 		// noteSelectViewの表示
 		noteSelectView := NewNoteSelectView(
 			n.gui,
@@ -165,8 +172,6 @@ func (n *DateSelectView) decisionDate(g *gocui.Gui, v *gocui.View) error {
 			n.dailyDataRepository,
 			n.noteRepository,
 		)
-		useCase := usecases.NewGetAllNotesUseCase(n.noteRepository)
-		allNotes, err := useCase.Handle()
 		err = noteSelectView.Create(allNotes)
 		if err != nil {
 			return err
@@ -184,9 +189,9 @@ func (n *DateSelectView) displayDateInputView() error {
 	// note名入力viewの表示
 	dateInputView := NewDateInputView(
 		n.gui,
+		n.memoDirPath,
 		n.insertData,
 		n.dateRange,
-		n.memoDirPath,
 		n.openViews,
 		n.dailyDataRepository,
 		n.noteRepository,

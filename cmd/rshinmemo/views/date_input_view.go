@@ -29,9 +29,9 @@ type DateInputView struct {
 
 func NewDateInputView(
 	gui *gocui.Gui,
+	memoDirPath string,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	memoDirPath string,
 	openViews []Deletable,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,

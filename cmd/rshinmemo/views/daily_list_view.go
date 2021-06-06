@@ -324,10 +324,10 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 	insertData.TargetDailyData = d.dailyList
 	dateSelectView := NewDateSelectView(
 		d.gui,
-		[]Deletable{},
+		d.memoDirPath,
 		insertData,
 		dateRange,
-		d.memoDirPath,
+		[]Deletable{},
 		d.dailyDataRepository,
 		d.noteRepository,
 	)
