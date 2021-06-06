@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/cmd/rshinmemo/dto"
+	"github.com/mixmaru/rshin-memo/cmd/rshinmemo/views"
 	"github.com/mixmaru/rshin-memo/core/repositories"
-	"github.com/mixmaru/rshin-memo/cui_app/dto"
-	"github.com/mixmaru/rshin-memo/cui_app/views"
 	"github.com/pkg/errors"
 	"log"
 	"os"
