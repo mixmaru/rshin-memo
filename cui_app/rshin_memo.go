@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/jroimartin/gocui"
 	"github.com/mixmaru/rshin-memo/core/repositories"
-	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/mixmaru/rshin-memo/cui_app/dto"
 	"github.com/mixmaru/rshin-memo/cui_app/views"
 	"github.com/pkg/errors"
@@ -45,12 +44,11 @@ func NewRshinMemo(
 	rshinMemo.gui = g
 	rshinMemo.memoDirPath = filepath.Join(homedir, "rshin_memo")
 	rshinMemo.alreadyInitialized = false
-	rshinMemo.dailyListView = views.NewDailyListView(rshinMemo.gui,
+	rshinMemo.dailyListView = views.NewDailyListView(
+		rshinMemo.gui,
 		rshinMemo.memoDirPath,
-		usecases.NewGetAllDailyListUsecase(dailyDataRepository),
-		usecases.NewGetAllNotesUseCase(noteRepository),
-		usecases.NewGetNoteUseCase(noteRepository),
-		usecases.NewSaveDailyDataUseCase(noteRepository, dailyDataRepository),
+		dailyDataRepository,
+		noteRepository,
 	)
 
 	return rshinMemo

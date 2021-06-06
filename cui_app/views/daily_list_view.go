@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/mixmaru/rshin-memo/cui_app/dto"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
@@ -23,28 +24,22 @@ type DailyListView struct {
 	insertData  dto.InsertData
 	addRowMode  AddRowMode
 
-	getAllDailyListUsecase *usecases.GetAllDailyListUsecase
-	getAllNotesUseCase     *usecases.GetAllNotesUseCase
-	getNoteUseCase         *usecases.GetNoteUseCase
-	saveDailyDataUseCase   *usecases.SaveDailyDataUseCase
+	dailyDataRepository repositories.DailyDataRepositoryInterface
+	noteRepository      repositories.NoteRepositoryInterface
 }
 
 func NewDailyListView(
 	gui *gocui.Gui,
 	memoDirPath string,
-	getAllDailyListUsecase *usecases.GetAllDailyListUsecase,
-	getAllNotesUseCase *usecases.GetAllNotesUseCase,
-	getNoteUseCase *usecases.GetNoteUseCase,
-	saveDailyDataUseCase *usecases.SaveDailyDataUseCase,
+	dailyDataRepository repositories.DailyDataRepositoryInterface,
+	noteRepository repositories.NoteRepositoryInterface,
 ) *DailyListView {
 	retObj := &DailyListView{
-		gui:                    gui,
-		memoDirPath:            memoDirPath,
-		insertData:             dto.InsertData{},
-		getAllDailyListUsecase: getAllDailyListUsecase,
-		getAllNotesUseCase:     getAllNotesUseCase,
-		getNoteUseCase:         getNoteUseCase,
-		saveDailyDataUseCase:   saveDailyDataUseCase,
+		gui:                 gui,
+		memoDirPath:         memoDirPath,
+		insertData:          dto.InsertData{},
+		dailyDataRepository: dailyDataRepository,
+		noteRepository:      noteRepository,
 	}
 	return retObj
 }
@@ -156,7 +151,8 @@ func createOrResizeView(gui *gocui.Gui, viewName string, x0, y0, x1, y1 int) (*g
 }
 
 func (d *DailyListView) loadAllDailyList() ([]usecases.DailyData, error) {
-	return d.getAllDailyListUsecase.Handle()
+	useCase := usecases.NewGetAllDailyListUsecase(d.dailyDataRepository)
+	return useCase.Handle()
 }
 
 func (d *DailyListView) GetDateOnCursor() (string, error) {
@@ -363,9 +359,8 @@ func (d *DailyListView) displayDateSelectView() error {
 		d.insertData,
 		dateRange,
 		d.memoDirPath,
-		d.getAllNotesUseCase,
-		d.getNoteUseCase,
-		d.saveDailyDataUseCase,
+		d.dailyDataRepository,
+		d.noteRepository,
 	)
 	err = dateSelectView.Create()
 	if err != nil {

@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/mixmaru/rshin-memo/cui_app/dto"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
@@ -23,9 +24,8 @@ type DateSelectView struct {
 	memoDirPath string
 	addRowMode  AddRowMode
 
-	getAllNotesUseCase   *usecases.GetAllNotesUseCase
-	getNoteUseCase       *usecases.GetNoteUseCase
-	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
+	dailyDataRepository repositories.DailyDataRepositoryInterface
+	noteRepository      repositories.NoteRepositoryInterface
 
 	openViews    []Deletable
 	WhenFinished func() error
@@ -37,19 +37,17 @@ func NewDateSelectView(
 	insertData dto.InsertData,
 	dateRange DateRange,
 	memoDirPath string,
-	getAllNotesUseCase *usecases.GetAllNotesUseCase,
-	getNoteUseCase *usecases.GetNoteUseCase,
-	saveDailyDataUseCase *usecases.SaveDailyDataUseCase,
+	dailyDataRepository repositories.DailyDataRepositoryInterface,
+	noteRepository repositories.NoteRepositoryInterface,
 ) *DateSelectView {
 	retObj := &DateSelectView{
-		gui:                  gui,
-		openViews:            openView,
-		insertData:           insertData,
-		dateRange:            dateRange,
-		memoDirPath:          memoDirPath,
-		getAllNotesUseCase:   getAllNotesUseCase,
-		getNoteUseCase:       getNoteUseCase,
-		saveDailyDataUseCase: saveDailyDataUseCase,
+		gui:                 gui,
+		openViews:           openView,
+		insertData:          insertData,
+		dateRange:           dateRange,
+		memoDirPath:         memoDirPath,
+		dailyDataRepository: dailyDataRepository,
+		noteRepository:      noteRepository,
 	}
 	return retObj
 }
@@ -160,15 +158,16 @@ func (n *DateSelectView) decisionDate(g *gocui.Gui, v *gocui.View) error {
 			return err
 		}
 		// noteSelectViewの表示
-		allNotes, err := n.getAllNotesUseCase.Handle()
 		noteSelectView := NewNoteSelectView(
 			n.gui,
 			n.insertData,
 			n.openViews,
 			n.memoDirPath,
-			n.getNoteUseCase,
-			n.saveDailyDataUseCase,
+			n.dailyDataRepository,
+			n.noteRepository,
 		)
+		useCase := usecases.NewGetAllNotesUseCase(n.noteRepository)
+		allNotes, err := useCase.Handle()
 		err = noteSelectView.Create(allNotes)
 		if err != nil {
 			return err
@@ -188,11 +187,10 @@ func (n *DateSelectView) displayDateInputView() error {
 		n.gui,
 		n.insertData,
 		n.dateRange,
-		n.getAllNotesUseCase,
-		n.getNoteUseCase,
-		n.saveDailyDataUseCase,
 		n.memoDirPath,
 		n.openViews,
+		n.dailyDataRepository,
+		n.noteRepository,
 	)
 	err := dateInputView.Create()
 	if err != nil {

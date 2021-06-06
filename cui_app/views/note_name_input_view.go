@@ -2,6 +2,7 @@ package views
 
 import (
 	"github.com/jroimartin/gocui"
+	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/mixmaru/rshin-memo/cui_app/dto"
 	"github.com/mixmaru/rshin-memo/cui_app/utils"
@@ -23,23 +24,23 @@ type NoteNameInputView struct {
 	WhenFinished             func() error // call when finish
 	ViewsToCloseWhenFinished []Deletable
 
-	getNoteUseCase       *usecases.GetNoteUseCase
-	saveDailyDataUseCase *usecases.SaveDailyDataUseCase
+	dailyDataRepository repositories.DailyDataRepositoryInterface
+	noteRepository      repositories.NoteRepositoryInterface
 }
 
 func NewNoteNameInputView(
 	gui *gocui.Gui,
 	memoDirPath string,
 	insertData dto.InsertData,
-	getNoteUseCase *usecases.GetNoteUseCase,
-	saveDailyDataUseCase *usecases.SaveDailyDataUseCase,
+	dailyDataRepository repositories.DailyDataRepositoryInterface,
+	noteRepository repositories.NoteRepositoryInterface,
 ) *NoteNameInputView {
 	retObj := &NoteNameInputView{
-		gui:                  gui,
-		insertData:           insertData,
-		memoDirPath:          memoDirPath,
-		getNoteUseCase:       getNoteUseCase,
-		saveDailyDataUseCase: saveDailyDataUseCase,
+		gui:                 gui,
+		insertData:          insertData,
+		memoDirPath:         memoDirPath,
+		dailyDataRepository: dailyDataRepository,
+		noteRepository:      noteRepository,
 	}
 	retObj.ViewsToCloseWhenFinished = append(retObj.ViewsToCloseWhenFinished, retObj)
 	return retObj
@@ -98,7 +99,8 @@ func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
 	n.insertData.NoteName = noteName
 
 	// 同名Noteが存在しないかcheck
-	_, notExist, err := n.getNoteUseCase.Handle(noteName)
+	useCase := usecases.NewGetNoteUseCase(n.noteRepository)
+	_, notExist, err := useCase.Handle(noteName)
 	if err != nil {
 		return err
 	} else if !notExist {
@@ -134,7 +136,8 @@ func (n *NoteNameInputView) createNewDailyList(insertData dto.InsertData) error 
 		return err
 	}
 	// Note作成を依頼
-	err = n.saveDailyDataUseCase.Handle(dailyData)
+	useCase := usecases.NewSaveDailyDataUseCase(n.noteRepository, n.dailyDataRepository)
+	err = useCase.Handle(dailyData)
 	if err != nil {
 		// todo: エラーメッセージビューへメッセージを表示する
 		return err
