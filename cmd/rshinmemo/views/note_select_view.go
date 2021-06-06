@@ -99,9 +99,15 @@ func (n *NoteSelectView) insertNoteToDailyList(g *gocui.Gui, v *gocui.View) erro
 }
 
 func (n *NoteSelectView) addNote() error {
-	noteNameInputView := NewNoteNameInputView(n.gui, n.memoDirPath, n.insertData, n.dailYDataRepository, n.noteRepository)
+	noteNameInputView := NewNoteNameInputView(
+		n.gui,
+		n.memoDirPath,
+		n.insertData,
+		n.openViews,
+		n.dailYDataRepository,
+		n.noteRepository,
+	)
 	noteNameInputView.WhenFinished = n.WhenFinished
-	noteNameInputView.ViewsToCloseWhenFinished = append(noteNameInputView.ViewsToCloseWhenFinished, n.openViews...)
 	err := noteNameInputView.Create()
 	if err != nil {
 		return err
