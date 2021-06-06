@@ -12,23 +12,15 @@ import (
 
 const DATE_INPUT_VIEW = "date_input"
 
-type AddRowMode int
-
-const (
-	ADD_ROW_PREV_MODE = iota
-	ADD_ROW_NEXT_MODE
-)
-
 type DateInputView struct {
-	gui  *gocui.Gui
-	view *gocui.View
-
-	insertData  dto.InsertData
-	addRowMode  AddRowMode
-	dateRange   DateRange
+	gui         *gocui.Gui
+	view        *gocui.View
 	memoDirPath string
-	openViews   []Deletable
 
+	insertData dto.InsertData
+	dateRange  DateRange
+
+	openViews    []Deletable
 	WhenFinished func() error
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
@@ -37,9 +29,9 @@ type DateInputView struct {
 
 func NewDateInputView(
 	gui *gocui.Gui,
+	memoDirPath string,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	memoDirPath string,
 	openViews []Deletable,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
@@ -120,9 +112,9 @@ func (n *DateInputView) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) er
 	allNotes, err := useCase.Handle()
 	noteSelectView := NewNoteSelectView(
 		n.gui,
+		n.memoDirPath,
 		n.insertData,
 		n.openViews,
-		n.memoDirPath,
 		n.dailyDataRepository,
 		n.noteRepository,
 	)

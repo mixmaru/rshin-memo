@@ -21,8 +21,6 @@ type DailyListView struct {
 	dailyList []usecases.DailyData
 
 	memoDirPath string
-	insertData  dto.InsertData
-	addRowMode  AddRowMode
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
@@ -37,7 +35,6 @@ func NewDailyListView(
 	retObj := &DailyListView{
 		gui:                 gui,
 		memoDirPath:         memoDirPath,
-		insertData:          dto.InsertData{},
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
 	}
@@ -89,11 +86,11 @@ func (d *DailyListView) setEvents() error {
 		return errors.Wrap(err, "キーバインド失敗")
 	}
 	// daily_listでカーソルの下行に新規list追加
-	if err := d.gui.SetKeybinding(DAILY_LIST_VIEW, 'o', gocui.ModNone, d.displayDateInputViewForNext); err != nil {
+	if err := d.gui.SetKeybinding(DAILY_LIST_VIEW, 'o', gocui.ModNone, d.displayDateInputViewForInsertingNextCursorPosition); err != nil {
 		return errors.Wrap(err, "キーバインド失敗")
 	}
 	// daily_listでカーソルの上行に新規list追加
-	if err := d.gui.SetKeybinding(DAILY_LIST_VIEW, 'O', gocui.ModNone, d.displayDataInputViewForPrev); err != nil {
+	if err := d.gui.SetKeybinding(DAILY_LIST_VIEW, 'O', gocui.ModNone, d.displayDataInputViewForInsertingCurrentCursorPosition); err != nil {
 		return errors.Wrap(err, "キーバインド失敗")
 	}
 
@@ -192,11 +189,6 @@ func getNoteString(text string) string {
 	return strings.Split(text, "\t")[1]
 }
 
-const (
-	prev_cursor = iota
-	next_cursor
-)
-
 func (d *DailyListView) Reload() error {
 	d.view.Clear()
 	d.dailyList = nil
@@ -251,7 +243,7 @@ func (d *DailyListView) GetInsertDateRangeNextCursor() (DateRange, error) {
 	return retDateRange, nil
 }
 
-func (d *DailyListView) GetInsertDateRangePrevCursor() (DateRange, error) {
+func (d *DailyListView) GetInsertDateRangeCurrentCursor() (DateRange, error) {
 	retDateRange := DateRange{}
 	// カーソル位置の日付を取得する
 	toDateString, err := d.GetDateOnCursor()
@@ -277,15 +269,6 @@ func (d *DailyListView) GetInsertDateRangePrevCursor() (DateRange, error) {
 	return retDateRange, nil
 }
 
-func (d *DailyListView) GetDailyDataByDate(dateStr string) usecases.DailyData {
-	for _, dailyData := range d.dailyList {
-		if dailyData.Date == dateStr {
-			return dailyData
-		}
-	}
-	return usecases.DailyData{}
-}
-
 func (d *DailyListView) OnCursorRowPosition() (int, error) {
 	_, y := d.view.Cursor()
 	lineStr, err := d.view.Line(y)
@@ -309,60 +292,46 @@ func (d *DailyListView) OnCursorRowPosition() (int, error) {
 	return 0, errors.New("カーソル上のNoteNameが見当たらない")
 }
 
-func (d *DailyListView) GetDailyList() []usecases.DailyData {
-	return d.dailyList
-}
-
-func (d *DailyListView) displayDateInputViewForNext(g *gocui.Gui, v *gocui.View) error {
+func (d *DailyListView) displayDateInputViewForInsertingNextCursorPosition(g *gocui.Gui, v *gocui.View) error {
 	insertNum, err := d.OnCursorRowPosition()
 	if err != nil {
 		return err
 	}
-	d.insertData.InsertNum = insertNum + 1
-	d.addRowMode = ADD_ROW_NEXT_MODE
-	return d.displayDateSelectView()
+	insertData := dto.InsertData{}
+	insertData.InsertNum = insertNum + 1
+	dateRange, err := d.GetInsertDateRangeNextCursor()
+	if err != nil {
+		return err
+	}
+	return d.displayDateSelectView(insertData, dateRange)
 }
 
-func (d *DailyListView) displayDataInputViewForPrev(g *gocui.Gui, v *gocui.View) error {
+func (d *DailyListView) displayDataInputViewForInsertingCurrentCursorPosition(g *gocui.Gui, v *gocui.View) error {
 	insertNum, err := d.OnCursorRowPosition()
 	if err != nil {
 		return err
 	}
-	d.insertData.InsertNum = insertNum
-	d.addRowMode = ADD_ROW_PREV_MODE
-	return d.displayDateSelectView()
+	insertData := dto.InsertData{}
+	insertData.InsertNum = insertNum
+	dateRange, err := d.GetInsertDateRangeCurrentCursor()
+	if err != nil {
+		return err
+	}
+	return d.displayDateSelectView(insertData, dateRange)
 }
 
-func (d *DailyListView) displayDateSelectView() error {
-	d.insertData.TargetDailyData = d.GetDailyList()
-
-	var dateRange DateRange
-	var err error
-	switch d.addRowMode {
-	case ADD_ROW_PREV_MODE:
-		dateRange, err = d.GetInsertDateRangePrevCursor()
-		if err != nil {
-			return err
-		}
-	case ADD_ROW_NEXT_MODE:
-		dateRange, err = d.GetInsertDateRangeNextCursor()
-		if err != nil {
-			return err
-		}
-	default:
-		return errors.Errorf("考慮外の値が使われた。addRowMode: %v", d.addRowMode)
-	}
-
+func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRange DateRange) error {
+	insertData.TargetDailyData = d.dailyList
 	dateSelectView := NewDateSelectView(
 		d.gui,
-		[]Deletable{},
-		d.insertData,
-		dateRange,
 		d.memoDirPath,
+		insertData,
+		dateRange,
+		[]Deletable{},
 		d.dailyDataRepository,
 		d.noteRepository,
 	)
-	err = dateSelectView.Create()
+	err := dateSelectView.Create()
 	if err != nil {
 		return err
 	}

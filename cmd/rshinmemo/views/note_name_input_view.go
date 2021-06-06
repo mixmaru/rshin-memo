@@ -17,12 +17,14 @@ type Deletable interface {
 }
 
 type NoteNameInputView struct {
-	gui                      *gocui.Gui
-	view                     *gocui.View
-	insertData               dto.InsertData
-	memoDirPath              string
-	WhenFinished             func() error // call when finish
-	ViewsToCloseWhenFinished []Deletable
+	gui         *gocui.Gui
+	view        *gocui.View
+	memoDirPath string
+
+	insertData dto.InsertData
+
+	WhenFinished func() error // call when finish
+	openViews    []Deletable
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
@@ -32,17 +34,18 @@ func NewNoteNameInputView(
 	gui *gocui.Gui,
 	memoDirPath string,
 	insertData dto.InsertData,
+	openViews []Deletable,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *NoteNameInputView {
 	retObj := &NoteNameInputView{
 		gui:                 gui,
-		insertData:          insertData,
 		memoDirPath:         memoDirPath,
+		insertData:          insertData,
+		openViews:           openViews,
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
 	}
-	retObj.ViewsToCloseWhenFinished = append(retObj.ViewsToCloseWhenFinished, retObj)
 	return retObj
 }
 
@@ -62,6 +65,7 @@ func (n *NoteNameInputView) Create() error {
 	if err := n.gui.SetKeybinding(NOTE_NAME_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, n.createNote); err != nil {
 		return errors.WithStack(err)
 	}
+	n.openViews = append(n.openViews, n)
 	return nil
 }
 
@@ -73,7 +77,7 @@ func (n *NoteNameInputView) Focus() error {
 	return nil
 }
 
-func (n *NoteNameInputView) GetInputNoteName() (string, error) {
+func (n *NoteNameInputView) getInputNoteName() (string, error) {
 	text, err := n.view.Line(0)
 	if err != nil {
 		return "", errors.Wrap(err, "入力データの取得に失敗しました")
@@ -92,7 +96,7 @@ func (n *NoteNameInputView) Delete() error {
 
 func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
 	// 入力内容を取得
-	noteName, err := n.GetInputNoteName()
+	noteName, err := n.getInputNoteName()
 	if err != nil {
 		return err
 	}
@@ -121,7 +125,7 @@ func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
 	if err != nil {
 		return err
 	}
-	for _, view := range n.ViewsToCloseWhenFinished {
+	for _, view := range n.openViews {
 		err := view.Delete()
 		if err != nil {
 			return err
