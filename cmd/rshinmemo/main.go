@@ -14,6 +14,7 @@ func main() {
 	}
 	rshinMemoBaseDir := filepath.Join(homedir, "rshin_memo")
 	rshinMemo := NewRshinMemo(
+		rshinMemoBaseDir,
 		repositories.NewDailyDataRepository(filepath.Join(rshinMemoBaseDir, "daily_data.json")),
 		repositories.NewNoteRepository(rshinMemoBaseDir),
 	)

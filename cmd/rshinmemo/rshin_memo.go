@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 	"log"
 	"os"
-	"path/filepath"
 )
 
 type RshinMemo struct {
@@ -18,15 +17,10 @@ type RshinMemo struct {
 }
 
 func NewRshinMemo(
+	memoDirPath string,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *RshinMemo {
-
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		log.Panicf("初期化失敗. %+v", err)
-	}
-
 	rshinMemo := &RshinMemo{}
 	// guiの初期化
 	g, err := gocui.NewGui(gocui.OutputNormal)
@@ -35,7 +29,7 @@ func NewRshinMemo(
 	}
 	g.SetManagerFunc(rshinMemo.layout)
 	rshinMemo.gui = g
-	rshinMemo.memoDirPath = filepath.Join(homedir, "rshin_memo")
+	rshinMemo.memoDirPath = memoDirPath
 	rshinMemo.alreadyInitialized = false
 	rshinMemo.dailyListView = views.NewDailyListView(
 		rshinMemo.gui,
