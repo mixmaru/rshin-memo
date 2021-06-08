@@ -1,7 +1,6 @@
 package views
 
 import (
-	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -79,35 +78,6 @@ func TestDateRange_IsIn(t *testing.T) {
 	})
 }
 
-func Test_isLastNote(t *testing.T) {
-	dailyList := []usecases.DailyData{
-		{
-			Date: "2021-03-30",
-			Notes: []string{
-				"a",
-				"b",
-				"c",
-			},
-		},
-		{
-			Date: "2021-03-29",
-			Notes: []string{
-				"a",
-				"b",
-			},
-		},
-	}
-
-	t.Run("末noteだったらTrue", func(t *testing.T) {
-		assert.True(t, isLastNote(dailyList, "2021-03-29", "b"))
-	})
-
-	t.Run("末noteでなければfalse", func(t *testing.T) {
-		assert.False(t, isLastNote(dailyList, "2021-03-30", "c"))
-		assert.False(t, isLastNote(dailyList, "2021-03-29", "a"))
-	})
-}
-
 func TestDateRange_GetSomeDateInRange(t *testing.T) {
 	t.Run("From, Toが設定されているRange：", func(t *testing.T) {
 		d := &DateRange{
@@ -116,7 +86,7 @@ func TestDateRange_GetSomeDateInRange(t *testing.T) {
 		}
 
 		t.Run("指定numがRangeの範囲内ならnum個のDateが返ってくる", func(t *testing.T) {
-			result, err := d.GetSomeDateInRange(5)
+			result, err := d.GetSomeDateInRange(5, time.Now())
 			assert.NoError(t, err)
 			expected := []time.Time{
 				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
@@ -129,7 +99,7 @@ func TestDateRange_GetSomeDateInRange(t *testing.T) {
 		})
 
 		t.Run("指定numがRangeの範囲と同じならnum個のDateが返ってくる", func(t *testing.T) {
-			result, err := d.GetSomeDateInRange(7)
+			result, err := d.GetSomeDateInRange(7, time.Now())
 			assert.NoError(t, err)
 			expected := []time.Time{
 				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
@@ -144,7 +114,7 @@ func TestDateRange_GetSomeDateInRange(t *testing.T) {
 		})
 
 		t.Run("指定numがRangeの範囲外ならRangeの最大個のDateが返ってくる", func(t *testing.T) {
-			result, err := d.GetSomeDateInRange(10)
+			result, err := d.GetSomeDateInRange(10, time.Now())
 			assert.NoError(t, err)
 			expected := []time.Time{
 				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
@@ -165,7 +135,7 @@ func TestDateRange_GetSomeDateInRange(t *testing.T) {
 		}
 
 		t.Run("Fromからの指定num個のDateが返ってくる", func(t *testing.T) {
-			result, err := d.GetSomeDateInRange(3)
+			result, err := d.GetSomeDateInRange(3, time.Now())
 			assert.NoError(t, err)
 			expected := []time.Time{
 				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
@@ -181,7 +151,7 @@ func TestDateRange_GetSomeDateInRange(t *testing.T) {
 			To: time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
 		}
 		t.Run("Toまでの指定num個のDateが返ってくる", func(t *testing.T) {
-			result, err := d.GetSomeDateInRange(3)
+			result, err := d.GetSomeDateInRange(3, time.Now())
 			assert.NoError(t, err)
 			expected := []time.Time{
 				time.Date(2020, 12, 30, 0, 0, 0, 0, time.Local),
@@ -194,7 +164,14 @@ func TestDateRange_GetSomeDateInRange(t *testing.T) {
 	})
 	t.Run("ToもFromも設定されていないRangeの場合errorが返る：", func(t *testing.T) {
 		d := &DateRange{}
-		_, err := d.GetSomeDateInRange(4)
-		assert.Error(t, err)
+		result, err := d.GetSomeDateInRange(4, time.Date(2021, 1, 16, 0, 0, 0, 0, time.Local))
+		assert.NoError(t, err)
+		expected := []time.Time{
+			time.Date(2021, 1, 14, 0, 0, 0, 0, time.Local),
+			time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local),
+			time.Date(2021, 1, 16, 0, 0, 0, 0, time.Local),
+			time.Date(2021, 1, 17, 0, 0, 0, 0, time.Local),
+		}
+		assert.Equal(t, expected, result)
 	})
 }

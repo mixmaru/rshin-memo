@@ -9,6 +9,7 @@ import (
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/pkg/errors"
 	"sort"
+	"time"
 )
 
 const DATE_SELECT_VIEW = "date_select"
@@ -98,7 +99,8 @@ func (n *DateSelectView) setEvents() error {
 func (n *DateSelectView) setContents() error {
 	fmt.Fprintln(n.view, utils.ConvertStringForView("手入力する"))
 
-	dates, err := n.dateRange.GetSomeDateInRange(30)
+	// 範囲指定がない場合は今日を中心にしてnum指定分の日付をだす
+	dates, err := n.dateRange.GetSomeDateInRange(30, time.Now())
 	if err != nil {
 		return err
 	}

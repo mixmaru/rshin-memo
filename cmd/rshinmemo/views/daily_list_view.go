@@ -156,7 +156,12 @@ func (d *DailyListView) GetDateOnCursor() (string, error) {
 	_, y := d.view.Cursor()
 	text, err := d.view.Line(y)
 	if err != nil {
-		return "", errors.Wrap(err, "選択行のtextの取得に失敗")
+		if err.Error() == "invalid point" {
+			// Listの末の何も表示されていない空間にカーソルがある場合
+			return "", nil
+		} else {
+			return "", errors.Wrap(err, "選択行のtextの取得に失敗")
+		}
 	}
 	return getDateString(text), nil
 }
@@ -165,7 +170,12 @@ func (d *DailyListView) GetDateOnCursorNext() (string, error) {
 	_, y := d.view.Cursor()
 	text, err := d.view.Line(y + 1)
 	if err != nil {
-		return "", errors.Wrap(err, "選択行の次の行のtextの取得に失敗")
+		if err.Error() == "invalid point" {
+			// Listの末の何も表示されていない空間にカーソルがある場合
+			return "", nil
+		} else {
+			return "", errors.Wrap(err, "選択行の次の行のtextの取得に失敗")
+		}
 	}
 	return getDateString(text), nil
 }
@@ -217,25 +227,19 @@ func (d *DailyListView) GetInsertDateRangeNextCursor() (DateRange, error) {
 	if err != nil {
 		return DateRange{}, err
 	}
-	err = retDateRange.SetToByString(toDateString)
-	if err != nil {
-		return DateRange{}, err
-	}
-
-	// if カーソルがデータの末でなければ一つ次の日付を取得する
-	_, y := d.view.Cursor()
-	line, err := d.view.Line(y)
-	if err != nil {
-		return DateRange{}, errors.WithStack(err)
-	}
-	date := getDateString(line)
-	note := getNoteString(utils.ConvertStringForLogic(line))
-	if !isLastNote(d.dailyList, date, note) {
-		fromDateString, err := d.GetDateOnCursorNext()
+	if toDateString != "" {
+		err := retDateRange.SetToByString(toDateString)
 		if err != nil {
 			return DateRange{}, err
 		}
-		err = retDateRange.SetFromByString(fromDateString)
+	}
+
+	fromDateString, err := d.GetDateOnCursorNext()
+	if err != nil {
+		return DateRange{}, err
+	}
+	if fromDateString != "" {
+		err := retDateRange.SetFromByString(fromDateString)
 		if err != nil {
 			return DateRange{}, err
 		}
@@ -273,7 +277,11 @@ func (d *DailyListView) OnCursorRowPosition() (int, error) {
 	_, y := d.view.Cursor()
 	lineStr, err := d.view.Line(y)
 	if err != nil {
-		return 0, err
+		if err.Error() == "invalid point" {
+			return len(d.dailyList) - 1, nil
+		} else {
+			return 0, errors.WithStack(err)
+		}
 	}
 	selectedDateStr := getDateString(utils.ConvertStringForLogic(lineStr))
 	selectedNoteName := getNoteString(utils.ConvertStringForLogic(lineStr))
@@ -353,24 +361,14 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 	return nil
 }
 
-func isLastNote(dailyList []usecases.DailyData, date, note string) bool {
-	lastDailyData := dailyList[len(dailyList)-1]
-	if lastDailyData.Date == date {
-		lastNote := lastDailyData.Notes[len(lastDailyData.Notes)-1]
-		if lastNote == note {
-			return true
-		}
-	}
-	return false
-}
-
 type DateRange struct {
 	From time.Time
 	To   time.Time
 }
 
-// 日付の範囲から最大指定個数の日をスライスで返す
-func (d *DateRange) GetSomeDateInRange(num int) ([]time.Time, error) {
+// 日付の範囲から最大指定個数の日をスライスで返す。
+func (d *DateRange) GetSomeDateInRange(num int, now time.Time) ([]time.Time, error) {
+	now = now.In(time.Local)
 	retDates := []time.Time{}
 	var startData time.Time
 	if !d.From.IsZero() {
@@ -378,7 +376,8 @@ func (d *DateRange) GetSomeDateInRange(num int) ([]time.Time, error) {
 	} else if !d.To.IsZero() {
 		startData = d.To.AddDate(0, 0, -(num - 1))
 	} else {
-		return nil, errors.Errorf("このDateRangeはFromもToも設定されていませんので実行できません。%+v", d)
+		// 範囲指定がない場合は今日を中心にしてnum指定分の日付をだす
+		startData = time.Date(now.Year(), now.Month(), now.Day()-num/2, 0, 0, 0, 0, time.Local)
 	}
 
 	for i := 0; i < num; i++ {
