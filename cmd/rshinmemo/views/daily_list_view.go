@@ -269,11 +269,14 @@ func (d *DailyListView) GetInsertDateRangeCurrentCursor() (DateRange, error) {
 	return retDateRange, nil
 }
 
-func (d *DailyListView) OnCursorRowPosition() (int, error) {
+func (d *DailyListView) OnCursorRowPosition() (lineNum int, emptyLine bool, err error) {
 	_, y := d.view.Cursor()
 	lineStr, err := d.view.Line(y)
 	if err != nil {
-		return 0, err
+		return 0, false, err
+	}
+	if lineStr == "" {
+		return 0, true, nil
 	}
 	selectedDateStr := getDateString(utils.ConvertStringForLogic(lineStr))
 	selectedNoteName := getNoteString(utils.ConvertStringForLogic(lineStr))
@@ -282,40 +285,54 @@ func (d *DailyListView) OnCursorRowPosition() (int, error) {
 		if dailyData.Date == selectedDateStr {
 			for _, noteName := range dailyData.Notes {
 				if noteName == selectedNoteName {
-					return rowPosition, nil
+					return rowPosition, false, nil
 				}
 				rowPosition += 1
 			}
 		}
 		rowPosition += len(dailyData.Notes)
 	}
-	return 0, errors.New("カーソル上のNoteNameが見当たらない")
+	return 0, false, errors.New("カーソル上のNoteNameが見当たらない")
 }
 
 func (d *DailyListView) displayDateInputViewForInsertingNextCursorPosition(g *gocui.Gui, v *gocui.View) error {
-	insertNum, err := d.OnCursorRowPosition()
-	if err != nil {
-		return err
-	}
-	insertData := dto.InsertData{}
-	insertData.InsertNum = insertNum + 1
-	dateRange, err := d.GetInsertDateRangeNextCursor()
-	if err != nil {
-		return err
-	}
-	return d.displayDateSelectView(insertData, dateRange)
+	return d.displayDataInputView(true)
 }
 
 func (d *DailyListView) displayDataInputViewForInsertingCurrentCursorPosition(g *gocui.Gui, v *gocui.View) error {
-	insertNum, err := d.OnCursorRowPosition()
-	if err != nil {
-		return err
-	}
+	return d.displayDataInputView(false)
+}
+
+func (d *DailyListView) displayDataInputView(next bool) error {
+	var dateRange DateRange
 	insertData := dto.InsertData{}
-	insertData.InsertNum = insertNum
-	dateRange, err := d.GetInsertDateRangeCurrentCursor()
-	if err != nil {
-		return err
+	if len(d.dailyList) == 0 {
+		// データがないときは無条件に新規登録
+		insertData.InsertNum = 0
+		now := time.Now().In(time.Local)
+		dateRange = DateRange{
+			From: time.Date(now.Year(), now.Month(), now.Day()-15, 0, 0, 0, 0, time.Local),
+			To:   time.Date(now.Year(), now.Month(), now.Day()+15, 0, 0, 0, 0, time.Local),
+		}
+	} else {
+		insertNum, emptyLine, err := d.OnCursorRowPosition()
+		if err != nil {
+			return err
+		}
+		if emptyLine {
+			// データがあるのに何もない行でoかOを押したときはなにもしない
+			return nil
+		}
+
+		insertData.InsertNum = insertNum + 1
+		if next {
+			dateRange, err = d.GetInsertDateRangeNextCursor()
+		} else {
+			dateRange, err = d.GetInsertDateRangeCurrentCursor()
+		}
+		if err != nil {
+			return err
+		}
 	}
 	return d.displayDateSelectView(insertData, dateRange)
 }
