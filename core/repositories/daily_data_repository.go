@@ -26,6 +26,10 @@ func NewDailyDataRepository(filePath string) *DailyDataRepository {
 
 // load as entity from jsonfile
 func (d *DailyDataRepository) Get() ([]*entities.DailyDataEntity, error) {
+	// ファイルがなければ空データを返す
+	if _, err := os.Stat(d.filePath); err != nil {
+		return []*entities.DailyDataEntity{}, nil
+	}
 	// ファイルから内容を読み込む
 	fileContentBytes, err := ioutil.ReadFile(d.filePath)
 	if err != nil {
