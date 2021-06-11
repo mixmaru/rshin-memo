@@ -20,7 +20,7 @@ type DateInputView struct {
 	insertData dto.InsertData
 	dateRange  DateRange
 
-	openViews    []Deletable
+	openViews    []View
 	WhenFinished func() error
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
@@ -32,7 +32,7 @@ func NewDateInputView(
 	memoDirPath string,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	openViews []Deletable,
+	openViews []View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *DateInputView {

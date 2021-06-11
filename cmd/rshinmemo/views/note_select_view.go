@@ -21,7 +21,7 @@ type NoteSelectView struct {
 
 	insertData dto.InsertData
 
-	openViews    []Deletable
+	openViews    []View
 	WhenFinished func() error
 
 	dailYDataRepository repositories.DailyDataRepositoryInterface
@@ -32,7 +32,7 @@ func NewNoteSelectView(
 	gui *gocui.Gui,
 	memoDirPath string,
 	insertData dto.InsertData,
-	openViews []Deletable,
+	openViews []View,
 	dailYDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *NoteSelectView {

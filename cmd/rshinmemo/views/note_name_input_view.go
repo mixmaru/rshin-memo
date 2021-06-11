@@ -12,8 +12,9 @@ import (
 
 const NOTE_NAME_INPUT_VIEW = "note_name_input"
 
-type Deletable interface {
+type View interface {
 	Delete() error
+	Focus() error
 }
 
 type NoteNameInputView struct {
@@ -24,7 +25,7 @@ type NoteNameInputView struct {
 	insertData dto.InsertData
 
 	WhenFinished func() error // call when finish
-	openViews    []Deletable
+	openViews    []View
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
@@ -34,7 +35,7 @@ func NewNoteNameInputView(
 	gui *gocui.Gui,
 	memoDirPath string,
 	insertData dto.InsertData,
-	openViews []Deletable,
+	openViews []View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *NoteNameInputView {

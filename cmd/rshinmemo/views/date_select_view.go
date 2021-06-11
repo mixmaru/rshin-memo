@@ -21,7 +21,7 @@ type DateSelectView struct {
 	insertData dto.InsertData
 	dateRange  DateRange
 
-	openViews    []Deletable
+	openViews    []View
 	WhenFinished func() error
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
@@ -33,7 +33,7 @@ func NewDateSelectView(
 	memoDirPath string,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	openView []Deletable,
+	openView []View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *DateSelectView {
@@ -92,7 +92,14 @@ func (n *DateSelectView) setEvents() error {
 	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, gocui.KeyEnter, gocui.ModNone, n.decisionDate); err != nil {
 		return errors.Wrap(err, "キーバイーンド失敗")
 	}
+	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, 'q', gocui.ModNone, n.deleteThisView); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
 	return nil
+}
+
+func (n *DateSelectView) deleteEvents() {
+	n.gui.DeleteKeybindings(DATE_SELECT_VIEW)
 }
 
 func (n *DateSelectView) setContents() error {
@@ -131,9 +138,10 @@ func (n *DateSelectView) getDateOnCursor() (string, error) {
 }
 
 func (n *DateSelectView) Delete() error {
+	n.deleteEvents()
 	err := n.gui.DeleteView(DATE_SELECT_VIEW)
 	if err != nil {
-		return errors.Wrapf(err, "Viewの削除に失敗。%v", NOTE_NAME_INPUT_VIEW)
+		return errors.Wrapf(err, "Viewの削除に失敗。%v", DATE_SELECT_VIEW)
 	}
 	return nil
 }
@@ -205,6 +213,18 @@ func (n *DateSelectView) displayDateInputView() error {
 	err = dateInputView.Focus()
 	if err != nil {
 		return errors.Wrap(err, "フォーカス移動失敗")
+	}
+	return nil
+}
+
+func (n *DateSelectView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
+	err := n.Delete()
+	if err != nil {
+		return err
+	}
+	err = n.openViews[len(n.openViews)-2].Focus()
+	if err != nil {
+		return err
 	}
 	return nil
 }

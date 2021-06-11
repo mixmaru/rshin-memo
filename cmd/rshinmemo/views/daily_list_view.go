@@ -344,7 +344,7 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 		d.memoDirPath,
 		insertData,
 		dateRange,
-		[]Deletable{},
+		[]View{d},
 		d.dailyDataRepository,
 		d.noteRepository,
 	)
@@ -366,6 +366,15 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 	err = dateSelectView.Focus()
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (d *DailyListView) Delete() error {
+	d.gui.DeleteKeybindings(DAILY_LIST_VIEW)
+	err := d.gui.DeleteView(DAILY_LIST_VIEW)
+	if err != nil {
+		return errors.Wrapf(err, "Viewの削除に失敗。%v", DAILY_LIST_VIEW)
 	}
 	return nil
 }
