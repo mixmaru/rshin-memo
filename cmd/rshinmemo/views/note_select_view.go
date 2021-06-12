@@ -21,8 +21,7 @@ type NoteSelectView struct {
 
 	insertData dto.InsertData
 
-	openViews    []View
-	WhenFinished func() error
+	openViews []View
 
 	dailYDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
@@ -114,7 +113,6 @@ func (n *NoteSelectView) addNote() error {
 		n.dailYDataRepository,
 		n.noteRepository,
 	)
-	noteNameInputView.WhenFinished = n.WhenFinished
 	err := noteNameInputView.Create()
 	if err != nil {
 		return err
@@ -147,15 +145,19 @@ func (n *NoteSelectView) insertExistedNoteToDailyList() error {
 
 	// 不要なviewを閉じる
 	for _, view := range n.openViews {
-		err := view.Delete()
-		if err != nil {
-			return err
+		_, ok := view.(*DailyListView)
+		if ok {
+			// DailyListViewにフォーカスを移す
+			err := view.Focus()
+			if err != nil {
+				return err
+			}
+		} else {
+			err := view.Delete()
+			if err != nil {
+				return err
+			}
 		}
-	}
-
-	err = n.WhenFinished()
-	if err != nil {
-		return err
 	}
 	return nil
 }

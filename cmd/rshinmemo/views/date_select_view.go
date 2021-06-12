@@ -21,8 +21,7 @@ type DateSelectView struct {
 	insertData dto.InsertData
 	dateRange  DateRange
 
-	openViews    []View
-	WhenFinished func() error
+	openViews []View
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
@@ -171,7 +170,6 @@ func (n *DateSelectView) decisionDate(g *gocui.Gui, v *gocui.View) error {
 		if err != nil {
 			return err
 		}
-		noteSelectView.WhenFinished = n.WhenFinished
 		err = noteSelectView.Focus()
 		if err != nil {
 			return err
@@ -195,7 +193,6 @@ func (n *DateSelectView) displayDateInputView() error {
 	if err != nil {
 		return err
 	}
-	dateInputView.WhenFinished = n.WhenFinished
 	// フォーカスの移動
 	err = dateInputView.Focus()
 	if err != nil {

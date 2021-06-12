@@ -19,8 +19,7 @@ type NoteNameInputView struct {
 
 	insertData dto.InsertData
 
-	WhenFinished func() error // call when finish
-	openViews    []View
+	openViews []View
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
@@ -116,14 +115,18 @@ func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
 		}
 	}
 
-	err = n.WhenFinished()
-	if err != nil {
-		return err
-	}
 	for _, view := range n.openViews {
-		err := view.Delete()
-		if err != nil {
-			return err
+		_, ok := view.(*DailyListView)
+		if ok {
+			err := view.Focus()
+			if err != nil {
+				return err
+			}
+		} else {
+			err := view.Delete()
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
