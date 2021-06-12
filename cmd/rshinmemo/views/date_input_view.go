@@ -20,11 +20,13 @@ type DateInputView struct {
 	insertData dto.InsertData
 	dateRange  DateRange
 
-	openViews    []Deletable
+	openViews    []View
 	WhenFinished func() error
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
+
+	*ViewBase
 }
 
 func NewDateInputView(
@@ -32,7 +34,7 @@ func NewDateInputView(
 	memoDirPath string,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	openViews []Deletable,
+	openViews []View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *DateInputView {
@@ -59,20 +61,24 @@ func (n *DateInputView) Create() error {
 
 	n.view.Editable = true
 	n.view.Editor = &Editor{}
+	n.openViews = append(n.openViews, n)
+	n.ViewBase = NewViewBase(DATE_INPUT_VIEW, n.gui, n.openViews)
 
+	err = n.setEvent()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (n *DateInputView) setEvent() error {
 	// DateInputViewでのEnterキー
 	if err := n.gui.SetKeybinding(DATE_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, n.displayNoteNameInputView); err != nil {
 		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
-
-	n.openViews = append(n.openViews, n)
-	return nil
-}
-
-func (n *DateInputView) Focus() error {
-	_, err := n.gui.SetCurrentView(DATE_INPUT_VIEW)
-	if err != nil {
-		return errors.Wrap(err, "フォーカス移動失敗")
+	if err := n.gui.SetKeybinding(DATE_INPUT_VIEW, gocui.KeyEsc, gocui.ModNone, n.deleteThisView); err != nil {
+		return errors.Wrap(err, "Enterキーバインド失敗")
 	}
 	return nil
 }
@@ -84,14 +90,6 @@ func (n *DateInputView) getInputString() (string, error) {
 	}
 	inputText := utils.ConvertStringForLogic(text)
 	return inputText, nil
-}
-
-func (n *DateInputView) Delete() error {
-	err := n.gui.DeleteView(DATE_INPUT_VIEW)
-	if err != nil {
-		return errors.Wrapf(err, "Viewの削除に失敗。%v", NOTE_NAME_INPUT_VIEW)
-	}
-	return nil
 }
 
 func (n *DateInputView) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) error {

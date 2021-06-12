@@ -28,6 +28,7 @@ func NewRshinMemo(
 		log.Panicf("初期化失敗。error: %+v", errors.Wrap(err, "初期化失敗"))
 	}
 	g.SetManagerFunc(rshinMemo.layout)
+	g.InputEsc = true
 	rshinMemo.gui = g
 	rshinMemo.memoDirPath = memoDirPath
 	rshinMemo.alreadyInitialized = false

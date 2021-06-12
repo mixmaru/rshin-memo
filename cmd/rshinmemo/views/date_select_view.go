@@ -21,11 +21,13 @@ type DateSelectView struct {
 	insertData dto.InsertData
 	dateRange  DateRange
 
-	openViews    []Deletable
+	openViews    []View
 	WhenFinished func() error
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
+
+	*ViewBase
 }
 
 func NewDateSelectView(
@@ -33,7 +35,7 @@ func NewDateSelectView(
 	memoDirPath string,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	openView []Deletable,
+	openView []View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *DateSelectView {
@@ -62,6 +64,9 @@ func (n *DateSelectView) Create() error {
 	n.view.SelBgColor = gocui.ColorGreen
 	n.view.SelFgColor = gocui.ColorBlack
 
+	n.openViews = append(n.openViews, n)
+	n.ViewBase = NewViewBase(DATE_SELECT_VIEW, n.gui, n.openViews)
+
 	err = n.setContents()
 	if err != nil {
 		return err
@@ -71,7 +76,6 @@ func (n *DateSelectView) Create() error {
 		return err
 	}
 
-	n.openViews = append(n.openViews, n)
 	return nil
 }
 
@@ -92,7 +96,14 @@ func (n *DateSelectView) setEvents() error {
 	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, gocui.KeyEnter, gocui.ModNone, n.decisionDate); err != nil {
 		return errors.Wrap(err, "キーバイーンド失敗")
 	}
+	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, gocui.KeyEsc, gocui.ModNone, n.deleteThisView); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
 	return nil
+}
+
+func (n *DateSelectView) deleteEvents() {
+	n.gui.DeleteKeybindings(DATE_SELECT_VIEW)
 }
 
 func (n *DateSelectView) setContents() error {
@@ -113,14 +124,6 @@ func (n *DateSelectView) setContents() error {
 	return nil
 }
 
-func (n *DateSelectView) Focus() error {
-	_, err := n.gui.SetCurrentView(DATE_SELECT_VIEW)
-	if err != nil {
-		return errors.Wrap(err, "フォーカス移動失敗")
-	}
-	return nil
-}
-
 func (n *DateSelectView) getDateOnCursor() (string, error) {
 	_, y := n.view.Cursor()
 	line, err := n.view.Line(y)
@@ -128,14 +131,6 @@ func (n *DateSelectView) getDateOnCursor() (string, error) {
 		return "", errors.WithStack(err)
 	}
 	return line, nil
-}
-
-func (n *DateSelectView) Delete() error {
-	err := n.gui.DeleteView(DATE_SELECT_VIEW)
-	if err != nil {
-		return errors.Wrapf(err, "Viewの削除に失敗。%v", NOTE_NAME_INPUT_VIEW)
-	}
-	return nil
 }
 
 func (n *DateSelectView) isSelectedHandInput() bool {

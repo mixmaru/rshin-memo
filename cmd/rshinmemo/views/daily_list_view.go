@@ -24,6 +24,8 @@ type DailyListView struct {
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
+
+	*ViewBase
 }
 
 func NewDailyListView(
@@ -64,6 +66,8 @@ func (d *DailyListView) Create() error {
 	if err != nil {
 		return err
 	}
+
+	d.ViewBase = NewViewBase(DAILY_LIST_VIEW, d.gui, []View{d})
 	return nil
 }
 
@@ -127,14 +131,6 @@ func (d *DailyListView) Resize() error {
 	_, err := createOrResizeView(d.gui, DAILY_LIST_VIEW, 0, 0, 50, height-1)
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func (d *DailyListView) Focus() error {
-	_, err := d.gui.SetCurrentView(DAILY_LIST_VIEW)
-	if err != nil {
-		return errors.Wrap(err, "フォーカス失敗")
 	}
 	return nil
 }
@@ -344,7 +340,7 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 		d.memoDirPath,
 		insertData,
 		dateRange,
-		[]Deletable{},
+		[]View{d},
 		d.dailyDataRepository,
 		d.noteRepository,
 	)

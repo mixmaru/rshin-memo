@@ -12,10 +12,6 @@ import (
 
 const NOTE_NAME_INPUT_VIEW = "note_name_input"
 
-type Deletable interface {
-	Delete() error
-}
-
 type NoteNameInputView struct {
 	gui         *gocui.Gui
 	view        *gocui.View
@@ -24,17 +20,19 @@ type NoteNameInputView struct {
 	insertData dto.InsertData
 
 	WhenFinished func() error // call when finish
-	openViews    []Deletable
+	openViews    []View
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
+
+	*ViewBase
 }
 
 func NewNoteNameInputView(
 	gui *gocui.Gui,
 	memoDirPath string,
 	insertData dto.InsertData,
-	openViews []Deletable,
+	openViews []View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *NoteNameInputView {
@@ -61,18 +59,23 @@ func (n *NoteNameInputView) Create() error {
 	n.view.Editable = true
 	n.view.Editor = &Editor{}
 
+	n.openViews = append(n.openViews, n)
+	n.ViewBase = NewViewBase(NOTE_NAME_INPUT_VIEW, n.gui, n.openViews)
+
+	err = n.setEvents()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (n *NoteNameInputView) setEvents() error {
 	// inputNoteNameViewでのEnterキー
 	if err := n.gui.SetKeybinding(NOTE_NAME_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, n.createNote); err != nil {
 		return errors.WithStack(err)
 	}
-	n.openViews = append(n.openViews, n)
-	return nil
-}
-
-func (n *NoteNameInputView) Focus() error {
-	_, err := n.gui.SetCurrentView(NOTE_NAME_INPUT_VIEW)
-	if err != nil {
-		return errors.Wrap(err, "フォーカス移動失敗")
+	if err := n.gui.SetKeybinding(NOTE_NAME_INPUT_VIEW, gocui.KeyEsc, gocui.ModNone, n.deleteThisView); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
 	}
 	return nil
 }
@@ -84,14 +87,6 @@ func (n *NoteNameInputView) getInputNoteName() (string, error) {
 	}
 	inputText := utils.ConvertStringForLogic(text)
 	return inputText, nil
-}
-
-func (n *NoteNameInputView) Delete() error {
-	err := n.gui.DeleteView(NOTE_NAME_INPUT_VIEW)
-	if err != nil {
-		return errors.Wrapf(err, "Viewの削除に失敗。%v", NOTE_NAME_INPUT_VIEW)
-	}
-	return nil
 }
 
 func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
