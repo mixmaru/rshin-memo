@@ -47,7 +47,6 @@ func NewDateSelectView(
 		memoDirPath:         memoDirPath,
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
-		ViewBase:            NewViewBase(DATE_SELECT_VIEW, gui),
 	}
 	return retObj
 }
@@ -65,6 +64,9 @@ func (n *DateSelectView) Create() error {
 	n.view.SelBgColor = gocui.ColorGreen
 	n.view.SelFgColor = gocui.ColorBlack
 
+	n.openViews = append(n.openViews, n)
+	n.ViewBase = NewViewBase(DATE_SELECT_VIEW, n.gui, n.openViews)
+
 	err = n.setContents()
 	if err != nil {
 		return err
@@ -74,7 +76,6 @@ func (n *DateSelectView) Create() error {
 		return err
 	}
 
-	n.openViews = append(n.openViews, n)
 	return nil
 }
 
@@ -95,7 +96,7 @@ func (n *DateSelectView) setEvents() error {
 	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, gocui.KeyEnter, gocui.ModNone, n.decisionDate); err != nil {
 		return errors.Wrap(err, "キーバイーンド失敗")
 	}
-	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, 'q', gocui.ModNone, n.deleteThisView); err != nil {
+	if err := n.gui.SetKeybinding(DATE_SELECT_VIEW, gocui.KeyEsc, gocui.ModNone, n.deleteThisView); err != nil {
 		return errors.Wrap(err, "キーバイーンド失敗")
 	}
 	return nil
@@ -199,18 +200,6 @@ func (n *DateSelectView) displayDateInputView() error {
 	err = dateInputView.Focus()
 	if err != nil {
 		return errors.Wrap(err, "フォーカス移動失敗")
-	}
-	return nil
-}
-
-func (n *DateSelectView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
-	err := n.Delete()
-	if err != nil {
-		return err
-	}
-	err = n.openViews[len(n.openViews)-2].Focus()
-	if err != nil {
-		return err
 	}
 	return nil
 }

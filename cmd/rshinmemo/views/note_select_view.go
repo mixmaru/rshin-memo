@@ -26,6 +26,8 @@ type NoteSelectView struct {
 
 	dailYDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
+
+	*ViewBase
 }
 
 func NewNoteSelectView(
@@ -55,7 +57,6 @@ func (n *NoteSelectView) Create(notes []string) error {
 	if err != nil {
 		return err
 	}
-	n.openViews = append(n.openViews, n)
 	n.view = v
 
 	n.view.Highlight = true
@@ -63,6 +64,9 @@ func (n *NoteSelectView) Create(notes []string) error {
 	n.view.SelFgColor = gocui.ColorBlack
 
 	n.setContents()
+
+	n.openViews = append(n.openViews, n)
+	n.ViewBase = NewViewBase(NOTE_SELECT_VIEW, n.gui, n.openViews)
 
 	err = n.setEvents()
 	if err != nil {
@@ -85,6 +89,9 @@ func (n *NoteSelectView) setEvents() error {
 		return errors.Wrap(err, "キーバイーンド失敗")
 	}
 	if err := n.gui.SetKeybinding(NOTE_SELECT_VIEW, gocui.KeyEnter, gocui.ModNone, n.insertNoteToDailyList); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
+	if err := n.gui.SetKeybinding(NOTE_SELECT_VIEW, gocui.KeyEsc, gocui.ModNone, n.deleteThisView); err != nil {
 		return errors.Wrap(err, "キーバイーンド失敗")
 	}
 	return nil
@@ -175,14 +182,6 @@ func (n *NoteSelectView) setContents() {
 	}
 }
 
-func (n *NoteSelectView) Focus() error {
-	_, err := n.gui.SetCurrentView(NOTE_SELECT_VIEW)
-	if err != nil {
-		return errors.Wrap(err, "フォーカス移動失敗")
-	}
-	return nil
-}
-
 func (n *NoteSelectView) getNoteNameOnCursor() (string, error) {
 	_, y := n.view.Cursor()
 	noteName, err := n.view.Line(y)
@@ -191,14 +190,6 @@ func (n *NoteSelectView) getNoteNameOnCursor() (string, error) {
 	}
 
 	return utils.ConvertStringForLogic(noteName), nil
-}
-
-func (n *NoteSelectView) Delete() error {
-	err := n.gui.DeleteView(NOTE_SELECT_VIEW)
-	if err != nil {
-		return errors.Wrapf(err, "Viewの削除に失敗。%v", NOTE_NAME_INPUT_VIEW)
-	}
-	return nil
 }
 
 func (n *NoteSelectView) isSelectedNewNote() bool {

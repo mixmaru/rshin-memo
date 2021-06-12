@@ -39,7 +39,6 @@ func NewDailyListView(
 		memoDirPath:         memoDirPath,
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
-		ViewBase:            NewViewBase(DAILY_LIST_VIEW, gui),
 	}
 	return retObj
 }
@@ -67,6 +66,8 @@ func (d *DailyListView) Create() error {
 	if err != nil {
 		return err
 	}
+
+	d.ViewBase = NewViewBase(DAILY_LIST_VIEW, d.gui, []View{d})
 	return nil
 }
 
