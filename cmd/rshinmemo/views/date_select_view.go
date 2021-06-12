@@ -26,6 +26,8 @@ type DateSelectView struct {
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
+
+	*ViewBase
 }
 
 func NewDateSelectView(
@@ -45,6 +47,7 @@ func NewDateSelectView(
 		memoDirPath:         memoDirPath,
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
+		ViewBase:            NewViewBase(DATE_SELECT_VIEW, gui),
 	}
 	return retObj
 }
@@ -120,14 +123,6 @@ func (n *DateSelectView) setContents() error {
 	return nil
 }
 
-func (n *DateSelectView) Focus() error {
-	_, err := n.gui.SetCurrentView(DATE_SELECT_VIEW)
-	if err != nil {
-		return errors.Wrap(err, "フォーカス移動失敗")
-	}
-	return nil
-}
-
 func (n *DateSelectView) getDateOnCursor() (string, error) {
 	_, y := n.view.Cursor()
 	line, err := n.view.Line(y)
@@ -135,15 +130,6 @@ func (n *DateSelectView) getDateOnCursor() (string, error) {
 		return "", errors.WithStack(err)
 	}
 	return line, nil
-}
-
-func (n *DateSelectView) Delete() error {
-	n.deleteEvents()
-	err := n.gui.DeleteView(DATE_SELECT_VIEW)
-	if err != nil {
-		return errors.Wrapf(err, "Viewの削除に失敗。%v", DATE_SELECT_VIEW)
-	}
-	return nil
 }
 
 func (n *DateSelectView) isSelectedHandInput() bool {

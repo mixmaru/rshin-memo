@@ -12,11 +12,6 @@ import (
 
 const NOTE_NAME_INPUT_VIEW = "note_name_input"
 
-type View interface {
-	Delete() error
-	Focus() error
-}
-
 type NoteNameInputView struct {
 	gui         *gocui.Gui
 	view        *gocui.View
