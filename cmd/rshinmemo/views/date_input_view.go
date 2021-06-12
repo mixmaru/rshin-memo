@@ -20,8 +20,7 @@ type DateInputView struct {
 	insertData dto.InsertData
 	dateRange  DateRange
 
-	openViews    []View
-	WhenFinished func() error
+	openViews []View
 
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
@@ -120,7 +119,6 @@ func (n *DateInputView) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) er
 	if err != nil {
 		return err
 	}
-	noteSelectView.WhenFinished = n.WhenFinished
 	err = noteSelectView.Focus()
 	if err != nil {
 		return err

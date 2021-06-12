@@ -348,18 +348,19 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 	if err != nil {
 		return err
 	}
-	dateSelectView.WhenFinished = func() error {
-		err := d.Reload()
-		if err != nil {
-			return err
-		}
-		err = d.Focus()
-		if err != nil {
-			return err
-		}
-		return nil
-	}
 	err = dateSelectView.Focus()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *DailyListView) Focus() error {
+	err := d.Reload()
+	if err != nil {
+		return err
+	}
+	err = d.ViewBase.Focus()
 	if err != nil {
 		return err
 	}
