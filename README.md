@@ -3,6 +3,9 @@
 ターミナル上で動作するメモアプリです。  
 ※まだバギーです。コツコツ作ります。
 
+![Animation](https://user-images.githubusercontent.com/2360858/121778993-82a09780-cbd4-11eb-9c3d-3cbd705db189.gif)
+
+
 # インストール方法
 ```
 $ go get github.com/mixmaru/rshin-memo/cmd/rshinmemo`
