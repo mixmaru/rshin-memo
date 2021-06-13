@@ -12,7 +12,7 @@ func main() {
 	if err != nil {
 		log.Panicf("homeDir取得失敗. %v", err)
 	}
-	rshinMemoBaseDir := filepath.Join(homedir, "rshin_memo")
+	rshinMemoBaseDir := filepath.Join(homedir, "rshinmemo")
 	rshinMemo := NewRshinMemo(
 		rshinMemoBaseDir,
 		repositories.NewDailyDataRepository(filepath.Join(rshinMemoBaseDir, "daily_data.json")),
