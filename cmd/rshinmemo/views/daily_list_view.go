@@ -320,7 +320,7 @@ func (d *DailyListView) displayDataInputView(next bool) error {
 			return nil
 		}
 
-		insertData.InsertNum = insertNum + 1
+		insertData.InsertNum = insertNum
 		if next {
 			dateRange, err = d.GetInsertDateRangeNextCursor()
 		} else {
