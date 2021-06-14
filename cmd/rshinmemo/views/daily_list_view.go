@@ -320,14 +320,18 @@ func (d *DailyListView) displayDataInputView(next bool) error {
 			return nil
 		}
 
-		insertData.InsertNum = insertNum
 		if next {
+			insertData.InsertNum = insertNum + 1
 			dateRange, err = d.GetInsertDateRangeNextCursor()
+			if err != nil {
+				return err
+			}
 		} else {
+			insertData.InsertNum = insertNum
 			dateRange, err = d.GetInsertDateRangeCurrentCursor()
-		}
-		if err != nil {
-			return err
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return d.displayDateSelectView(insertData, dateRange)
