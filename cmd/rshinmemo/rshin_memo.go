@@ -13,6 +13,7 @@ type RshinMemo struct {
 	memoDirPath        string
 	gui                *gocui.Gui
 	dailyListView      *views.DailyListView
+	explainView        *views.ExplainView
 	alreadyInitialized bool
 }
 
@@ -98,6 +99,13 @@ func (r *RshinMemo) initViews() error {
 
 	// 起動時のフォーカス設定
 	err = r.dailyListView.Focus()
+	if err != nil {
+		return err
+	}
+
+	// explainViewの表示
+	r.explainView = views.NewExplainView(r.gui)
+	err = r.explainView.Create("[j]:up cursor [k]:down cursor [o]:insert memo under the cursor [O]:insert memo just the cursor")
 	if err != nil {
 		return err
 	}
