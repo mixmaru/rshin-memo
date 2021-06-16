@@ -33,11 +33,14 @@ func NewRshinMemo(
 	rshinMemo.gui = g
 	rshinMemo.memoDirPath = memoDirPath
 	rshinMemo.alreadyInitialized = false
+	rshinMemo.explainView = views.NewExplainView(rshinMemo.gui)
+	rshinMemo.explainView.Create("")
 	rshinMemo.dailyListView = views.NewDailyListView(
 		rshinMemo.gui,
 		rshinMemo.memoDirPath,
 		dailyDataRepository,
 		noteRepository,
+		rshinMemo.explainView,
 	)
 
 	return rshinMemo
@@ -106,12 +109,6 @@ func (r *RshinMemo) initViews() error {
 		return err
 	}
 
-	// explainViewの表示
-	r.explainView = views.NewExplainView(r.gui)
-	err = r.explainView.Create("[j]:up cursor [k]:down cursor [o]:insert memo under the cursor [O]:insert memo just the cursor [enter]:open memo")
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
