@@ -72,6 +72,9 @@ func (r *RshinMemo) layout(g *gocui.Gui) error {
 		if err := r.dailyListView.Resize(); err != nil {
 			return err
 		}
+		if err := r.explainView.Resize(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -105,7 +108,7 @@ func (r *RshinMemo) initViews() error {
 
 	// explainViewの表示
 	r.explainView = views.NewExplainView(r.gui)
-	err = r.explainView.Create("[j]:up cursor [k]:down cursor [o]:insert memo under the cursor [O]:insert memo just the cursor")
+	err = r.explainView.Create("[j]:up cursor [k]:down cursor [o]:insert memo under the cursor [O]:insert memo just the cursor [enter]:open memo")
 	if err != nil {
 		return err
 	}
