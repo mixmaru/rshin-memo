@@ -13,6 +13,7 @@ type RshinMemo struct {
 	memoDirPath        string
 	gui                *gocui.Gui
 	dailyListView      *views.DailyListView
+	explainView        *views.ExplainView
 	alreadyInitialized bool
 }
 
@@ -32,11 +33,14 @@ func NewRshinMemo(
 	rshinMemo.gui = g
 	rshinMemo.memoDirPath = memoDirPath
 	rshinMemo.alreadyInitialized = false
+	rshinMemo.explainView = views.NewExplainView(rshinMemo.gui)
+	rshinMemo.explainView.Create("")
 	rshinMemo.dailyListView = views.NewDailyListView(
 		rshinMemo.gui,
 		rshinMemo.memoDirPath,
 		dailyDataRepository,
 		noteRepository,
+		rshinMemo.explainView,
 	)
 
 	return rshinMemo
@@ -71,6 +75,9 @@ func (r *RshinMemo) layout(g *gocui.Gui) error {
 		if err := r.dailyListView.Resize(); err != nil {
 			return err
 		}
+		if err := r.explainView.Resize(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -101,6 +108,7 @@ func (r *RshinMemo) initViews() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
