@@ -35,6 +35,10 @@ func (e *ExplainView) Set(text string) {
 	fmt.Fprintln(e.view, text)
 }
 
+func (e *ExplainView) Clear() {
+	e.view.Clear()
+}
+
 func (e *ExplainView) Resize() error {
 	_, err := e.createOrResizeView()
 	if err != nil {

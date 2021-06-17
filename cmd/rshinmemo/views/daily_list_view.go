@@ -46,6 +46,8 @@ func NewDailyListView(
 	return retObj
 }
 
+const DAILY_LIST_VIEW_EXPLAIN = "[j]:up [k]:down [o]:insert memo under the cursor [O]:insert memo just the cursor [enter]:open memo"
+
 // dailyListViewの新規作成
 func (d *DailyListView) Create() error {
 	// あとでどうせリサイズされるので、ここではこまかな位置調整は行わない。
@@ -72,7 +74,7 @@ func (d *DailyListView) Create() error {
 
 	d.ViewBase = NewViewBase(DAILY_LIST_VIEW, d.gui, []View{d})
 
-	d.explainView.Set("[j]:up cursor [k]:down cursor [o]:insert memo under the cursor [O]:insert memo just the cursor [enter]:open memo")
+	d.explainView.Set(DAILY_LIST_VIEW_EXPLAIN)
 	return nil
 }
 
@@ -361,6 +363,8 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 	if err != nil {
 		return err
 	}
+
+	d.explainView.Clear()
 	return nil
 }
 
@@ -373,6 +377,7 @@ func (d *DailyListView) Focus() error {
 	if err != nil {
 		return err
 	}
+	d.explainView.Set(DAILY_LIST_VIEW_EXPLAIN)
 	return nil
 }
 
