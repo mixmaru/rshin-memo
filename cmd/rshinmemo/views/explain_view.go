@@ -45,9 +45,10 @@ func (e *ExplainView) Resize() error {
 
 func (e *ExplainView) createOrResizeView() (*gocui.View, error) {
 	width, height := e.gui.Size()
-	v, err := createOrResizeView(e.gui, EXPLAIN_VIEW, 0, height-3, width-1, height-1)
+	v, err := createOrResizeView(e.gui, EXPLAIN_VIEW, 0, height-2, width-1, height)
 	if err != nil {
 		return nil, err
 	}
+	v.Frame = false
 	return v, nil
 }

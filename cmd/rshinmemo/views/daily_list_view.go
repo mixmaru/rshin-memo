@@ -133,7 +133,7 @@ func (d *DailyListView) openVim(noteName string) error {
 
 func (d *DailyListView) Resize() error {
 	_, height := d.gui.Size()
-	_, err := createOrResizeView(d.gui, DAILY_LIST_VIEW, 0, 0, 50, height-3)
+	_, err := createOrResizeView(d.gui, DAILY_LIST_VIEW, 0, 0, 50, height-2)
 	if err != nil {
 		return err
 	}
