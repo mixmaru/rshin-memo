@@ -21,8 +21,6 @@ type DateSelectView struct {
 	insertData dto.InsertData
 	dateRange  DateRange
 
-	openViews []View
-
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
 
@@ -34,19 +32,19 @@ func NewDateSelectView(
 	memoDirPath string,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	openView []View,
+	parentView View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *DateSelectView {
 	retObj := &DateSelectView{
 		gui:                 gui,
-		openViews:           openView,
 		insertData:          insertData,
 		dateRange:           dateRange,
 		memoDirPath:         memoDirPath,
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
 	}
+	retObj.ViewBase = NewViewBase(DATE_SELECT_VIEW, gui, parentView)
 	return retObj
 }
 
@@ -62,9 +60,6 @@ func (n *DateSelectView) Create() error {
 	n.view.Highlight = true
 	n.view.SelBgColor = gocui.ColorGreen
 	n.view.SelFgColor = gocui.ColorBlack
-
-	n.openViews = append(n.openViews, n)
-	n.ViewBase = NewViewBase(DATE_SELECT_VIEW, n.gui, n.openViews)
 
 	err = n.setContents()
 	if err != nil {
@@ -162,7 +157,7 @@ func (n *DateSelectView) decisionDate(g *gocui.Gui, v *gocui.View) error {
 			n.gui,
 			n.memoDirPath,
 			n.insertData,
-			n.openViews,
+			n,
 			n.dailyDataRepository,
 			n.noteRepository,
 		)
@@ -185,7 +180,7 @@ func (n *DateSelectView) displayDateInputView() error {
 		n.memoDirPath,
 		n.insertData,
 		n.dateRange,
-		n.openViews,
+		n,
 		n.dailyDataRepository,
 		n.noteRepository,
 	)

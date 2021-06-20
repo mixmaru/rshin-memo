@@ -20,8 +20,6 @@ type DateInputView struct {
 	insertData dto.InsertData
 	dateRange  DateRange
 
-	openViews []View
-
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
 
@@ -33,7 +31,7 @@ func NewDateInputView(
 	memoDirPath string,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	openViews []View,
+	parentView View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *DateInputView {
@@ -41,11 +39,11 @@ func NewDateInputView(
 		gui:                 gui,
 		insertData:          insertData,
 		dateRange:           dateRange,
-		openViews:           openViews,
 		memoDirPath:         memoDirPath,
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
 	}
+	retObj.ViewBase = NewViewBase(DATE_INPUT_VIEW, gui, parentView)
 	return retObj
 }
 
@@ -60,8 +58,6 @@ func (n *DateInputView) Create() error {
 
 	n.view.Editable = true
 	n.view.Editor = &Editor{}
-	n.openViews = append(n.openViews, n)
-	n.ViewBase = NewViewBase(DATE_INPUT_VIEW, n.gui, n.openViews)
 
 	err = n.setEvent()
 	if err != nil {
@@ -111,7 +107,7 @@ func (n *DateInputView) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) er
 		n.gui,
 		n.memoDirPath,
 		n.insertData,
-		n.openViews,
+		n,
 		n.dailyDataRepository,
 		n.noteRepository,
 	)

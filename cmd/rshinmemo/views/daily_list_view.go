@@ -72,7 +72,7 @@ func (d *DailyListView) Create() error {
 		return err
 	}
 
-	d.ViewBase = NewViewBase(DAILY_LIST_VIEW, d.gui, []View{d})
+	d.ViewBase = NewViewBase(DAILY_LIST_VIEW, d.gui, nil)
 
 	d.explainView.Set(DAILY_LIST_VIEW_EXPLAIN)
 	return nil
@@ -351,7 +351,7 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 		d.memoDirPath,
 		insertData,
 		dateRange,
-		[]View{d},
+		d,
 		d.dailyDataRepository,
 		d.noteRepository,
 	)
@@ -364,6 +364,7 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 		return err
 	}
 
+	d.childView = dateSelectView
 	d.explainView.Clear()
 	return nil
 }

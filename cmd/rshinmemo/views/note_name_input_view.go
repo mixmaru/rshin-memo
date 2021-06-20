@@ -19,8 +19,6 @@ type NoteNameInputView struct {
 
 	insertData dto.InsertData
 
-	openViews []View
-
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
 
@@ -31,7 +29,7 @@ func NewNoteNameInputView(
 	gui *gocui.Gui,
 	memoDirPath string,
 	insertData dto.InsertData,
-	openViews []View,
+	parentView View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *NoteNameInputView {
@@ -39,10 +37,10 @@ func NewNoteNameInputView(
 		gui:                 gui,
 		memoDirPath:         memoDirPath,
 		insertData:          insertData,
-		openViews:           openViews,
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
 	}
+	retObj.ViewBase = NewViewBase(NOTE_NAME_INPUT_VIEW, gui, parentView)
 	return retObj
 }
 
@@ -57,9 +55,6 @@ func (n *NoteNameInputView) Create() error {
 
 	n.view.Editable = true
 	n.view.Editor = &Editor{}
-
-	n.openViews = append(n.openViews, n)
-	n.ViewBase = NewViewBase(NOTE_NAME_INPUT_VIEW, n.gui, n.openViews)
 
 	err = n.setEvents()
 	if err != nil {
@@ -115,19 +110,9 @@ func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
 		}
 	}
 
-	for _, view := range n.openViews {
-		_, ok := view.(*DailyListView)
-		if ok {
-			err := view.Focus()
-			if err != nil {
-				return err
-			}
-		} else {
-			err := view.Delete()
-			if err != nil {
-				return err
-			}
-		}
+	err = n.AllDelete()
+	if err != nil {
+		return err
 	}
 	return nil
 }
