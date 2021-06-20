@@ -26,6 +26,46 @@ type DateInputView struct {
 	*ViewBase
 }
 
+func (n *DateInputView) Delete() error {
+	n.gui.DeleteKeybindings(n.viewName)
+	err := n.gui.DeleteView(n.viewName)
+	if err != nil {
+		return errors.Wrapf(err, "Viewの削除に失敗。%+v", n.viewName)
+	}
+	return nil
+}
+
+func (n *DateInputView) Focus() error {
+	_, err := n.gui.SetCurrentView(n.viewName)
+	if err != nil {
+		return errors.Wrapf(err, "フォーカス移動失敗。%+v", n)
+	}
+	return nil
+}
+
+func (n *DateInputView) AllDelete() error {
+	if n.parentView != nil {
+		if err := n.Delete(); err != nil {
+			return err
+		}
+		return n.parentView.AllDelete()
+	} else {
+		return n.Focus()
+	}
+}
+
+func (n *DateInputView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
+	err := n.Delete()
+	if err != nil {
+		return err
+	}
+	err = n.parentView.Focus()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func NewDateInputView(
 	gui *gocui.Gui,
 	memoDirPath string,

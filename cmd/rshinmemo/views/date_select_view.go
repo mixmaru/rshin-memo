@@ -27,6 +27,46 @@ type DateSelectView struct {
 	*ViewBase
 }
 
+func (n *DateSelectView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
+	err := n.Delete()
+	if err != nil {
+		return err
+	}
+	err = n.parentView.Focus()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (n *DateSelectView) Delete() error {
+	n.gui.DeleteKeybindings(n.viewName)
+	err := n.gui.DeleteView(n.viewName)
+	if err != nil {
+		return errors.Wrapf(err, "Viewの削除に失敗。%+v", n.viewName)
+	}
+	return nil
+}
+
+func (n *DateSelectView) Focus() error {
+	_, err := n.gui.SetCurrentView(n.viewName)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (n *DateSelectView) AllDelete() error {
+	if n.parentView != nil {
+		if err := n.Delete(); err != nil {
+			return err
+		}
+		return n.parentView.AllDelete()
+	} else {
+		return n.Focus()
+	}
+}
+
 func NewDateSelectView(
 	gui *gocui.Gui,
 	memoDirPath string,

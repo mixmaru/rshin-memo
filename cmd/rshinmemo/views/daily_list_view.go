@@ -29,6 +29,51 @@ type DailyListView struct {
 	*ViewBase
 }
 
+func (d *DailyListView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
+	err := d.Delete()
+	if err != nil {
+		return err
+	}
+	err = d.parentView.Focus()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *DailyListView) Focus() error {
+	err := d.Reload()
+	if err != nil {
+		return err
+	}
+	_, err = d.gui.SetCurrentView(d.viewName)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	d.explainView.Set(DAILY_LIST_VIEW_EXPLAIN)
+	return nil
+}
+
+func (d *DailyListView) Delete() error {
+	d.gui.DeleteKeybindings(d.viewName)
+	err := d.gui.DeleteView(d.viewName)
+	if err != nil {
+		return errors.Wrapf(err, "Viewの削除に失敗。%+v", d.viewName)
+	}
+	return nil
+}
+
+func (d *DailyListView) AllDelete() error {
+	if d.parentView != nil {
+		if err := d.Delete(); err != nil {
+			return err
+		}
+		return d.parentView.AllDelete()
+	} else {
+		return d.Focus()
+	}
+}
+
 func NewDailyListView(
 	gui *gocui.Gui,
 	memoDirPath string,
@@ -366,19 +411,6 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 
 	d.childView = dateSelectView
 	d.explainView.Clear()
-	return nil
-}
-
-func (d *DailyListView) Focus() error {
-	err := d.Reload()
-	if err != nil {
-		return err
-	}
-	err = d.ViewBase.Focus()
-	if err != nil {
-		return err
-	}
-	d.explainView.Set(DAILY_LIST_VIEW_EXPLAIN)
 	return nil
 }
 
