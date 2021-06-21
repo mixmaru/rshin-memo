@@ -30,15 +30,7 @@ type DailyListView struct {
 }
 
 func (d *DailyListView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
-	err := d.Delete()
-	if err != nil {
-		return err
-	}
-	err = d.parentView.Focus()
-	if err != nil {
-		return err
-	}
-	return nil
+	return deleteThisView(d, d.parentView)
 }
 
 func (d *DailyListView) Focus() error {
@@ -46,32 +38,21 @@ func (d *DailyListView) Focus() error {
 	if err != nil {
 		return err
 	}
-	_, err = d.gui.SetCurrentView(d.viewName)
+
+	err = focus(d.gui, DAILY_LIST_VIEW)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	d.explainView.Set(DAILY_LIST_VIEW_EXPLAIN)
 	return nil
 }
 
 func (d *DailyListView) Delete() error {
-	d.gui.DeleteKeybindings(d.viewName)
-	err := d.gui.DeleteView(d.viewName)
-	if err != nil {
-		return errors.Wrapf(err, "Viewの削除に失敗。%+v", d.viewName)
-	}
-	return nil
+	return deleteView(d.gui, DAILY_LIST_VIEW)
 }
 
 func (d *DailyListView) AllDelete() error {
-	if d.parentView != nil {
-		if err := d.Delete(); err != nil {
-			return err
-		}
-		return d.parentView.AllDelete()
-	} else {
-		return d.Focus()
-	}
+	return allDelete(d, d.parentView)
 }
 
 func NewDailyListView(
