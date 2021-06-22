@@ -8,47 +8,82 @@ import (
 type View interface {
 	Delete() error
 	Focus() error
+	AllDelete() error
+	deleteThisView(g *gocui.Gui, v *gocui.View) error
+	Resize() error
 }
 
 type ViewBase struct {
-	viewName  string
-	gui       *gocui.Gui
-	openViews []View
+	viewName   string
+	gui        *gocui.Gui
+	parentView View
+	childView  View
 }
 
-func NewViewBase(viewName string, gui *gocui.Gui, openViews []View) *ViewBase {
+func NewViewBase(viewName string, gui *gocui.Gui, parentView View) *ViewBase {
 	return &ViewBase{
-		viewName:  viewName,
-		gui:       gui,
-		openViews: openViews,
+		viewName:   viewName,
+		gui:        gui,
+		parentView: parentView,
 	}
 }
 
-func (vb *ViewBase) Focus() error {
-	_, err := vb.gui.SetCurrentView(vb.viewName)
+func deleteThisView(view View, parentView View) error {
+	err := view.Delete()
 	if err != nil {
-		return errors.Wrap(err, "フォーカス移動失敗")
+		return err
+	}
+	err = parentView.Focus()
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func (vb *ViewBase) Delete() error {
-	vb.gui.DeleteKeybindings(vb.viewName)
-	err := vb.gui.DeleteView(vb.viewName)
+func focus(gui *gocui.Gui, viewName string) error {
+	_, err := gui.SetCurrentView(viewName)
 	if err != nil {
-		return errors.Wrapf(err, "Viewの削除に失敗。%vb", vb.viewName)
+		return errors.WithStack(err)
 	}
 	return nil
 }
 
-func (vb *ViewBase) deleteThisView(g *gocui.Gui, v *gocui.View) error {
-	err := vb.Delete()
+func deleteView(gui *gocui.Gui, viewName string) error {
+	gui.DeleteKeybindings(viewName)
+	err := gui.DeleteView(viewName)
+	if err != nil {
+		return errors.Wrapf(err, "Viewの削除に失敗。%+v", viewName)
+	}
+	return nil
+}
+
+func allDelete(view, parentView View) error {
+	if parentView != nil {
+		if err := view.Delete(); err != nil {
+			return err
+		}
+		return parentView.AllDelete()
+	} else {
+		return view.Focus()
+	}
+}
+
+func resize(gui *gocui.Gui, currentViewName string, x0, y0, x1, y1 int, childView View) error {
+	_, err := gui.View(currentViewName)
+	if err != nil {
+		if err == gocui.ErrUnknownView {
+			// viewが存在しなければ(既にdeleteされているとかで)なにもしない
+			return nil
+		} else {
+			return errors.WithStack(err)
+		}
+	}
+	_, err = createOrResizeView(gui, currentViewName, x0, y0, x1, y1)
 	if err != nil {
 		return err
 	}
-	err = vb.openViews[len(vb.openViews)-2].Focus()
-	if err != nil {
-		return err
+	if childView != nil {
+		return childView.Resize()
 	}
 	return nil
 }

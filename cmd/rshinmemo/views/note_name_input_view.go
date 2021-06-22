@@ -19,19 +19,38 @@ type NoteNameInputView struct {
 
 	insertData dto.InsertData
 
-	openViews []View
-
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
 
 	*ViewBase
 }
 
+func (n *NoteNameInputView) Delete() error {
+	return deleteView(n.gui, n.viewName)
+}
+
+func (n *NoteNameInputView) Focus() error {
+	return focus(n.gui, n.viewName)
+}
+
+func (n *NoteNameInputView) AllDelete() error {
+	return allDelete(n, n.parentView)
+}
+
+func (n *NoteNameInputView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
+	return deleteThisView(n, n.parentView)
+}
+
+func (n *NoteNameInputView) Resize() error {
+	width, height := n.gui.Size()
+	return resize(n.gui, n.viewName, width/2-20, height/2-1, width/2+20, height/2+1, n.childView)
+}
+
 func NewNoteNameInputView(
 	gui *gocui.Gui,
 	memoDirPath string,
 	insertData dto.InsertData,
-	openViews []View,
+	parentView View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *NoteNameInputView {
@@ -39,10 +58,10 @@ func NewNoteNameInputView(
 		gui:                 gui,
 		memoDirPath:         memoDirPath,
 		insertData:          insertData,
-		openViews:           openViews,
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
 	}
+	retObj.ViewBase = NewViewBase(NOTE_NAME_INPUT_VIEW, gui, parentView)
 	return retObj
 }
 
@@ -57,9 +76,6 @@ func (n *NoteNameInputView) Create() error {
 
 	n.view.Editable = true
 	n.view.Editor = &Editor{}
-
-	n.openViews = append(n.openViews, n)
-	n.ViewBase = NewViewBase(NOTE_NAME_INPUT_VIEW, n.gui, n.openViews)
 
 	err = n.setEvents()
 	if err != nil {
@@ -115,19 +131,9 @@ func (n *NoteNameInputView) createNote(gui *gocui.Gui, view *gocui.View) error {
 		}
 	}
 
-	for _, view := range n.openViews {
-		_, ok := view.(*DailyListView)
-		if ok {
-			err := view.Focus()
-			if err != nil {
-				return err
-			}
-		} else {
-			err := view.Delete()
-			if err != nil {
-				return err
-			}
-		}
+	err = n.AllDelete()
+	if err != nil {
+		return err
 	}
 	return nil
 }

@@ -21,30 +21,49 @@ type NoteSelectView struct {
 
 	insertData dto.InsertData
 
-	openViews []View
-
 	dailYDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
 
 	*ViewBase
 }
 
+func (n *NoteSelectView) Delete() error {
+	return deleteView(n.gui, n.viewName)
+}
+
+func (n *NoteSelectView) Focus() error {
+	return focus(n.gui, n.viewName)
+}
+
+func (n *NoteSelectView) AllDelete() error {
+	return allDelete(n, n.parentView)
+}
+
+func (n *NoteSelectView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
+	return deleteThisView(n, n.parentView)
+}
+
+func (n *NoteSelectView) Resize() error {
+	width, height := n.gui.Size()
+	return resize(n.gui, n.viewName, width/2-25, 0, width/2+25, height-1, n.childView)
+}
+
 func NewNoteSelectView(
 	gui *gocui.Gui,
 	memoDirPath string,
 	insertData dto.InsertData,
-	openViews []View,
+	parentView View,
 	dailYDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *NoteSelectView {
 	retObj := &NoteSelectView{
 		gui:                 gui,
 		insertData:          insertData,
-		openViews:           openViews,
 		memoDirPath:         memoDirPath,
 		dailYDataRepository: dailYDataRepository,
 		noteRepository:      noteRepository,
 	}
+	retObj.ViewBase = NewViewBase(NOTE_SELECT_VIEW, gui, parentView)
 	return retObj
 }
 
@@ -63,9 +82,6 @@ func (n *NoteSelectView) Create(notes []string) error {
 	n.view.SelFgColor = gocui.ColorBlack
 
 	n.setContents()
-
-	n.openViews = append(n.openViews, n)
-	n.ViewBase = NewViewBase(NOTE_SELECT_VIEW, n.gui, n.openViews)
 
 	err = n.setEvents()
 	if err != nil {
@@ -109,7 +125,7 @@ func (n *NoteSelectView) addNote() error {
 		n.gui,
 		n.memoDirPath,
 		n.insertData,
-		n.openViews,
+		n,
 		n.dailYDataRepository,
 		n.noteRepository,
 	)
@@ -122,6 +138,7 @@ func (n *NoteSelectView) addNote() error {
 	if err != nil {
 		return errors.Wrap(err, "フォーカス移動失敗")
 	}
+	n.childView = noteNameInputView
 	return nil
 }
 
@@ -144,20 +161,9 @@ func (n *NoteSelectView) insertExistedNoteToDailyList() error {
 	}
 
 	// 不要なviewを閉じる
-	for _, view := range n.openViews {
-		_, ok := view.(*DailyListView)
-		if ok {
-			// DailyListViewにフォーカスを移す
-			err := view.Focus()
-			if err != nil {
-				return err
-			}
-		} else {
-			err := view.Delete()
-			if err != nil {
-				return err
-			}
-		}
+	err = n.AllDelete()
+	if err != nil {
+		return err
 	}
 	return nil
 }

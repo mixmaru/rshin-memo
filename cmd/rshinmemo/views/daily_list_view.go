@@ -29,6 +29,32 @@ type DailyListView struct {
 	*ViewBase
 }
 
+func (d *DailyListView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
+	return deleteThisView(d, d.parentView)
+}
+
+func (d *DailyListView) Focus() error {
+	err := d.Reload()
+	if err != nil {
+		return err
+	}
+
+	err = focus(d.gui, DAILY_LIST_VIEW)
+	if err != nil {
+		return err
+	}
+	d.explainView.Set(DAILY_LIST_VIEW_EXPLAIN)
+	return nil
+}
+
+func (d *DailyListView) Delete() error {
+	return deleteView(d.gui, DAILY_LIST_VIEW)
+}
+
+func (d *DailyListView) AllDelete() error {
+	return allDelete(d, d.parentView)
+}
+
 func NewDailyListView(
 	gui *gocui.Gui,
 	memoDirPath string,
@@ -72,7 +98,7 @@ func (d *DailyListView) Create() error {
 		return err
 	}
 
-	d.ViewBase = NewViewBase(DAILY_LIST_VIEW, d.gui, []View{d})
+	d.ViewBase = NewViewBase(DAILY_LIST_VIEW, d.gui, nil)
 
 	d.explainView.Set(DAILY_LIST_VIEW_EXPLAIN)
 	return nil
@@ -135,11 +161,7 @@ func (d *DailyListView) openVim(noteName string) error {
 
 func (d *DailyListView) Resize() error {
 	_, height := d.gui.Size()
-	_, err := createOrResizeView(d.gui, DAILY_LIST_VIEW, 0, 0, 50, height-2)
-	if err != nil {
-		return err
-	}
-	return nil
+	return resize(d.gui, d.viewName, 0, 0, 50, height-2, d.childView)
 }
 
 func createOrResizeView(gui *gocui.Gui, viewName string, x0, y0, x1, y1 int) (*gocui.View, error) {
@@ -351,7 +373,7 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 		d.memoDirPath,
 		insertData,
 		dateRange,
-		[]View{d},
+		d,
 		d.dailyDataRepository,
 		d.noteRepository,
 	)
@@ -364,20 +386,8 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 		return err
 	}
 
+	d.childView = dateSelectView
 	d.explainView.Clear()
-	return nil
-}
-
-func (d *DailyListView) Focus() error {
-	err := d.Reload()
-	if err != nil {
-		return err
-	}
-	err = d.ViewBase.Focus()
-	if err != nil {
-		return err
-	}
-	d.explainView.Set(DAILY_LIST_VIEW_EXPLAIN)
 	return nil
 }
 

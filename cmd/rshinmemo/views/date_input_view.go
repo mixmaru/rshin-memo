@@ -20,12 +20,31 @@ type DateInputView struct {
 	insertData dto.InsertData
 	dateRange  DateRange
 
-	openViews []View
-
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
 
 	*ViewBase
+}
+
+func (n *DateInputView) Delete() error {
+	return deleteView(n.gui, n.viewName)
+}
+
+func (n *DateInputView) Focus() error {
+	return focus(n.gui, n.viewName)
+}
+
+func (n *DateInputView) AllDelete() error {
+	return allDelete(n, n.parentView)
+}
+
+func (n *DateInputView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
+	return deleteThisView(n, n.parentView)
+}
+
+func (n *DateInputView) Resize() error {
+	width, height := n.gui.Size()
+	return resize(n.gui, n.viewName, width/2-20, height/2-1, width/2+20, height/2+1, n.childView)
 }
 
 func NewDateInputView(
@@ -33,7 +52,7 @@ func NewDateInputView(
 	memoDirPath string,
 	insertData dto.InsertData,
 	dateRange DateRange,
-	openViews []View,
+	parentView View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
 ) *DateInputView {
@@ -41,11 +60,11 @@ func NewDateInputView(
 		gui:                 gui,
 		insertData:          insertData,
 		dateRange:           dateRange,
-		openViews:           openViews,
 		memoDirPath:         memoDirPath,
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
 	}
+	retObj.ViewBase = NewViewBase(DATE_INPUT_VIEW, gui, parentView)
 	return retObj
 }
 
@@ -60,8 +79,6 @@ func (n *DateInputView) Create() error {
 
 	n.view.Editable = true
 	n.view.Editor = &Editor{}
-	n.openViews = append(n.openViews, n)
-	n.ViewBase = NewViewBase(DATE_INPUT_VIEW, n.gui, n.openViews)
 
 	err = n.setEvent()
 	if err != nil {
@@ -111,7 +128,7 @@ func (n *DateInputView) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) er
 		n.gui,
 		n.memoDirPath,
 		n.insertData,
-		n.openViews,
+		n,
 		n.dailyDataRepository,
 		n.noteRepository,
 	)
@@ -123,6 +140,7 @@ func (n *DateInputView) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) er
 	if err != nil {
 		return err
 	}
+	n.childView = noteSelectView
 
 	return nil
 }
