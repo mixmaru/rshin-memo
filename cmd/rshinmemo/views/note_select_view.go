@@ -43,6 +43,11 @@ func (n *NoteSelectView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
 	return deleteThisView(n, n.parentView)
 }
 
+func (n *NoteSelectView) Resize() error {
+	width, height := n.gui.Size()
+	return resize(n.gui, n.viewName, width/2-25, 0, width/2+25, height-1, n.childView)
+}
+
 func NewNoteSelectView(
 	gui *gocui.Gui,
 	memoDirPath string,
@@ -133,6 +138,7 @@ func (n *NoteSelectView) addNote() error {
 	if err != nil {
 		return errors.Wrap(err, "フォーカス移動失敗")
 	}
+	n.childView = noteNameInputView
 	return nil
 }
 

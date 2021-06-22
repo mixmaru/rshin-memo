@@ -41,6 +41,11 @@ func (n *NoteNameInputView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
 	return deleteThisView(n, n.parentView)
 }
 
+func (n *NoteNameInputView) Resize() error {
+	width, height := n.gui.Size()
+	return resize(n.gui, n.viewName, width/2-20, height/2-1, width/2+20, height/2+1, n.childView)
+}
+
 func NewNoteNameInputView(
 	gui *gocui.Gui,
 	memoDirPath string,

@@ -10,6 +10,7 @@ type View interface {
 	Focus() error
 	AllDelete() error
 	deleteThisView(g *gocui.Gui, v *gocui.View) error
+	Resize() error
 }
 
 type ViewBase struct {
@@ -65,4 +66,15 @@ func allDelete(view, parentView View) error {
 	} else {
 		return view.Focus()
 	}
+}
+
+func resize(gui *gocui.Gui, currentViewName string, x0, y0, x1, y1 int, childView View) error {
+	_, err := createOrResizeView(gui, currentViewName, x0, y0, x1, y1)
+	if err != nil {
+		return err
+	}
+	if childView != nil {
+		return childView.Resize()
+	}
+	return nil
 }

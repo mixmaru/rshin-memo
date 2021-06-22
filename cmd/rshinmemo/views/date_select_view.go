@@ -43,6 +43,11 @@ func (n *DateSelectView) AllDelete() error {
 	return allDelete(n, n.parentView)
 }
 
+func (n *DateSelectView) Resize() error {
+	width, height := n.gui.Size()
+	return resize(n.gui, n.viewName, width/2-25, 0, width/2+25, height-1, n.childView)
+}
+
 func NewDateSelectView(
 	gui *gocui.Gui,
 	memoDirPath string,
@@ -185,6 +190,7 @@ func (n *DateSelectView) decisionDate(g *gocui.Gui, v *gocui.View) error {
 		if err != nil {
 			return err
 		}
+		n.childView = noteSelectView
 	}
 	return nil
 }
@@ -209,5 +215,6 @@ func (n *DateSelectView) displayDateInputView() error {
 	if err != nil {
 		return errors.Wrap(err, "フォーカス移動失敗")
 	}
+	n.childView = dateInputView
 	return nil
 }
