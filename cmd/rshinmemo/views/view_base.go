@@ -69,7 +69,16 @@ func allDelete(view, parentView View) error {
 }
 
 func resize(gui *gocui.Gui, currentViewName string, x0, y0, x1, y1 int, childView View) error {
-	_, err := createOrResizeView(gui, currentViewName, x0, y0, x1, y1)
+	_, err := gui.View(currentViewName)
+	if err != nil {
+		if err == gocui.ErrUnknownView {
+			// viewが存在しなければ(既にdeleteされているとかで)なにもしない
+			return nil
+		} else {
+			return errors.WithStack(err)
+		}
+	}
+	_, err = createOrResizeView(gui, currentViewName, x0, y0, x1, y1)
 	if err != nil {
 		return err
 	}
