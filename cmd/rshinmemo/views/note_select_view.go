@@ -140,6 +140,9 @@ func (n *NoteSelectView) setEvents() error {
 	if err := n.gui.SetKeybinding(NOTE_SELECT_SEARCH_INPUT_VIEW, gocui.KeyEsc, gocui.ModNone, n.focusNoteSelectView); err != nil {
 		return errors.Wrap(err, "キーバイーンド失敗")
 	}
+	if err := n.gui.SetKeybinding(NOTE_SELECT_SEARCH_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, n.executeSearch); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
 	return nil
 }
 
@@ -160,6 +163,10 @@ func (n *NoteSelectView) focusSearchView(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (n *NoteSelectView) focusNoteSelectView(g *gocui.Gui, v *gocui.View) error {
+	return n.focusNoteSelectViewExecute()
+}
+
+func (n *NoteSelectView) focusNoteSelectViewExecute() error {
 	n.searchInputView.Clear()
 	err := n.searchInputView.SetCursor(0, 0)
 	if err != nil {
@@ -170,6 +177,18 @@ func (n *NoteSelectView) focusNoteSelectView(g *gocui.Gui, v *gocui.View) error 
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+func (n *NoteSelectView) executeSearch(g *gocui.Gui, v *gocui.View) error {
+	// 入力文字列を取得
+	inputText, err := n.searchInputView.Line(0)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	searchText := utils.ConvertStringForLogic(inputText)
+	// 検索文字列の検索結果でNoteSelectViewの表示をリロードする
+	// フォーカスをnoteSelectViewへ移す
+	return n.focusNoteSelectViewExecute()
 }
 
 func (n *NoteSelectView) addNote() error {
