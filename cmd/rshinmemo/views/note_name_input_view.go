@@ -43,7 +43,7 @@ func (n *NoteNameInputView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
 
 func (n *NoteNameInputView) Resize() error {
 	width, height := n.gui.Size()
-	return resize(n.gui, n.viewName, width/2-20, height/2-1, width/2+20, height/2+1, n.childView)
+	return resize(n.gui, n.viewName, width/2-50, height/2-1, width/2+50, height/2+1, n.childView)
 }
 
 func NewNoteNameInputView(
@@ -68,7 +68,7 @@ func NewNoteNameInputView(
 // dailyListViewの新規作成
 func (n *NoteNameInputView) Create() error {
 	width, height := n.gui.Size()
-	v, err := createOrResizeView(n.gui, NOTE_NAME_INPUT_VIEW, width/2-20, height/2-1, width/2+20, height/2+1)
+	v, err := createOrResizeView(n.gui, NOTE_NAME_INPUT_VIEW, width/2-50, height/2-1, width/2+50, height/2+1)
 	if err != nil {
 		return err
 	}
