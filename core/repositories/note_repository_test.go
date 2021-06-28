@@ -172,3 +172,82 @@ func TestNoteRepository_GetAllNotes(t *testing.T) {
 		assert.Len(t, result, 0)
 	})
 }
+
+func TestNoteRepository_GetBySearchText(t *testing.T) {
+	thisDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+	targetDirPath := filepath.Join(thisDir, "test", "TestNoteRepository_GetBySearchText")
+
+	t.Run("検索対象があったとき", func(t *testing.T) {
+		////// 準備
+		if _, err := os.Stat(targetDirPath); err == nil {
+			// あれば一旦削除して作り直す
+			err = os.RemoveAll(targetDirPath)
+		}
+		err = os.Mkdir(targetDirPath, 0777)
+		if err != nil {
+			t.Fatalf("%+v", err)
+		}
+
+		repository := NewNoteRepository(targetDirPath)
+		// なんこかNoteを追加しておく
+		newNoteEntityA := entities.NewNoteEntity("noteA", "noteAの内容")
+		newNoteEntityB := entities.NewNoteEntity("noteB", "noteBの内容")
+		newNoteEntityC := entities.NewNoteEntity("ヒットしないやつ", "noteCの内容")
+		err = repository.Save(newNoteEntityA)
+		if err != nil {
+			assert.Failf(t, "%+v", err.Error())
+		}
+		err = repository.Save(newNoteEntityB)
+		if err != nil {
+			assert.Failf(t, "%+v", err.Error())
+		}
+		err = repository.Save(newNoteEntityC)
+		if err != nil {
+			assert.Failf(t, "%+v", err.Error())
+		}
+
+		////// 実行
+		results, err := repository.GetBySearchText("note")
+		assert.NoError(t, err)
+
+		////// 検証
+		assert.Len(t, results, 2)
+		assert.EqualValues(t, newNoteEntityA.Name(), results[0].Name())
+		assert.EqualValues(t, newNoteEntityB.Name(), results[1].Name())
+	})
+
+	t.Run("検索対象がなかったとき", func(t *testing.T) {
+		////// 準備
+		if _, err := os.Stat(targetDirPath); err == nil {
+			// あれば一旦削除して作り直す
+			err = os.RemoveAll(targetDirPath)
+		}
+		err = os.Mkdir(targetDirPath, 0777)
+		if err != nil {
+			t.Fatalf("%+v", err)
+		}
+
+		repository := NewNoteRepository(targetDirPath)
+		// なんこかNoteを追加しておく
+		newNoteEntityA := entities.NewNoteEntity("noteA", "noteAの内容")
+		newNoteEntityB := entities.NewNoteEntity("noteB", "noteBの内容")
+		err = repository.Save(newNoteEntityA)
+		if err != nil {
+			assert.Failf(t, "%+v", err.Error())
+		}
+		err = repository.Save(newNoteEntityB)
+		if err != nil {
+			assert.Failf(t, "%+v", err.Error())
+		}
+
+		////// 実行
+		results, err := repository.GetBySearchText("ヒットせず")
+		assert.NoError(t, err)
+
+		////// 検証
+		assert.Len(t, results, 0)
+	})
+}
