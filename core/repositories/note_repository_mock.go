@@ -36,3 +36,11 @@ func (n *NoteRepositoryMock) GetAllNotesOnlyName() ([]*entities.NoteEntity, erro
 	}
 	return retEntity, nil
 }
+
+func (n *NoteRepositoryMock) GetBySearchText(text string) ([]*entities.NoteEntity, error) {
+	retEntity := []*entities.NoteEntity{
+		entities.NewNoteEntity("検索されたNote_A", "内容A"),
+		entities.NewNoteEntity("検索されたNote_B", "内容B"),
+	}
+	return retEntity, nil
+}

@@ -12,12 +12,14 @@ import (
 )
 
 const NOTE_SELECT_VIEW = "note_select"
+const NOTE_SELECT_SEARCH_INPUT_VIEW = "note_select_search_input_view"
 
 type NoteSelectView struct {
-	gui         *gocui.Gui
-	view        *gocui.View
-	memoDirPath string
-	notes       []string
+	gui             *gocui.Gui
+	noteSelectView  *gocui.View
+	searchInputView *gocui.View
+	memoDirPath     string
+	notes           []string
 
 	insertData dto.InsertData
 
@@ -28,6 +30,10 @@ type NoteSelectView struct {
 }
 
 func (n *NoteSelectView) Delete() error {
+	err := n.deleteSearchView()
+	if err != nil {
+		return err
+	}
 	return deleteView(n.gui, n.viewName)
 }
 
@@ -39,13 +45,22 @@ func (n *NoteSelectView) AllDelete() error {
 	return allDelete(n, n.parentView)
 }
 
+func (n *NoteSelectView) deleteSearchView() error {
+	n.gui.DeleteKeybindings(NOTE_SELECT_SEARCH_INPUT_VIEW)
+	err := n.gui.DeleteView(NOTE_SELECT_SEARCH_INPUT_VIEW)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 func (n *NoteSelectView) deleteThisView(g *gocui.Gui, v *gocui.View) error {
 	return deleteThisView(n, n.parentView)
 }
 
 func (n *NoteSelectView) Resize() error {
 	width, height := n.gui.Size()
-	return resize(n.gui, n.viewName, width/2-25, 0, width/2+25, height-1, n.childView)
+	return resize(n.gui, n.viewName, width/2-25, 0, width/2+25, height-2, n.childView)
 }
 
 func NewNoteSelectView(
@@ -71,17 +86,22 @@ func NewNoteSelectView(
 func (n *NoteSelectView) Create(notes []string) error {
 	n.notes = notes
 	width, height := n.gui.Size()
-	v, err := createOrResizeView(n.gui, NOTE_SELECT_VIEW, width/2-25, 0, width/2+25, height-1)
+	v, err := createOrResizeView(n.gui, NOTE_SELECT_VIEW, width/2-25, 0, width/2+25, height-2)
 	if err != nil {
 		return err
 	}
-	n.view = v
+	n.noteSelectView = v
 
-	n.view.Highlight = true
-	n.view.SelBgColor = gocui.ColorGreen
-	n.view.SelFgColor = gocui.ColorBlack
+	n.noteSelectView.Highlight = true
+	n.noteSelectView.SelBgColor = gocui.ColorGreen
+	n.noteSelectView.SelFgColor = gocui.ColorBlack
 
-	n.setContents()
+	n.searchInputView, err = createOrResizeView(n.gui, NOTE_SELECT_SEARCH_INPUT_VIEW, 0, height-2, width, height)
+	n.searchInputView.Frame = false
+	n.searchInputView.Editable = true
+	n.searchInputView.Editor = &Editor{}
+
+	n.setContents(n.notes)
 
 	err = n.setEvents()
 	if err != nil {
@@ -109,6 +129,16 @@ func (n *NoteSelectView) setEvents() error {
 	if err := n.gui.SetKeybinding(NOTE_SELECT_VIEW, gocui.KeyEsc, gocui.ModNone, n.deleteThisView); err != nil {
 		return errors.Wrap(err, "キーバイーンド失敗")
 	}
+	if err := n.gui.SetKeybinding(NOTE_SELECT_VIEW, gocui.KeyCtrlF, gocui.ModNone, n.focusSearchView); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
+
+	if err := n.gui.SetKeybinding(NOTE_SELECT_SEARCH_INPUT_VIEW, gocui.KeyEsc, gocui.ModNone, n.focusNoteSelectView); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
+	if err := n.gui.SetKeybinding(NOTE_SELECT_SEARCH_INPUT_VIEW, gocui.KeyEnter, gocui.ModNone, n.executeSearch); err != nil {
+		return errors.Wrap(err, "キーバイーンド失敗")
+	}
 	return nil
 }
 
@@ -118,6 +148,47 @@ func (n *NoteSelectView) insertNoteToDailyList(g *gocui.Gui, v *gocui.View) erro
 	} else {
 		return n.insertExistedNoteToDailyList()
 	}
+}
+
+func (n *NoteSelectView) focusSearchView(g *gocui.Gui, v *gocui.View) error {
+	_, err := n.gui.SetCurrentView(NOTE_SELECT_SEARCH_INPUT_VIEW)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (n *NoteSelectView) focusNoteSelectView(g *gocui.Gui, v *gocui.View) error {
+	return n.focusNoteSelectViewExecute()
+}
+
+func (n *NoteSelectView) focusNoteSelectViewExecute() error {
+	n.searchInputView.Clear()
+	err := n.searchInputView.SetCursor(0, 0)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, err = n.gui.SetCurrentView(NOTE_SELECT_VIEW)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (n *NoteSelectView) executeSearch(g *gocui.Gui, v *gocui.View) error {
+	// 入力文字列を取得
+	inputText, err := n.searchInputView.Line(0)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	searchText := utils.ConvertStringForLogic(inputText)
+	// 検索文字列の検索結果でNoteSelectViewの表示をリロードする
+	err = n.search(searchText)
+	if err != nil {
+		return err
+	}
+	// フォーカスをnoteSelectViewへ移す
+	return n.focusNoteSelectViewExecute()
 }
 
 func (n *NoteSelectView) addNote() error {
@@ -183,16 +254,29 @@ func (n *NoteSelectView) createNewDailyList() error {
 	return nil
 }
 
-func (n *NoteSelectView) setContents() {
-	fmt.Fprintln(n.view, utils.ConvertStringForView("新規追加"))
-	for _, note := range n.notes {
-		fmt.Fprintln(n.view, utils.ConvertStringForView(note))
+func (n *NoteSelectView) setContents(notes []string) {
+	fmt.Fprintln(n.noteSelectView, utils.ConvertStringForView("新規追加"))
+	for _, note := range notes {
+		fmt.Fprintln(n.noteSelectView, utils.ConvertStringForView(note))
 	}
 }
 
+func (n *NoteSelectView) search(text string) error {
+	// 内容のクリア
+	n.noteSelectView.Clear()
+	useCase := usecases.NewGetNotesBySearchTextUseCase(n.noteRepository)
+	searchedNotes, err := useCase.Handle(text)
+	if err != nil {
+		return err
+	}
+
+	n.setContents(searchedNotes)
+	return nil
+}
+
 func (n *NoteSelectView) getNoteNameOnCursor() (string, error) {
-	_, y := n.view.Cursor()
-	noteName, err := n.view.Line(y)
+	_, y := n.noteSelectView.Cursor()
+	noteName, err := n.noteSelectView.Line(y)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -201,7 +285,7 @@ func (n *NoteSelectView) getNoteNameOnCursor() (string, error) {
 }
 
 func (n *NoteSelectView) isSelectedNewNote() bool {
-	_, y := n.view.Cursor()
+	_, y := n.noteSelectView.Cursor()
 	if y == 0 {
 		return true
 	} else {
