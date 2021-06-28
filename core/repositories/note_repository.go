@@ -14,6 +14,7 @@ type NoteRepositoryInterface interface {
 	GetByNoteName(noteName string) (*entities.NoteEntity, error)
 	GetAllNotesOnlyName() ([]*entities.NoteEntity, error)
 	Save(entity *entities.NoteEntity) error
+	GetBySearchText(text string) ([]*entities.NoteEntity, error)
 }
 
 type NoteRepository struct {
@@ -68,4 +69,20 @@ func (n *NoteRepository) Save(entity *entities.NoteEntity) error {
 		return errors.Wrapf(err, "NoteFile create error. entity: %+v", entity)
 	}
 	return nil
+}
+
+func (n *NoteRepository) GetBySearchText(text string) ([]*entities.NoteEntity, error) {
+	allNotes, err := n.GetAllNotesOnlyName()
+	if err != nil {
+		return nil, err
+	}
+
+	retEntities := []*entities.NoteEntity{}
+	r := regexp.MustCompile(text)
+	for _, note := range allNotes {
+		if r.MatchString(note.Name()) {
+			retEntities = append(retEntities, note)
+		}
+	}
+	return retEntities, nil
 }
