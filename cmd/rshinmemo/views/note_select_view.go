@@ -105,7 +105,7 @@ func (n *NoteSelectView) Create(notes []string) error {
 	n.searchInputView.Editable = true
 	n.searchInputView.Editor = &Editor{}
 
-	n.setContents()
+	n.setContents(n.notes)
 
 	err = n.setEvents()
 	if err != nil {
@@ -187,6 +187,10 @@ func (n *NoteSelectView) executeSearch(g *gocui.Gui, v *gocui.View) error {
 	}
 	searchText := utils.ConvertStringForLogic(inputText)
 	// 検索文字列の検索結果でNoteSelectViewの表示をリロードする
+	err = n.search(searchText)
+	if err != nil {
+		return err
+	}
 	// フォーカスをnoteSelectViewへ移す
 	return n.focusNoteSelectViewExecute()
 }
@@ -254,11 +258,24 @@ func (n *NoteSelectView) createNewDailyList() error {
 	return nil
 }
 
-func (n *NoteSelectView) setContents() {
+func (n *NoteSelectView) setContents(notes []string) {
 	fmt.Fprintln(n.noteSelectView, utils.ConvertStringForView("新規追加"))
-	for _, note := range n.notes {
+	for _, note := range notes {
 		fmt.Fprintln(n.noteSelectView, utils.ConvertStringForView(note))
 	}
+}
+
+func (n *NoteSelectView) search(text string) error {
+	// 内容のクリア
+	n.noteSelectView.Clear()
+	useCase := usecases.NewGetNotesBySearchTextUseCase(n.noteRepository)
+	searchedNotes, err := useCase.Handle(text)
+	if err != nil {
+		return err
+	}
+
+	n.setContents(searchedNotes)
+	return nil
 }
 
 func (n *NoteSelectView) getNoteNameOnCursor() (string, error) {

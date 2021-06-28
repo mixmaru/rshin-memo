@@ -14,6 +14,7 @@ type NoteRepositoryInterface interface {
 	GetByNoteName(noteName string) (*entities.NoteEntity, error)
 	GetAllNotesOnlyName() ([]*entities.NoteEntity, error)
 	Save(entity *entities.NoteEntity) error
+	GetBySearchText(text string) ([]*entities.NoteEntity, error)
 }
 
 type NoteRepository struct {
