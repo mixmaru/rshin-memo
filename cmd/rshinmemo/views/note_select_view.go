@@ -42,10 +42,6 @@ func (n *NoteSelectView) Focus() error {
 }
 
 func (n *NoteSelectView) AllDelete() error {
-	err := n.deleteSearchView()
-	if err != nil {
-		return err
-	}
 	return allDelete(n, n.parentView)
 }
 
