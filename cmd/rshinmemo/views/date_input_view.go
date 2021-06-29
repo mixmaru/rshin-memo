@@ -31,6 +31,7 @@ func (n *DateInputView) Delete() error {
 }
 
 func (n *DateInputView) Focus() error {
+	n.explainView.Set(DATE_INPUT_VIEW_EXPLAIN)
 	return focus(n.gui, n.viewName)
 }
 
@@ -55,6 +56,7 @@ func NewDateInputView(
 	parentView View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
+	explainView *ExplainView,
 ) *DateInputView {
 	retObj := &DateInputView{
 		gui:                 gui,
@@ -65,8 +67,11 @@ func NewDateInputView(
 		noteRepository:      noteRepository,
 	}
 	retObj.ViewBase = NewViewBase(DATE_INPUT_VIEW, gui, parentView)
+	retObj.explainView = explainView
 	return retObj
 }
+
+const DATE_INPUT_VIEW_EXPLAIN = "[esc]:back"
 
 // 新規作成
 func (n *DateInputView) Create() error {
@@ -85,6 +90,7 @@ func (n *DateInputView) Create() error {
 		return err
 	}
 
+	n.explainView.Set(DATE_INPUT_VIEW_EXPLAIN)
 	return nil
 }
 
@@ -131,6 +137,7 @@ func (n *DateInputView) displayNoteNameInputView(g *gocui.Gui, v *gocui.View) er
 		n,
 		n.dailyDataRepository,
 		n.noteRepository,
+		n.explainView,
 	)
 	err = noteSelectView.Create(allNotes)
 	if err != nil {

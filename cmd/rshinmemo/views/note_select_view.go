@@ -38,6 +38,7 @@ func (n *NoteSelectView) Delete() error {
 }
 
 func (n *NoteSelectView) Focus() error {
+	n.explainView.Set(NOTE_SELECT_VIEW_EXPLAIN)
 	return focus(n.gui, n.viewName)
 }
 
@@ -70,6 +71,7 @@ func NewNoteSelectView(
 	parentView View,
 	dailYDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
+	explainView *ExplainView,
 ) *NoteSelectView {
 	retObj := &NoteSelectView{
 		gui:                 gui,
@@ -79,8 +81,11 @@ func NewNoteSelectView(
 		noteRepository:      noteRepository,
 	}
 	retObj.ViewBase = NewViewBase(NOTE_SELECT_VIEW, gui, parentView)
+	retObj.explainView = explainView
 	return retObj
 }
+
+const NOTE_SELECT_VIEW_EXPLAIN = "[esc]:back [j]:up [k]:down [enter]:open memo [ctrl-f]:search memo"
 
 // 新規作成
 func (n *NoteSelectView) Create(notes []string) error {
@@ -106,6 +111,11 @@ func (n *NoteSelectView) Create(notes []string) error {
 	err = n.setEvents()
 	if err != nil {
 		return err
+	}
+	n.explainView.Set(NOTE_SELECT_VIEW_EXPLAIN)
+	_, err = n.gui.SetViewOnTop(EXPLAIN_VIEW)
+	if err != nil {
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -151,7 +161,11 @@ func (n *NoteSelectView) insertNoteToDailyList(g *gocui.Gui, v *gocui.View) erro
 }
 
 func (n *NoteSelectView) focusSearchView(g *gocui.Gui, v *gocui.View) error {
-	_, err := n.gui.SetCurrentView(NOTE_SELECT_SEARCH_INPUT_VIEW)
+	_, err := n.gui.SetViewOnTop(NOTE_SELECT_SEARCH_INPUT_VIEW)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, err = n.gui.SetCurrentView(NOTE_SELECT_SEARCH_INPUT_VIEW)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -165,6 +179,11 @@ func (n *NoteSelectView) focusNoteSelectView(g *gocui.Gui, v *gocui.View) error 
 func (n *NoteSelectView) focusNoteSelectViewExecute() error {
 	n.searchInputView.Clear()
 	err := n.searchInputView.SetCursor(0, 0)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	_, err = n.gui.SetViewOnTop(EXPLAIN_VIEW)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -199,6 +218,7 @@ func (n *NoteSelectView) addNote() error {
 		n,
 		n.dailYDataRepository,
 		n.noteRepository,
+		n.explainView,
 	)
 	err := noteNameInputView.Create()
 	if err != nil {

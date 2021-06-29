@@ -36,6 +36,7 @@ func (n *DateSelectView) Delete() error {
 }
 
 func (n *DateSelectView) Focus() error {
+	n.explainView.Set(DATE_SELECT_VIEW_EXPLAIN)
 	return focus(n.gui, n.viewName)
 }
 
@@ -45,7 +46,7 @@ func (n *DateSelectView) AllDelete() error {
 
 func (n *DateSelectView) Resize() error {
 	width, height := n.gui.Size()
-	return resize(n.gui, n.viewName, width/2-25, 0, width/2+25, height-1, n.childView)
+	return resize(n.gui, n.viewName, width/2-25, 0, width/2+25, height-2, n.childView)
 }
 
 func NewDateSelectView(
@@ -56,6 +57,7 @@ func NewDateSelectView(
 	parentView View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
+	explainView *ExplainView,
 ) *DateSelectView {
 	retObj := &DateSelectView{
 		gui:                 gui,
@@ -66,13 +68,16 @@ func NewDateSelectView(
 		noteRepository:      noteRepository,
 	}
 	retObj.ViewBase = NewViewBase(DATE_SELECT_VIEW, gui, parentView)
+	retObj.explainView = explainView
 	return retObj
 }
+
+const DATE_SELECT_VIEW_EXPLAIN = "[esc]:back"
 
 // 新規作成
 func (n *DateSelectView) Create() error {
 	width, height := n.gui.Size()
-	v, err := createOrResizeView(n.gui, DATE_SELECT_VIEW, width/2-25, 0, width/2+25, height-1)
+	v, err := createOrResizeView(n.gui, DATE_SELECT_VIEW, width/2-25, 0, width/2+25, height-2)
 	if err != nil {
 		return err
 	}
@@ -91,6 +96,7 @@ func (n *DateSelectView) Create() error {
 		return err
 	}
 
+	n.explainView.Set(DATE_SELECT_VIEW_EXPLAIN)
 	return nil
 }
 
@@ -181,6 +187,7 @@ func (n *DateSelectView) decisionDate(g *gocui.Gui, v *gocui.View) error {
 			n,
 			n.dailyDataRepository,
 			n.noteRepository,
+			n.explainView,
 		)
 		err = noteSelectView.Create(allNotes)
 		if err != nil {
@@ -205,6 +212,7 @@ func (n *DateSelectView) displayDateInputView() error {
 		n,
 		n.dailyDataRepository,
 		n.noteRepository,
+		n.explainView,
 	)
 	err := dateInputView.Create()
 	if err != nil {
