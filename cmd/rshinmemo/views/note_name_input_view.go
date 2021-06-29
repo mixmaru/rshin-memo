@@ -30,6 +30,7 @@ func (n *NoteNameInputView) Delete() error {
 }
 
 func (n *NoteNameInputView) Focus() error {
+	n.explainView.Set(NOTE_NAME_INPUT_VIEW_EXPLAIN)
 	return focus(n.gui, n.viewName)
 }
 
@@ -53,6 +54,7 @@ func NewNoteNameInputView(
 	parentView View,
 	dailyDataRepository repositories.DailyDataRepositoryInterface,
 	noteRepository repositories.NoteRepositoryInterface,
+	explainView *ExplainView,
 ) *NoteNameInputView {
 	retObj := &NoteNameInputView{
 		gui:                 gui,
@@ -62,8 +64,11 @@ func NewNoteNameInputView(
 		noteRepository:      noteRepository,
 	}
 	retObj.ViewBase = NewViewBase(NOTE_NAME_INPUT_VIEW, gui, parentView)
+	retObj.explainView = explainView
 	return retObj
 }
+
+const NOTE_NAME_INPUT_VIEW_EXPLAIN = "[esc]:back"
 
 // dailyListViewの新規作成
 func (n *NoteNameInputView) Create() error {
@@ -81,6 +86,7 @@ func (n *NoteNameInputView) Create() error {
 	if err != nil {
 		return err
 	}
+	n.explainView.Set(NOTE_NAME_INPUT_VIEW_EXPLAIN)
 	return nil
 }
 

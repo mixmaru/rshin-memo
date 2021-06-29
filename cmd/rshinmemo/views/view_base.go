@@ -14,10 +14,11 @@ type View interface {
 }
 
 type ViewBase struct {
-	viewName   string
-	gui        *gocui.Gui
-	parentView View
-	childView  View
+	viewName    string
+	gui         *gocui.Gui
+	parentView  View
+	childView   View
+	explainView *ExplainView
 }
 
 func NewViewBase(viewName string, gui *gocui.Gui, parentView View) *ViewBase {
