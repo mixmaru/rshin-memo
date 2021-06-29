@@ -25,7 +25,6 @@ type DailyListView struct {
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 	noteRepository      repositories.NoteRepositoryInterface
 
-	explainView *ExplainView
 	*ViewBase
 }
 
@@ -67,8 +66,9 @@ func NewDailyListView(
 		memoDirPath:         memoDirPath,
 		dailyDataRepository: dailyDataRepository,
 		noteRepository:      noteRepository,
-		explainView:         explainView,
 	}
+	retObj.ViewBase = NewViewBase(DAILY_LIST_VIEW, gui, nil)
+	retObj.explainView = explainView
 	return retObj
 }
 
@@ -97,8 +97,6 @@ func (d *DailyListView) Create() error {
 	if err != nil {
 		return err
 	}
-
-	d.ViewBase = NewViewBase(DAILY_LIST_VIEW, d.gui, nil)
 
 	d.explainView.Set(DAILY_LIST_VIEW_EXPLAIN)
 	return nil
@@ -376,6 +374,7 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 		d,
 		d.dailyDataRepository,
 		d.noteRepository,
+		d.explainView,
 	)
 	err := dateSelectView.Create()
 	if err != nil {
@@ -387,7 +386,6 @@ func (d *DailyListView) displayDateSelectView(insertData dto.InsertData, dateRan
 	}
 
 	d.childView = dateSelectView
-	d.explainView.Clear()
 	return nil
 }
 
