@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/gdamore/tcell/v2 v2.3.3
 	github.com/jroimartin/gocui v0.4.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.12
