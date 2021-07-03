@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/mixmaru/rshin-memo/core/repositories"
+	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/pkg/errors"
 	"github.com/rivo/tview"
 )
@@ -9,15 +11,23 @@ type RshinMemo struct {
 	app           *tview.Application
 	layoutView    *tview.Flex
 	dailyListView *tview.Table
+
+	dailyDataRep repositories.DailyDataRepositoryInterface
 }
 
-func NewRshinMemo() *RshinMemo {
-	return &RshinMemo{}
+func NewRshinMemo(dailyDataRep repositories.DailyDataRepositoryInterface) *RshinMemo {
+	return &RshinMemo{
+		dailyDataRep: dailyDataRep,
+	}
 }
 
 func (r *RshinMemo) Run() error {
+	var err error
 	r.app = tview.NewApplication()
-	r.layoutView, r.dailyListView = r.createInitViews()
+	r.layoutView, r.dailyListView, err = r.createInitViews()
+	if err != nil {
+		return err
+	}
 
 	if err := r.app.SetRoot(r.layoutView, true).Run(); err != nil {
 		return errors.WithStack(err)
@@ -25,74 +35,37 @@ func (r *RshinMemo) Run() error {
 	return nil
 }
 
-func (r *RshinMemo) createInitViews() (layoutView *tview.Flex, dailyListView *tview.Table) {
-	dailyListView = r.createInitDailyListView()
-	layoutView = tview.NewFlex().AddItem(dailyListView, 300, 0, true)
-	return layoutView, dailyListView
+func (r *RshinMemo) createInitViews() (layoutView *tview.Flex, dailyListView *tview.Table, err error) {
+	dailyListView, err = r.createInitDailyListView()
+	if err != nil {
+		return nil, nil, err
+	}
+	layoutView = tview.NewFlex().AddItem(dailyListView, 100, 0, true)
+	return layoutView, dailyListView, nil
 }
 
-func (r *RshinMemo) createInitDailyListView() *tview.Table {
-	table := tview.NewTable().SetSelectable(true, false)
-	table.SetCellSimple(0, 0, "2021-01-01")
-	table.SetCellSimple(0, 1, "aaaaaaaaaa")
-	table.SetCellSimple(1, 0, "2021-01-01")
-	table.SetCellSimple(1, 1, "aaaaaaaaaa")
-	return table
+func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
+	table := tview.NewTable()
+	table.SetSelectable(true, false)
+	table.SetBorder(true)
+	// データ取得
+	useCase := usecases.NewGetAllDailyListUsecase(r.dailyDataRep)
+	dailyList, err := useCase.Handle()
+	if err != nil {
+		return nil, err
+	}
+
+	// データをテーブルにセット
+	for i, dailyData := range dailyList {
+		for j, note := range dailyData.Notes {
+			row := i + j
+			table.SetCellSimple(row, 0, dailyData.Date)
+			table.SetCellSimple(row, 1, note)
+		}
+	}
+	return table, nil
 }
 
-//app := tview.NewApplication()
-////box := tview.NewBox().SetBorder(true).SetTitle("Hello, world!")
-//textView := tview.NewTextView().SetTitle(" どうですか ").SetBorder(true)
-//// dailyListを用意する。
-//list := tview.NewList().ShowSecondaryText(false).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil).
-//	AddItem("1行目のコンテンツ", "セカンダリーテキスト", '1', nil).
-//	AddItem("2行目のコンテンツ", "", '2', nil).
-//	AddItem("3行目のコンテンツ", "セカンダリーテキスト3", '3', nil)
-//// ボタン
-//
-//flex := tview.NewFlex().
-//	AddItem(list, 0, 1, true)
-//
-////AddItem(textView, 0, 1, false)
 //list.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 //	switch event.Key() {
 //	case tcell.KeyEnter:
