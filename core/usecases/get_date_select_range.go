@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -11,10 +12,26 @@ func NewGetDateSelectRangeUseCase() *GetDateSelectRangeUseCase {
 	return &GetDateSelectRangeUseCase{}
 }
 
-func (g *GetDateSelectRangeUseCase) Handle(baseTime time.Time, beforeRangeDate, afterRangeDate int) []time.Time {
-	baseTime = baseTime.In(time.Local)
-	from := time.Date(baseTime.Year(), baseTime.Month(), baseTime.Day()-beforeRangeDate, 0, 0, 0, 0, time.Local)
-	to := time.Date(baseTime.Year(), baseTime.Month(), baseTime.Day()+afterRangeDate, 0, 0, 0, 0, time.Local)
+type InsertMode int
+
+const (
+	INSERT_OVER_MODE InsertMode = iota
+	INSERT_UNDER_MODE
+)
+const maxCount = 15
+
+func (g *GetDateSelectRangeUseCase) Handle(overCursorDate, currentCursorDate, underCursorDate time.Time, insertMode InsertMode) ([]time.Time, error) {
+	var from, to time.Time
+	switch insertMode {
+	case INSERT_OVER_MODE:
+		from = currentCursorDate
+		to = overCursorDate
+	case INSERT_UNDER_MODE:
+		from = underCursorDate
+		to = currentCursorDate
+	default:
+		return nil, errors.Errorf("想定外値 overCursorDate: %+v, currentCursorDate: %+v, underCursorDate: %+v, insertMode: %+v", overCursorDate, currentCursorDate, underCursorDate, insertMode)
+	}
 
 	retDates := []time.Time{}
 	appendDate := from
@@ -22,5 +39,5 @@ func (g *GetDateSelectRangeUseCase) Handle(baseTime time.Time, beforeRangeDate, 
 		retDates = append(retDates, appendDate)
 		appendDate = appendDate.AddDate(0, 0, 1)
 	}
-	return retDates
+	return retDates, nil
 }
