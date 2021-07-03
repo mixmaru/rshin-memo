@@ -7,6 +7,7 @@ import (
 
 type RshinMemo struct {
 	app           *tview.Application
+	layoutView    *tview.Flex
 	dailyListView *tview.Table
 }
 
@@ -15,30 +16,28 @@ func NewRshinMemo() *RshinMemo {
 }
 
 func (r *RshinMemo) Run() error {
-	var err error
 	r.app = tview.NewApplication()
-	// dailyListViewの初期化
-	r.dailyListView = tview.NewTable().SetSelectable(true, false)
-	r.dailyListView, err = setContents(r.dailyListView)
-	if err != nil {
-		return err
-	}
+	r.layoutView, r.dailyListView = r.createInitViews()
 
-	// レイアウト
-	flex := tview.NewFlex().AddItem(r.dailyListView, 300, 0, true)
-
-	if err := r.app.SetRoot(flex, true).Run(); err != nil {
+	if err := r.app.SetRoot(r.layoutView, true).Run(); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
-func setContents(table *tview.Table) (*tview.Table, error) {
+func (r *RshinMemo) createInitViews() (layoutView *tview.Flex, dailyListView *tview.Table) {
+	dailyListView = r.createInitDailyListView()
+	layoutView = tview.NewFlex().AddItem(dailyListView, 300, 0, true)
+	return layoutView, dailyListView
+}
+
+func (r *RshinMemo) createInitDailyListView() *tview.Table {
+	table := tview.NewTable().SetSelectable(true, false)
 	table.SetCellSimple(0, 0, "2021-01-01")
 	table.SetCellSimple(0, 1, "aaaaaaaaaa")
 	table.SetCellSimple(1, 0, "2021-01-01")
 	table.SetCellSimple(1, 1, "aaaaaaaaaa")
-	return table, nil
+	return table
 }
 
 //app := tview.NewApplication()
