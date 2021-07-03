@@ -6,6 +6,7 @@ import (
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/pkg/errors"
 	"github.com/rivo/tview"
+	"time"
 )
 
 type RshinMemo struct {
@@ -92,10 +93,14 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 
 func (r *RshinMemo) createInitDailySelectView() (*tview.Table, error) {
 	dateSelectView := tview.NewTable().SetSelectable(true, false)
-	dateSelectView.SetCellSimple(0, 0, "2021-01-01")
-	dateSelectView.SetCellSimple(1, 0, "2021-01-01")
-	dateSelectView.SetCellSimple(2, 0, "2021-01-01")
-	dateSelectView.SetCellSimple(3, 0, "2021-01-01")
+	dateSelectView.SetCellSimple(0, 0, "手入力する")
+
+	now := time.Now().In(time.Local)
+	useCase := usecases.NewGetDateSelectRangeUseCase()
+	dates := useCase.Handle(now, 15, 15)
+	for i, date := range dates {
+		dateSelectView.SetCellSimple(i+1, 0, date.Format("2006-01-02"))
+	}
 	return dateSelectView, nil
 }
 
