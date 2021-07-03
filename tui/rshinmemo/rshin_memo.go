@@ -53,17 +53,22 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		var err error
 		switch event.Key() {
-		case tcell.KeyEnter:
-			// dataSelectViewを作る
-			r.dateSelectView, err = r.createInitDailySelectView()
-			if err != nil {
-				panic(errors.WithStack(err))
+		case tcell.KeyRune:
+			switch event.Rune() {
+			case 'o':
+				// dataSelectViewを作る
+				r.dateSelectView, err = r.createInitDailySelectView()
+				if err != nil {
+					panic(errors.WithStack(err))
+				}
+				// 表示領域に挿入する
+				r.layoutView.AddItem(r.dateSelectView, 0, 1, true)
+				// フォーカスを移す
+				r.app.SetFocus(r.dateSelectView)
+				return nil
+			case 'O':
+				panic("noteImplement")
 			}
-			// 表示領域に挿入する
-			r.layoutView.AddItem(r.dateSelectView, 0, 1, true)
-			// フォーカスを移す
-			r.app.SetFocus(r.dateSelectView)
-			return nil
 		}
 		return event
 	})
