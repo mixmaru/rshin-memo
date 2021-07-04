@@ -125,7 +125,12 @@ func (r *RshinMemo) createInitDailySelectView() (*tview.Table, error) {
 // cursorPointAdjustに数値を指定すると、指定分カーソル位置からずれた位置の日付を取得する
 func (r *RshinMemo) getDailyListCursorDate(cursorPointAdjust int) (time.Time, error) {
 	row, _ := r.dailyListView.GetSelection()
-	dateStr := r.dailyListView.GetCell(row+cursorPointAdjust, 0)
+	targetRow := row + cursorPointAdjust
+	if targetRow < 0 || targetRow+1 > r.dailyListView.GetRowCount() {
+		// targetRow is out of range
+		return time.Time{}, nil
+	}
+	dateStr := r.dailyListView.GetCell(targetRow, 0)
 	date, err := time.ParseInLocation("2006-01-02", dateStr.Text, time.Local)
 	if err != nil {
 		return time.Time{}, errors.WithStack(err)
