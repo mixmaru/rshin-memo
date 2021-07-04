@@ -56,9 +56,15 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 		switch event.Key() {
 		case tcell.KeyRune:
 			switch event.Rune() {
-			case 'o':
+			case 'o', 'O':
 				// dataSelectViewを作る
-				r.dateSelectView, err = r.createInitDailySelectView()
+				var mode usecases.InsertMode
+				if event.Rune() == 'o' {
+					mode = usecases.INSERT_UNDER_MODE
+				} else {
+					mode = usecases.INSERT_OVER_MODE
+				}
+				r.dateSelectView, err = r.createInitDailySelectView(mode)
 				if err != nil {
 					panic(errors.WithStack(err))
 				}
@@ -67,8 +73,6 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 				// フォーカスを移す
 				r.app.SetFocus(r.dateSelectView)
 				return nil
-			case 'O':
-				panic("noteImplement")
 			}
 		}
 		return event
@@ -91,7 +95,7 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 	return table, nil
 }
 
-func (r *RshinMemo) createInitDailySelectView() (*tview.Table, error) {
+func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.Table, error) {
 	dateSelectView := tview.NewTable().SetSelectable(true, false)
 	dateSelectView.SetCellSimple(0, 0, "手入力する")
 
@@ -111,7 +115,7 @@ func (r *RshinMemo) createInitDailySelectView() (*tview.Table, error) {
 
 	now := time.Now().In(time.Local)
 	useCase := usecases.NewGetDateSelectRangeUseCase(now)
-	dates, err := useCase.Handle(overCurrentDate, currentDate, underCurrentDate, usecases.INSERT_UNDER_MODE)
+	dates, err := useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
 	if err != nil {
 		return nil, err
 	}
