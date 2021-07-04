@@ -97,6 +97,18 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 
 func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.Table, error) {
 	dateSelectView := tview.NewTable().SetSelectable(true, false)
+	// event設定
+	dateSelectView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEscape:
+			// dateSelectViewを削除してDailyListにフォーカスを戻す
+			r.layoutView.RemoveItem(r.dateSelectView)
+			r.dateSelectView = nil
+			r.app.SetFocus(r.dailyListView)
+			return nil
+		}
+		return event
+	})
 	dateSelectView.SetCellSimple(0, 0, "手入力する")
 
 	// 表示する日付の範囲を決定する
