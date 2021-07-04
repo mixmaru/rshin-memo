@@ -18,7 +18,7 @@ const (
 	INSERT_OVER_MODE InsertMode = iota
 	INSERT_UNDER_MODE
 )
-const maxCount = 15
+const maxCount = 30
 
 func (g *GetDateSelectRangeUseCase) Handle(overCursorDate, currentCursorDate, underCursorDate time.Time, insertMode InsertMode) ([]time.Time, error) {
 	var from, to time.Time
@@ -31,6 +31,11 @@ func (g *GetDateSelectRangeUseCase) Handle(overCursorDate, currentCursorDate, un
 		to = currentCursorDate
 	default:
 		return nil, errors.Errorf("想定外値 overCursorDate: %+v, currentCursorDate: %+v, underCursorDate: %+v, insertMode: %+v", overCursorDate, currentCursorDate, underCursorDate, insertMode)
+	}
+
+	// fromがゼロ値(無指定)の場合の補正
+	if from.IsZero() {
+		from = to.AddDate(0, 0, -maxCount)
 	}
 
 	retDates := []time.Time{}
