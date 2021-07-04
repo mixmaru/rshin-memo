@@ -10,7 +10,8 @@ func TestGetDateRangeUseCase_Handle(t *testing.T) {
 	t.Run("カーソル上下にデータがある場合のテスト", func(t *testing.T) {
 		t.Run("INSERT_UNDER_MODE", func(t *testing.T) {
 			////// 準備
-			useCase := NewGetDateSelectRangeUseCase()
+			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
+			useCase := NewGetDateSelectRangeUseCase(now)
 
 			overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
 			currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -32,7 +33,8 @@ func TestGetDateRangeUseCase_Handle(t *testing.T) {
 
 		t.Run("INSERT_OVER_MODE", func(t *testing.T) {
 			////// 準備
-			useCase := NewGetDateSelectRangeUseCase()
+			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
+			useCase := NewGetDateSelectRangeUseCase(now)
 
 			overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
 			currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -53,10 +55,11 @@ func TestGetDateRangeUseCase_Handle(t *testing.T) {
 		})
 	})
 
-	t.Run("カーソル下にデータがない場合のテスト", func(t *testing.T) {
+	t.Run("カーソルの下行にデータがない場合のテスト", func(t *testing.T) {
 		t.Run("INSERT_UNDER_MODE", func(t *testing.T) {
 			////// 準備
-			useCase := NewGetDateSelectRangeUseCase()
+			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
+			useCase := NewGetDateSelectRangeUseCase(now)
 
 			overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
 			currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -66,7 +69,6 @@ func TestGetDateRangeUseCase_Handle(t *testing.T) {
 			dates, err := useCase.Handle(overCurrentDate, currentDate, underCurrentDate, INSERT_UNDER_MODE)
 			assert.NoError(t, err)
 			expected := []time.Time{
-				time.Date(2020, 12, 11, 0, 0, 0, 0, time.Local),
 				time.Date(2020, 12, 12, 0, 0, 0, 0, time.Local),
 				time.Date(2020, 12, 13, 0, 0, 0, 0, time.Local),
 				time.Date(2020, 12, 14, 0, 0, 0, 0, time.Local),
@@ -103,7 +105,8 @@ func TestGetDateRangeUseCase_Handle(t *testing.T) {
 
 		t.Run("INSERT_OVER_MODE", func(t *testing.T) {
 			////// 準備
-			useCase := NewGetDateSelectRangeUseCase()
+			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
+			useCase := NewGetDateSelectRangeUseCase(now)
 
 			overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
 			currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -124,10 +127,11 @@ func TestGetDateRangeUseCase_Handle(t *testing.T) {
 		})
 	})
 
-	t.Run("カーソル上にデータがない場合のテスト", func(t *testing.T) {
+	t.Run("カーソルの上行にデータがない場合のテスト", func(t *testing.T) {
 		t.Run("INSERT_UNDER_MODE", func(t *testing.T) {
 			////// 準備
-			useCase := NewGetDateSelectRangeUseCase()
+			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
+			useCase := NewGetDateSelectRangeUseCase(now)
 
 			overCurrentDate := time.Time{}
 			currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -149,7 +153,8 @@ func TestGetDateRangeUseCase_Handle(t *testing.T) {
 
 		t.Run("INSERT_OVER_MODE", func(t *testing.T) {
 			////// 準備
-			useCase := NewGetDateSelectRangeUseCase()
+			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
+			useCase := NewGetDateSelectRangeUseCase(now)
 
 			overCurrentDate := time.Time{}
 			currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -197,10 +202,11 @@ func TestGetDateRangeUseCase_Handle(t *testing.T) {
 	t.Run("最初まったくデータがないときにつかうやつ", func(t *testing.T) {
 		t.Run("INSERT_UNDER_MODE", func(t *testing.T) {
 			////// 準備
-			useCase := NewGetDateSelectRangeUseCase()
+			now := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
+			useCase := NewGetDateSelectRangeUseCase(now)
 
 			overCurrentDate := time.Time{}
-			currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local) // nowを想定
+			currentDate := time.Time{}
 			underCurrentDate := time.Time{}
 
 			////// 検証1
@@ -237,17 +243,17 @@ func TestGetDateRangeUseCase_Handle(t *testing.T) {
 				time.Date(2021, 1, 22, 0, 0, 0, 0, time.Local),
 				time.Date(2021, 1, 23, 0, 0, 0, 0, time.Local),
 				time.Date(2021, 1, 24, 0, 0, 0, 0, time.Local),
-				time.Date(2021, 1, 25, 0, 0, 0, 0, time.Local),
 			}
 			assert.Equal(t, expected, dates)
 		})
 
 		t.Run("INSERT_OVER_MODE", func(t *testing.T) {
 			////// 準備
-			useCase := NewGetDateSelectRangeUseCase()
+			now := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
+			useCase := NewGetDateSelectRangeUseCase(now)
 
 			overCurrentDate := time.Time{}
-			currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local) // nowを想定
+			currentDate := time.Time{}
 			underCurrentDate := time.Time{}
 
 			////// 検証1
@@ -284,7 +290,6 @@ func TestGetDateRangeUseCase_Handle(t *testing.T) {
 				time.Date(2021, 1, 22, 0, 0, 0, 0, time.Local),
 				time.Date(2021, 1, 23, 0, 0, 0, 0, time.Local),
 				time.Date(2021, 1, 24, 0, 0, 0, 0, time.Local),
-				time.Date(2021, 1, 25, 0, 0, 0, 0, time.Local),
 			}
 			assert.Equal(t, expected, dates)
 		})
