@@ -95,13 +95,42 @@ func (r *RshinMemo) createInitDailySelectView() (*tview.Table, error) {
 	dateSelectView := tview.NewTable().SetSelectable(true, false)
 	dateSelectView.SetCellSimple(0, 0, "手入力する")
 
+	// 表示する日付の範囲を決定する
+	overCurrentDate, err := r.getDailyListCursorDate(-1)
+	if err != nil {
+		return nil, err
+	}
+	currentDate, err := r.getDailyListCursorDate(0)
+	if err != nil {
+		return nil, err
+	}
+	underCurrentDate, err := r.getDailyListCursorDate(1)
+	if err != nil {
+		return nil, err
+	}
+
 	now := time.Now().In(time.Local)
-	useCase := usecases.NewGetDateSelectRangeUseCase()
-	dates := useCase.Handle(now, 15, 15)
+	useCase := usecases.NewGetDateSelectRangeUseCase(now)
+	dates, err := useCase.Handle(overCurrentDate, currentDate, underCurrentDate, usecases.INSERT_UNDER_MODE)
+	if err != nil {
+		return nil, err
+	}
 	for i, date := range dates {
 		dateSelectView.SetCellSimple(i+1, 0, date.Format("2006-01-02"))
 	}
 	return dateSelectView, nil
+}
+
+// dailyListのカーソル位置の日付を取得する。
+// cursorPointAdjustに数値を指定すると、指定分カーソル位置からずれた位置の日付を取得する
+func (r *RshinMemo) getDailyListCursorDate(cursorPointAdjust int) (time.Time, error) {
+	row, _ := r.dailyListView.GetSelection()
+	dateStr := r.dailyListView.GetCell(row+cursorPointAdjust, 0)
+	date, err := time.ParseInLocation("2006-01-02", dateStr.Text, time.Local)
+	if err != nil {
+		return time.Time{}, errors.WithStack(err)
+	}
+	return date, nil
 }
 
 //list.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
