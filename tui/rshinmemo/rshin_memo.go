@@ -11,16 +11,22 @@ import (
 
 type RshinMemo struct {
 	app            *tview.Application
-	layoutView     *tview.Flex
+	layoutView     *tview.Pages
 	dailyListView  *tview.Table
 	dateSelectView *tview.Table
+	noteSelectView *tview.Table
 
 	dailyDataRep repositories.DailyDataRepositoryInterface
+	noteRep      repositories.NoteRepositoryInterface
 }
 
-func NewRshinMemo(dailyDataRep repositories.DailyDataRepositoryInterface) *RshinMemo {
+func NewRshinMemo(
+	dailyDataRep repositories.DailyDataRepositoryInterface,
+	noteRep repositories.NoteRepositoryInterface,
+) *RshinMemo {
 	return &RshinMemo{
 		dailyDataRep: dailyDataRep,
+		noteRep:      noteRep,
 	}
 }
 
@@ -38,12 +44,12 @@ func (r *RshinMemo) Run() error {
 	return nil
 }
 
-func (r *RshinMemo) createInitViews() (layoutView *tview.Flex, dailyListView *tview.Table, err error) {
+func (r *RshinMemo) createInitViews() (layoutView *tview.Pages, dailyListView *tview.Table, err error) {
 	dailyListView, err = r.createInitDailyListView()
 	if err != nil {
 		return nil, nil, err
 	}
-	layoutView = tview.NewFlex().AddItem(dailyListView, 0, 1, true)
+	layoutView = tview.NewPages().AddPage("dailyList", dailyListView, true, true)
 	return layoutView, dailyListView, nil
 }
 
@@ -69,9 +75,7 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 					panic(errors.WithStack(err))
 				}
 				// 表示領域に挿入する
-				r.layoutView.AddItem(r.dateSelectView, 0, 1, true)
-				// フォーカスを移す
-				r.app.SetFocus(r.dateSelectView)
+				r.layoutView.AddPage("dateSelect", r.dateSelectView, true, true)
 				return nil
 			}
 		}
@@ -99,13 +103,20 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.
 	dateSelectView := tview.NewTable().SetSelectable(true, false)
 	// event設定
 	dateSelectView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		var err error
 		switch event.Key() {
 		case tcell.KeyEscape:
 			// dateSelectViewを削除してDailyListにフォーカスを戻す
-			r.layoutView.RemoveItem(r.dateSelectView)
+			r.layoutView.RemovePage("dateSelect")
 			r.dateSelectView = nil
-			r.app.SetFocus(r.dailyListView)
 			return nil
+		case tcell.KeyEnter:
+			// noteSelectViewを表示してフォーカスを移す
+			r.noteSelectView, err = r.createNoteSelectView()
+			if err != nil {
+				panic(err)
+			}
+			r.layoutView.AddPage("noteSelect", r.noteSelectView, true, true)
 		}
 		return event
 	})
@@ -135,6 +146,30 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.
 		dateSelectView.SetCellSimple(i+1, 0, date.Format("2006-01-02"))
 	}
 	return dateSelectView, nil
+}
+
+func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
+	table := tview.NewTable()
+	table.SetSelectable(true, false)
+	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEscape:
+			r.layoutView.RemovePage("noteSelect")
+			return nil
+		}
+		return event
+	})
+	table.SetCellSimple(0, 0, "新規追加")
+	// データ読み込み
+	useCase := usecases.NewGetAllNotesUseCase(r.noteRep)
+	notes, err := useCase.Handle()
+	if err != nil {
+		return nil, err
+	}
+	for i, note := range notes {
+		table.SetCellSimple(i+1, 0, note)
+	}
+	return table, nil
 }
 
 // dailyListのカーソル位置の日付を取得する。
