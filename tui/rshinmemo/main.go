@@ -8,11 +8,18 @@ import (
 )
 
 func main() {
+	baseDirPath, err := getRshinMamoBaseDirPath()
+	if err != nil {
+		panic(err)
+	}
 	dailyDataJsonFilePath, err := getRshinMamoDailyDataJsonFilePath()
 	if err != nil {
 		panic(err)
 	}
-	rshinMemo := NewRshinMemo(repositories.NewDailyDataRepository(dailyDataJsonFilePath))
+	rshinMemo := NewRshinMemo(
+		repositories.NewDailyDataRepository(dailyDataJsonFilePath),
+		repositories.NewNoteRepository(baseDirPath),
+	)
 	err = rshinMemo.Run()
 	if err != nil {
 		panic(err)

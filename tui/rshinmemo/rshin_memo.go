@@ -17,11 +17,16 @@ type RshinMemo struct {
 	noteSelectView *tview.Table
 
 	dailyDataRep repositories.DailyDataRepositoryInterface
+	noteRep      repositories.NoteRepositoryInterface
 }
 
-func NewRshinMemo(dailyDataRep repositories.DailyDataRepositoryInterface) *RshinMemo {
+func NewRshinMemo(
+	dailyDataRep repositories.DailyDataRepositoryInterface,
+	noteRep repositories.NoteRepositoryInterface,
+) *RshinMemo {
 	return &RshinMemo{
 		dailyDataRep: dailyDataRep,
+		noteRep:      noteRep,
 	}
 }
 
@@ -98,6 +103,7 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.
 	dateSelectView := tview.NewTable().SetSelectable(true, false)
 	// event設定
 	dateSelectView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		var err error
 		switch event.Key() {
 		case tcell.KeyEscape:
 			// dateSelectViewを削除してDailyListにフォーカスを戻す
@@ -106,7 +112,10 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.
 			return nil
 		case tcell.KeyEnter:
 			// noteSelectViewを表示してフォーカスを移す
-			r.noteSelectView = r.createSelectView()
+			r.noteSelectView, err = r.createNoteSelectView()
+			if err != nil {
+				panic(err)
+			}
 			r.layoutView.AddPage("noteSelect", r.noteSelectView, true, true)
 		}
 		return event
@@ -139,7 +148,7 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.
 	return dateSelectView, nil
 }
 
-func (r *RshinMemo) createSelectView() *tview.Table {
+func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
 	table := tview.NewTable()
 	table.SetSelectable(true, false)
 	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -150,9 +159,17 @@ func (r *RshinMemo) createSelectView() *tview.Table {
 		}
 		return event
 	})
-	table.SetCellSimple(0, 0, "aaaa")
-	table.SetCellSimple(1, 0, "bbbb")
-	return table
+	table.SetCellSimple(0, 0, "新規追加")
+	// データ読み込み
+	useCase := usecases.NewGetAllNotesUseCase(r.noteRep)
+	notes, err := useCase.Handle()
+	if err != nil {
+		return nil, err
+	}
+	for i, note := range notes {
+		table.SetCellSimple(i+1, 0, note)
+	}
+	return table, nil
 }
 
 // dailyListのカーソル位置の日付を取得する。
