@@ -26,10 +26,10 @@ const maxCount = 30
 func (g *GetDateSelectRangeUseCase) Handle(overCursorDate, currentCursorDate, underCursorDate time.Time, insertMode InsertMode) ([]time.Time, error) {
 	var from, to time.Time
 	switch insertMode {
-	case INSERT_OVER_MODE:
+	case INSERT_UNDER_MODE:
 		from = currentCursorDate
 		to = overCursorDate
-	case INSERT_UNDER_MODE:
+	case INSERT_OVER_MODE:
 		from = underCursorDate
 		to = currentCursorDate
 	default:

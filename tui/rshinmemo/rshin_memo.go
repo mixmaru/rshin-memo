@@ -10,11 +10,12 @@ import (
 )
 
 type RshinMemo struct {
-	app            *tview.Application
-	layoutView     *tview.Pages
-	dailyListView  *tview.Table
-	dateSelectView *tview.Table
-	noteSelectView *tview.Table
+	app                 *tview.Application
+	layoutView          *tview.Pages
+	dailyListView       *tview.Table
+	dailyListInsertMode usecases.InsertMode
+	dateSelectView      *tview.Table
+	noteSelectView      *tview.Table
 
 	dailyDataRep repositories.DailyDataRepositoryInterface
 	noteRep      repositories.NoteRepositoryInterface
@@ -64,13 +65,12 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 			switch event.Rune() {
 			case 'o', 'O':
 				// dataSelectViewを作る
-				var mode usecases.InsertMode
 				if event.Rune() == 'o' {
-					mode = usecases.INSERT_UNDER_MODE
+					r.dailyListInsertMode = usecases.INSERT_OVER_MODE
 				} else {
-					mode = usecases.INSERT_OVER_MODE
+					r.dailyListInsertMode = usecases.INSERT_UNDER_MODE
 				}
-				r.dateSelectView, err = r.createInitDailySelectView(mode)
+				r.dateSelectView, err = r.createInitDailySelectView(r.dailyListInsertMode)
 				if err != nil {
 					panic(errors.WithStack(err))
 				}
@@ -156,6 +156,15 @@ func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
 		case tcell.KeyEscape:
 			r.layoutView.RemovePage("noteSelect")
 			return nil
+		case tcell.KeyEnter:
+			// 指定のnoteをデータに追加
+			err := r.saveDailyData()
+			if err != nil {
+				panic(err)
+			}
+
+			// vimでひらく
+
 		}
 		return event
 	})
@@ -170,6 +179,29 @@ func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
 		table.SetCellSimple(i+1, 0, note)
 	}
 	return table, nil
+}
+
+func (r *RshinMemo) saveDailyData() error {
+	// 選択note名を取得する
+	noteName := r.getNoteSelectCursorNoteName()
+
+	// 選択した日付を取得
+	selectedDate, err := r.getDailyListCursorDate(0)
+	if err != nil {
+		return err
+	}
+	newDailyData, err := r.createNewDailyData(selectedDate, noteName, r.dailyListInsertMode)
+	if err != nil {
+		return err
+	}
+
+	usecase := usecases.NewSaveDailyDataUseCase(r.noteRep, r.dailyDataRep)
+	err = usecase.Handle(newDailyData)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // dailyListのカーソル位置の日付を取得する。
@@ -187,6 +219,49 @@ func (r *RshinMemo) getDailyListCursorDate(cursorPointAdjust int) (time.Time, er
 		return time.Time{}, errors.WithStack(err)
 	}
 	return date, nil
+}
+
+// noteSelectViewのカーソル位置のnome名を取得する
+func (r *RshinMemo) getNoteSelectCursorNoteName() (noteName string) {
+	row, _ := r.noteSelectView.GetSelection()
+	cell := r.noteSelectView.GetCell(row, 0)
+	return cell.Text
+}
+
+// わたされた日付のnote一覧を取得
+// 取得しながら、カーソル位置を基準にnoteを挿入する
+func (r *RshinMemo) createNewDailyData(date time.Time, noteName string, mode usecases.InsertMode) (usecases.DailyData, error) {
+	retData := usecases.DailyData{}
+	retData.Date = date.Format("2006-01-02")
+	for i := 0; i < r.dailyListView.GetRowCount(); i++ {
+		// 挿入位置であれば新規noteを追加
+		insertPoint, err := r.getInsertPoint(mode)
+		if err != nil {
+			return usecases.DailyData{}, err
+		}
+		if i == insertPoint {
+			retData.Notes = append(retData.Notes, noteName)
+		}
+
+		tmpDateStr := r.dailyListView.GetCell(i, 0).Text
+		tmpNoteName := r.dailyListView.GetCell(i, 1).Text
+		if tmpDateStr == retData.Date {
+			retData.Notes = append(retData.Notes, tmpNoteName)
+		}
+	}
+	return retData, nil
+}
+
+func (r *RshinMemo) getInsertPoint(mode usecases.InsertMode) (int, error) {
+	cursorRow, _ := r.dailyListView.GetSelection()
+	switch mode {
+	case usecases.INSERT_OVER_MODE:
+		return cursorRow, nil
+	case usecases.INSERT_UNDER_MODE:
+		return cursorRow + 1, nil
+	default:
+		return 0, errors.Errorf("考慮外の値. mode: %v", mode)
+	}
 }
 
 //list.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
