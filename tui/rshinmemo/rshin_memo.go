@@ -66,9 +66,9 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 			case 'o', 'O':
 				// dataSelectViewを作る
 				if event.Rune() == 'o' {
-					r.dailyListInsertMode = usecases.INSERT_OVER_MODE
+					r.dailyListInsertMode = usecases.INSERT_UNDER_DATE_MODE
 				} else {
-					r.dailyListInsertMode = usecases.INSERT_UNDER_MODE
+					r.dailyListInsertMode = usecases.INSERT_OVER_DATE_MODE
 				}
 				r.dateSelectView, err = r.createInitDailySelectView(r.dailyListInsertMode)
 				if err != nil {
@@ -255,9 +255,9 @@ func (r *RshinMemo) createNewDailyData(date time.Time, noteName string, mode use
 func (r *RshinMemo) getInsertPoint(mode usecases.InsertMode) (int, error) {
 	cursorRow, _ := r.dailyListView.GetSelection()
 	switch mode {
-	case usecases.INSERT_OVER_MODE:
+	case usecases.INSERT_OVER_DATE_MODE:
 		return cursorRow, nil
-	case usecases.INSERT_UNDER_MODE:
+	case usecases.INSERT_UNDER_DATE_MODE:
 		return cursorRow + 1, nil
 	default:
 		return 0, errors.Errorf("考慮外の値. mode: %v", mode)
