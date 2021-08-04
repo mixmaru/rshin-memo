@@ -89,11 +89,12 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 	}
 
 	// データをテーブルにセット
-	for i, dailyData := range dailyList {
-		for j, note := range dailyData.Notes {
-			row := i + j
+	row := 0
+	for _, dailyData := range dailyList {
+		for _, note := range dailyData.Notes {
 			table.SetCellSimple(row, 0, dailyData.Date)
 			table.SetCellSimple(row, 1, note)
+			row++
 		}
 	}
 	return table, nil
