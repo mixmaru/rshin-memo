@@ -17,6 +17,7 @@ func main() {
 		panic(err)
 	}
 	rshinMemo := NewRshinMemo(
+		baseDirPath,
 		repositories.NewDailyDataRepository(dailyDataJsonFilePath),
 		repositories.NewNoteRepository(baseDirPath),
 	)
