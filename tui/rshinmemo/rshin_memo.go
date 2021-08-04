@@ -86,6 +86,13 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 		}
 		return event
 	})
+
+	// データセット
+	return r.loadDailyListAllData(table)
+}
+
+func (r *RshinMemo) loadDailyListAllData(table *tview.Table) (*tview.Table, error) {
+	table.Clear()
 	// データ取得
 	useCase := usecases.NewGetAllDailyListUsecase(r.dailyDataRep)
 	dailyList, err := useCase.Handle()
@@ -113,8 +120,7 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.
 		switch event.Key() {
 		case tcell.KeyEscape:
 			// dateSelectViewを削除してDailyListにフォーカスを戻す
-			r.layoutView.RemovePage("dateSelect")
-			r.dateSelectView = nil
+			r.closeDateSelectView()
 			return nil
 		case tcell.KeyEnter:
 			// noteSelectViewを表示してフォーカスを移す
@@ -153,6 +159,10 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.
 	}
 	return dateSelectView, nil
 }
+func (r *RshinMemo) closeDateSelectView() {
+	r.layoutView.RemovePage("dateSelect")
+	r.dateSelectView = nil
+}
 
 func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
 	table := tview.NewTable()
@@ -160,7 +170,7 @@ func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
 	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEscape:
-			r.layoutView.RemovePage("noteSelect")
+			r.closeNoteSelectView()
 			return nil
 		case tcell.KeyEnter:
 			// 指定のnoteをデータに追加
@@ -172,6 +182,18 @@ func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
 			// vimでひらく
 			noteName := r.getNoteSelectCursorNoteName()
 			err = utils.OpenVim(filepath.Join(r.memoDirPath, noteName+".txt"))
+			if err != nil {
+				panic(err)
+			}
+
+			// dailyList表示までもどす
+			r.closeNoteSelectView()
+			r.closeDateSelectView()
+			// データ再読込
+			r.dailyListView, err = r.loadDailyListAllData(r.dailyListView)
+			if err != nil {
+				panic(err)
+			}
 		}
 		return event
 	})
@@ -186,6 +208,11 @@ func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
 		table.SetCellSimple(i+1, 0, note)
 	}
 	return table, nil
+}
+
+func (r *RshinMemo) closeNoteSelectView() {
+	r.layoutView.RemovePage("noteSelect")
+	r.noteSelectView = nil
 }
 
 func (r *RshinMemo) saveDailyData() error {
