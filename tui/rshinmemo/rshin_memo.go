@@ -2,15 +2,18 @@ package main
 
 import (
 	"github.com/gdamore/tcell/v2"
+	"github.com/mixmaru/rshin-memo/cmd/rshinmemo/utils"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/pkg/errors"
 	"github.com/rivo/tview"
+	"path/filepath"
 	"time"
 )
 
 type RshinMemo struct {
 	app                 *tview.Application
+	memoDirPath         string // memoファイルをおいているDirPath
 	layoutView          *tview.Pages
 	dailyListView       *tview.Table
 	dailyListInsertMode usecases.InsertMode
@@ -22,10 +25,12 @@ type RshinMemo struct {
 }
 
 func NewRshinMemo(
+	memoDirPath string,
 	dailyDataRep repositories.DailyDataRepositoryInterface,
 	noteRep repositories.NoteRepositoryInterface,
 ) *RshinMemo {
 	return &RshinMemo{
+		memoDirPath:  memoDirPath,
 		dailyDataRep: dailyDataRep,
 		noteRep:      noteRep,
 	}
@@ -165,7 +170,8 @@ func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
 			}
 
 			// vimでひらく
-
+			noteName := r.getNoteSelectCursorNoteName()
+			err = utils.OpenVim(filepath.Join(r.memoDirPath, noteName+".txt"))
 		}
 		return event
 	})
