@@ -14,7 +14,7 @@ import (
 type RshinMemo struct {
 	app                 *tview.Application
 	memoDirPath         string // memoファイルをおいているDirPath
-	layoutView          *tview.Pages
+	layoutView          *layoutView
 	dailyListView       *tview.Table
 	dailyListInsertMode usecases.InsertMode
 	dateSelectView      *tview.Table
@@ -44,18 +44,20 @@ func (r *RshinMemo) Run() error {
 		return err
 	}
 
-	if err := r.app.SetRoot(r.layoutView, true).Run(); err != nil {
+	if err := r.app.SetRoot(r.layoutView.layoutView, true).Run(); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
-func (r *RshinMemo) createInitViews() (layoutView *tview.Pages, dailyListView *tview.Table, err error) {
+func (r *RshinMemo) createInitViews() (layoutView *layoutView, dailyListView *tview.Table, err error) {
 	dailyListView, err = r.createInitDailyListView()
 	if err != nil {
 		return nil, nil, err
 	}
-	layoutView = tview.NewPages().AddPage("dailyList", dailyListView, true, true)
+	//layoutView = tview.NewPages().AddPage("dailyList", dailyListView, true, true)
+	layoutView = newLayoutView()
+	layoutView.AddPage("dailyListView", dailyListView)
 	return layoutView, dailyListView, nil
 }
 
@@ -80,7 +82,7 @@ func (r *RshinMemo) createInitDailyListView() (*tview.Table, error) {
 					panic(errors.WithStack(err))
 				}
 				// 表示領域に挿入する
-				r.layoutView.AddPage("dateSelect", r.dateSelectView, true, true)
+				r.layoutView.AddPage("dateSelectView", r.dateSelectView)
 				return nil
 			}
 		}
@@ -128,7 +130,7 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.
 			if err != nil {
 				panic(err)
 			}
-			r.layoutView.AddPage("noteSelect", r.noteSelectView, true, true)
+			r.layoutView.AddPage("noteSelectView", r.noteSelectView)
 		}
 		return event
 	})
@@ -160,7 +162,7 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.
 	return dateSelectView, nil
 }
 func (r *RshinMemo) closeDateSelectView() {
-	r.layoutView.RemovePage("dateSelect")
+	r.layoutView.RemovePage("dateSelectView", r.dateSelectView)
 	r.dateSelectView = nil
 }
 
@@ -211,7 +213,7 @@ func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
 }
 
 func (r *RshinMemo) closeNoteSelectView() {
-	r.layoutView.RemovePage("noteSelect")
+	r.layoutView.RemovePage("noteSelectView", r.noteSelectView)
 	r.noteSelectView = nil
 }
 
