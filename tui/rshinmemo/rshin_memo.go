@@ -17,7 +17,7 @@ type RshinMemo struct {
 	layoutView          *layoutView
 	dailyListView       *dailyListView
 	dailyListInsertMode usecases.InsertMode
-	dateSelectView      *tview.Table
+	dateSelectView      *DateSelectView
 	noteSelectView      *tview.Table
 
 	dailyDataRep repositories.DailyDataRepositoryInterface
@@ -88,7 +88,7 @@ func (r *RshinMemo) displayDateSelectView(mode usecases.InsertMode) error {
 		panic(errors.WithStack(err))
 	}
 	// 表示領域に挿入する
-	r.layoutView.AddPage("dateSelectView", r.dateSelectView)
+	r.layoutView.AddPage("dateSelectView", r.dateSelectView.view)
 	return nil
 }
 
@@ -108,29 +108,35 @@ func (r *RshinMemo) getDailyListAllData() ([]usecases.DailyData, error) {
 	useCase := usecases.NewGetAllDailyListUsecase(r.dailyDataRep)
 	return useCase.Handle()
 }
-
-func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.Table, error) {
-	dateSelectView := tview.NewTable().SetSelectable(true, false)
-	// event設定
-	dateSelectView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		var err error
-		switch event.Key() {
-		case tcell.KeyEscape:
-			// dateSelectViewを削除してDailyListにフォーカスを戻す
-			r.closeDateSelectView()
-			return nil
-		case tcell.KeyEnter:
-			// noteSelectViewを表示してフォーカスを移す
-			r.noteSelectView, err = r.createNoteSelectView()
-			if err != nil {
-				panic(err)
-			}
-			r.layoutView.AddPage("noteSelectView", r.noteSelectView)
-		}
-		return event
+func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*DateSelectView, error) {
+	dateSelectView := NewDateSelectView()
+	dateSelectView.AddWhenPushEscapeKey(func() error {
+		// dateSelectViewを削除してDailyListにフォーカスを戻す
+		r.closeDateSelectView()
+		return nil
 	})
-	dateSelectView.SetCellSimple(0, 0, "手入力する")
 
+	dateSelectView.AddWhenPushEnterKey(func() error {
+		// noteSelectViewを表示してフォーカスを移す
+		var err error
+		r.noteSelectView, err = r.createNoteSelectView()
+		if err != nil {
+			return err
+		}
+		r.layoutView.AddPage("noteSelectView", r.noteSelectView)
+		return nil
+	})
+
+	// データセット
+	dates, err := r.createDates(mode)
+	if err != nil {
+		return nil, err
+	}
+	dateSelectView.SetData(dates)
+	return dateSelectView, nil
+}
+
+func (r *RshinMemo) createDates(mode usecases.InsertMode) ([]time.Time, error) {
 	// 表示する日付の範囲を決定する
 	overCurrentDate, err := r.getDailyListCursorDate(-1)
 	if err != nil {
@@ -147,17 +153,11 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.
 
 	now := time.Now().In(time.Local)
 	useCase := usecases.NewGetDateSelectRangeUseCase(now)
-	dates, err := useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
-	if err != nil {
-		return nil, err
-	}
-	for i, date := range dates {
-		dateSelectView.SetCellSimple(i+1, 0, date.Format("2006-01-02"))
-	}
-	return dateSelectView, nil
+	return useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
 }
+
 func (r *RshinMemo) closeDateSelectView() {
-	r.layoutView.RemovePage("dateSelectView", r.dateSelectView)
+	r.layoutView.RemovePage("dateSelectView", r.dateSelectView.view)
 	r.dateSelectView = nil
 }
 
