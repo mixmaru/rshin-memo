@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/mixmaru/rshin-memo/cmd/rshinmemo/utils"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
@@ -18,7 +17,7 @@ type RshinMemo struct {
 	dailyListView       *dailyListView
 	dailyListInsertMode usecases.InsertMode
 	dateSelectView      *DateSelectView
-	noteSelectView      *tview.Table
+	noteSelectView      *NoteSelectView
 
 	dailyDataRep repositories.DailyDataRepositoryInterface
 	noteRep      repositories.NoteRepositoryInterface
@@ -123,7 +122,7 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*DateSe
 		if err != nil {
 			return err
 		}
-		r.layoutView.AddPage("noteSelectView", r.noteSelectView)
+		r.layoutView.AddPage("noteSelectView", r.noteSelectView.view)
 		return nil
 	})
 
@@ -161,54 +160,44 @@ func (r *RshinMemo) closeDateSelectView() {
 	r.dateSelectView = nil
 }
 
-func (r *RshinMemo) createNoteSelectView() (*tview.Table, error) {
-	table := tview.NewTable()
-	table.SetSelectable(true, false)
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEscape:
-			r.closeNoteSelectView()
-			return nil
-		case tcell.KeyEnter:
-			// 指定のnoteをデータに追加
-			err := r.saveDailyData()
-			if err != nil {
-				panic(err)
-			}
-
-			// vimでひらく
-			noteName := r.getNoteSelectCursorNoteName()
-			err = utils.OpenVim(filepath.Join(r.memoDirPath, noteName+".txt"))
-			if err != nil {
-				panic(err)
-			}
-
-			// dailyList表示までもどす
-			r.closeNoteSelectView()
-			r.closeDateSelectView()
-			// データ再読込
-			err = r.loadDailyListAllData()
-			if err != nil {
-				panic(err)
-			}
-		}
-		return event
+func (r *RshinMemo) createNoteSelectView() (*NoteSelectView, error) {
+	noteSelectView := NewNoteSelectView()
+	noteSelectView.AddWhenPushEscapeKey(func() error {
+		r.closeNoteSelectView()
+		return nil
 	})
-	table.SetCellSimple(0, 0, "新規追加")
-	// データ読み込み
+	noteSelectView.AddWhenPushEnterKey(func() error {
+		// 指定のnoteをデータに追加
+		err := r.saveDailyData()
+		if err != nil {
+			return err
+		}
+
+		// vimでひらく
+		noteName := r.getNoteSelectCursorNoteName()
+		err = utils.OpenVim(filepath.Join(r.memoDirPath, noteName+".txt"))
+		if err != nil {
+			return err
+		}
+
+		// dailyList表示までもどす
+		r.closeNoteSelectView()
+		r.closeDateSelectView()
+		// データ再読込
+		return r.loadDailyListAllData()
+	})
+
 	useCase := usecases.NewGetAllNotesUseCase(r.noteRep)
 	notes, err := useCase.Handle()
 	if err != nil {
 		return nil, err
 	}
-	for i, note := range notes {
-		table.SetCellSimple(i+1, 0, note)
-	}
-	return table, nil
+	noteSelectView.SetData(notes)
+	return noteSelectView, nil
 }
 
 func (r *RshinMemo) closeNoteSelectView() {
-	r.layoutView.RemovePage("noteSelectView", r.noteSelectView)
+	r.layoutView.RemovePage("noteSelectView", r.noteSelectView.view)
 	r.noteSelectView = nil
 }
 
