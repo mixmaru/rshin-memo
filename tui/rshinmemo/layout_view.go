@@ -12,10 +12,10 @@ func newLayoutView() *layoutView {
 	return &layoutView{layoutView: tview.NewPages()}
 }
 
-func (l *layoutView) AddPage(name string, view *tview.Table) {
-	l.layoutView.AddPage(name, view, true, true)
+func (l *layoutView) AddPage(view viewInterface) {
+	l.layoutView.AddPage(view.GetName(), view.GetTviewTable(), true, true)
 }
 
-func (l *layoutView) RemovePage(name string, view *tview.Table) {
-	l.layoutView.RemovePage(name)
+func (l *layoutView) RemovePage(view viewInterface) {
+	l.layoutView.RemovePage(view.GetName())
 }

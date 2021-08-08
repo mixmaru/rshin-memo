@@ -7,12 +7,21 @@ import (
 
 type NoteSelectView struct {
 	view              *tview.Table
+	name              string
 	whenPushEscapeKey []func() error
 	whenPushEnterKey  []func() error
 }
 
+func (n *NoteSelectView) GetTviewTable() *tview.Table {
+	return n.view
+}
+
+func (n *NoteSelectView) GetName() string {
+	return n.name
+}
+
 func NewNoteSelectView() *NoteSelectView {
-	noteSelectView := &NoteSelectView{}
+	noteSelectView := &NoteSelectView{name: "note_select_view"}
 	noteSelectView.initView()
 	return noteSelectView
 }

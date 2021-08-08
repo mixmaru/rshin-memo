@@ -8,12 +8,21 @@ import (
 
 type DateSelectView struct {
 	view              *tview.Table
+	name              string
 	whenPushEscapeKey []func() error
 	whenPushEnterKey  []func() error
 }
 
+func (d *DateSelectView) GetTviewTable() *tview.Table {
+	return d.view
+}
+
+func (d *DateSelectView) GetName() string {
+	return d.name
+}
+
 func NewDateSelectView() *DateSelectView {
-	dateSelectView := &DateSelectView{}
+	dateSelectView := &DateSelectView{name: "date_select_view"}
 	dateSelectView.initView()
 	return dateSelectView
 }

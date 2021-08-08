@@ -8,12 +8,21 @@ import (
 
 type dailyListView struct {
 	view              *tview.Table
+	name              string
 	whenPushLowerOkey []func() error
 	whenPushUpperOkey []func() error
 }
 
+func (d *dailyListView) GetTviewTable() *tview.Table {
+	return d.view
+}
+
+func (d *dailyListView) GetName() string {
+	return d.name
+}
+
 func NewDailyListView() *dailyListView {
-	dailyListView := &dailyListView{}
+	dailyListView := &dailyListView{name: "dailyListView"}
 	dailyListView.initView()
 	return dailyListView
 }

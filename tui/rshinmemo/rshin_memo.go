@@ -56,7 +56,7 @@ func (r *RshinMemo) createInitViews() (layoutView *layoutView, dailyListView *da
 	}
 
 	layoutView = newLayoutView()
-	layoutView.AddPage("dailyListView", dailyListView.view)
+	layoutView.AddPage(dailyListView)
 	return layoutView, dailyListView, nil
 }
 
@@ -87,7 +87,7 @@ func (r *RshinMemo) displayDateSelectView(mode usecases.InsertMode) error {
 		panic(errors.WithStack(err))
 	}
 	// 表示領域に挿入する
-	r.layoutView.AddPage("dateSelectView", r.dateSelectView.view)
+	r.layoutView.AddPage(r.dateSelectView)
 	return nil
 }
 
@@ -122,7 +122,7 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*DateSe
 		if err != nil {
 			return err
 		}
-		r.layoutView.AddPage("noteSelectView", r.noteSelectView.view)
+		r.layoutView.AddPage(r.noteSelectView)
 		return nil
 	})
 
@@ -156,7 +156,7 @@ func (r *RshinMemo) createDates(mode usecases.InsertMode) ([]time.Time, error) {
 }
 
 func (r *RshinMemo) closeDateSelectView() {
-	r.layoutView.RemovePage("dateSelectView", r.dateSelectView.view)
+	r.layoutView.RemovePage(r.dateSelectView)
 	r.dateSelectView = nil
 }
 
@@ -197,7 +197,7 @@ func (r *RshinMemo) createNoteSelectView() (*NoteSelectView, error) {
 }
 
 func (r *RshinMemo) closeNoteSelectView() {
-	r.layoutView.RemovePage("noteSelectView", r.noteSelectView.view)
+	r.layoutView.RemovePage(r.noteSelectView)
 	r.noteSelectView = nil
 }
 
