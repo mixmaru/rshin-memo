@@ -6,28 +6,28 @@ import (
 	"github.com/rivo/tview"
 )
 
-type dailyListView struct {
+type DailyListView struct {
 	view              *tview.Table
 	name              string
 	whenPushLowerOkey []func() error
 	whenPushUpperOkey []func() error
 }
 
-func (d *dailyListView) GetTviewTable() *tview.Table {
+func (d *DailyListView) GetTviewTable() *tview.Table {
 	return d.view
 }
 
-func (d *dailyListView) GetName() string {
+func (d *DailyListView) GetName() string {
 	return d.name
 }
 
-func NewDailyListView() *dailyListView {
-	dailyListView := &dailyListView{name: "dailyListView"}
+func NewDailyListView() *DailyListView {
+	dailyListView := &DailyListView{name: "DailyListView"}
 	dailyListView.initView()
 	return dailyListView
 }
 
-func (d *dailyListView) initView() {
+func (d *DailyListView) initView() {
 	table := tview.NewTable()
 	table.SetSelectable(true, false)
 	// イベント設定
@@ -54,23 +54,23 @@ func (d *dailyListView) initView() {
 	return
 }
 
-func (d *dailyListView) AddWhenPushLowerOKey(function func() error) {
+func (d *DailyListView) AddWhenPushLowerOKey(function func() error) {
 	d.whenPushLowerOkey = append(d.whenPushLowerOkey, function)
 }
 
-func (d *dailyListView) AddWhenPushUpperOKey(function func() error) {
+func (d *DailyListView) AddWhenPushUpperOKey(function func() error) {
 	d.whenPushUpperOkey = append(d.whenPushUpperOkey, function)
 }
 
-func (d *dailyListView) whenPushLowerOKey() error {
+func (d *DailyListView) whenPushLowerOKey() error {
 	return executeFunctions(d.whenPushLowerOkey)
 }
 
-func (d *dailyListView) whenPushUpperOKey() error {
+func (d *DailyListView) whenPushUpperOKey() error {
 	return executeFunctions(d.whenPushUpperOkey)
 }
 
-func (d *dailyListView) SetData(data []usecases.DailyData) {
+func (d *DailyListView) SetData(data []usecases.DailyData) {
 	d.view.Clear()
 	// データをテーブルにセット
 	row := 0
@@ -83,15 +83,15 @@ func (d *dailyListView) SetData(data []usecases.DailyData) {
 	}
 }
 
-func (d *dailyListView) GetSelection() (row, column int) {
+func (d *DailyListView) GetSelection() (row, column int) {
 	return d.view.GetSelection()
 }
 
-func (d *dailyListView) GetRowCount() int {
+func (d *DailyListView) GetRowCount() int {
 	return d.view.GetRowCount()
 }
 
-func (d *dailyListView) GetCell(row int, i int) *tview.TableCell {
+func (d *DailyListView) GetCell(row int, i int) *tview.TableCell {
 	return d.view.GetCell(row, i)
 
 }

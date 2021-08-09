@@ -15,7 +15,7 @@ type RshinMemo struct {
 	app                 *tview.Application
 	memoDirPath         string // memoファイルをおいているDirPath
 	layoutView          *views.LayoutView
-	dailyListView       *views.dailyListView
+	dailyListView       *views.DailyListView
 	dailyListInsertMode usecases.InsertMode
 	dateSelectView      *views.DateSelectView
 	noteSelectView      *views.NoteSelectView
