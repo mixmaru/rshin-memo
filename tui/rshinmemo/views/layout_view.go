@@ -4,18 +4,18 @@ import (
 	"github.com/rivo/tview"
 )
 
-type layoutView struct {
+type LayoutView struct {
 	layoutView *tview.Pages
 }
 
-func newLayoutView() *layoutView {
-	return &layoutView{layoutView: tview.NewPages()}
+func newLayoutView() *LayoutView {
+	return &LayoutView{layoutView: tview.NewPages()}
 }
 
-func (l *layoutView) AddPage(view viewInterface) {
+func (l *LayoutView) AddPage(view viewInterface) {
 	l.layoutView.AddPage(view.GetName(), view.GetTviewTable(), true, true)
 }
 
-func (l *layoutView) RemovePage(view viewInterface) {
+func (l *LayoutView) RemovePage(view viewInterface) {
 	l.layoutView.RemovePage(view.GetName())
 }

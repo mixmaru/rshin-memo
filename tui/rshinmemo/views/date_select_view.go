@@ -89,7 +89,7 @@ func (d *DateSelectView) SetData(dates []time.Time) {
 //			if err != nil {
 //				panic(err)
 //			}
-//			r.layoutView.AddPage("noteSelectView", r.noteSelectView)
+//			r.LayoutView.AddPage("noteSelectView", r.noteSelectView)
 //		}
 //		return event
 //	})
