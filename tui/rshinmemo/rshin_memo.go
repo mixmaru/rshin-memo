@@ -6,13 +6,11 @@ import (
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"github.com/mixmaru/rshin-memo/tui/rshinmemo/views"
 	"github.com/pkg/errors"
-	"github.com/rivo/tview"
 	"path/filepath"
 	"time"
 )
 
 type RshinMemo struct {
-	app                 *tview.Application
 	memoDirPath         string // memoファイルをおいているDirPath
 	layoutView          *views.LayoutView
 	dailyListView       *views.DailyListView
@@ -38,30 +36,27 @@ func NewRshinMemo(
 
 func (r *RshinMemo) Run() error {
 	var err error
-	r.app = tview.NewApplication()
 	r.layoutView, r.dailyListView, err = r.createInitViews()
 	if err != nil {
 		return err
 	}
 
-	if err := r.app.SetRoot(r.layoutView.layoutView, true).Run(); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	r.layoutView.SetRoot(r.dailyListView)
+	return r.layoutView.Run()
 }
 
-func (r *RshinMemo) createInitViews() (layoutView *views.layoutView, dailyListView *views.dailyListView, err error) {
+func (r *RshinMemo) createInitViews() (layoutView *views.LayoutView, dailyListView *views.DailyListView, err error) {
 	dailyListView, err = r.createDailyListView()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	layoutView = views.newLayoutView()
+	layoutView = views.NewLayoutView()
 	layoutView.AddPage(dailyListView)
 	return layoutView, dailyListView, nil
 }
 
-func (r *RshinMemo) createDailyListView() (*views.dailyListView, error) {
+func (r *RshinMemo) createDailyListView() (*views.DailyListView, error) {
 	dailyList := views.NewDailyListView()
 	// イベント設定
 	dailyList.AddWhenPushLowerOKey(func() error {
