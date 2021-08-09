@@ -30,7 +30,7 @@ func (g *GetDateSelectRangeUseCase) Handle(overCursorDate, currentCursorDate, un
 		from = currentCursorDate
 		to = overCursorDate
 	case INSERT_UNDER_DATE_MODE:
-		from = underCursorDate
+		from = g.adjustFromDate(currentCursorDate, underCursorDate)
 		to = currentCursorDate
 	default:
 		return nil, errors.Errorf("想定外値 overCursorDate: %+v, currentCursorDate: %+v, underCursorDate: %+v, insertMode: %+v", overCursorDate, currentCursorDate, underCursorDate, insertMode)
@@ -60,5 +60,20 @@ func (g *GetDateSelectRangeUseCase) Handle(overCursorDate, currentCursorDate, un
 		appendDate = appendDate.AddDate(0, 0, 1)
 		counter++
 	}
+
+	if insertMode == INSERT_UNDER_DATE_MODE {
+		for i := 0; i < len(retDates)/2; i++ {
+			retDates[i], retDates[len(retDates)-i-1] = retDates[len(retDates)-i-1], retDates[i]
+		}
+	}
 	return retDates, nil
+}
+
+func (g *GetDateSelectRangeUseCase) adjustFromDate(currentCursorDate time.Time, underCursorDate time.Time) time.Time {
+	duration := currentCursorDate.Sub(underCursorDate)
+	if duration >= maxCount*24*60*60*1000*1000*1000 {
+		return time.Date(currentCursorDate.Year(), currentCursorDate.Month(), currentCursorDate.Day()-(maxCount-1), 0, 0, 0, 0, time.Local)
+	} else {
+		return underCursorDate
+	}
 }
