@@ -4,6 +4,7 @@ import (
 	"github.com/mixmaru/rshin-memo/cmd/rshinmemo/utils"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/mixmaru/rshin-memo/tui/rshinmemo/views"
 	"github.com/pkg/errors"
 	"github.com/rivo/tview"
 	"path/filepath"
@@ -13,11 +14,11 @@ import (
 type RshinMemo struct {
 	app                 *tview.Application
 	memoDirPath         string // memoファイルをおいているDirPath
-	layoutView          *layoutView
-	dailyListView       *dailyListView
+	layoutView          *views.layoutView
+	dailyListView       *views.dailyListView
 	dailyListInsertMode usecases.InsertMode
-	dateSelectView      *DateSelectView
-	noteSelectView      *NoteSelectView
+	dateSelectView      *views.DateSelectView
+	noteSelectView      *views.NoteSelectView
 
 	dailyDataRep repositories.DailyDataRepositoryInterface
 	noteRep      repositories.NoteRepositoryInterface
@@ -49,19 +50,19 @@ func (r *RshinMemo) Run() error {
 	return nil
 }
 
-func (r *RshinMemo) createInitViews() (layoutView *layoutView, dailyListView *dailyListView, err error) {
+func (r *RshinMemo) createInitViews() (layoutView *views.layoutView, dailyListView *views.dailyListView, err error) {
 	dailyListView, err = r.createDailyListView()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	layoutView = newLayoutView()
+	layoutView = views.newLayoutView()
 	layoutView.AddPage(dailyListView)
 	return layoutView, dailyListView, nil
 }
 
-func (r *RshinMemo) createDailyListView() (*dailyListView, error) {
-	dailyList := NewDailyListView()
+func (r *RshinMemo) createDailyListView() (*views.dailyListView, error) {
+	dailyList := views.NewDailyListView()
 	// イベント設定
 	dailyList.AddWhenPushLowerOKey(func() error {
 		return r.displayDateSelectView(usecases.INSERT_UNDER_DATE_MODE)
@@ -107,8 +108,8 @@ func (r *RshinMemo) getDailyListAllData() ([]usecases.DailyData, error) {
 	useCase := usecases.NewGetAllDailyListUsecase(r.dailyDataRep)
 	return useCase.Handle()
 }
-func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*DateSelectView, error) {
-	dateSelectView := NewDateSelectView()
+func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*views.DateSelectView, error) {
+	dateSelectView := views.NewDateSelectView()
 	dateSelectView.AddWhenPushEscapeKey(func() error {
 		// dateSelectViewを削除してDailyListにフォーカスを戻す
 		r.closeDateSelectView()
@@ -160,8 +161,8 @@ func (r *RshinMemo) closeDateSelectView() {
 	r.dateSelectView = nil
 }
 
-func (r *RshinMemo) createNoteSelectView() (*NoteSelectView, error) {
-	noteSelectView := NewNoteSelectView()
+func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
+	noteSelectView := views.NewNoteSelectView()
 	noteSelectView.AddWhenPushEscapeKey(func() error {
 		r.closeNoteSelectView()
 		return nil
