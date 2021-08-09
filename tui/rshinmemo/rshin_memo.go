@@ -249,9 +249,10 @@ func (r *RshinMemo) getNoteSelectCursorNoteName() (noteName string) {
 func (r *RshinMemo) createNewDailyData(date time.Time, noteName string, mode usecases.InsertMode) (usecases.DailyData, error) {
 	retData := usecases.DailyData{}
 	retData.Date = date.Format("2006-01-02")
-	for i := 0; i < r.dailyListView.GetRowCount(); i++ {
+	insertPoint, err := r.getInsertPoint(mode)
+	rowCount := r.dailyListView.GetRowCount()
+	for i := 0; i < rowCount; i++ {
 		// 挿入位置であれば新規noteを追加
-		insertPoint, err := r.getInsertPoint(mode)
 		if err != nil {
 			return usecases.DailyData{}, err
 		}
@@ -264,6 +265,10 @@ func (r *RshinMemo) createNewDailyData(date time.Time, noteName string, mode use
 		if tmpDateStr == retData.Date {
 			retData.Notes = append(retData.Notes, tmpNoteName)
 		}
+	}
+	// insert to end of list
+	if insertPoint == rowCount {
+		retData.Notes = append(retData.Notes, noteName)
 	}
 	return retData, nil
 }
