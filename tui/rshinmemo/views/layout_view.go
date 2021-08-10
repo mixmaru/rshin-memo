@@ -36,3 +36,8 @@ func (l *LayoutView) Run() error {
 	}
 	return nil
 }
+
+func (l *LayoutView) Refresh() {
+	l.app.Sync()
+	return
+}

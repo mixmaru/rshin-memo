@@ -197,7 +197,12 @@ func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
 
 // vimでひらく
 func (r *RshinMemo) openVim(noteName string) error {
-	return utils.OpenVim(filepath.Join(r.memoDirPath, noteName+".txt"))
+	err := utils.OpenVim(filepath.Join(r.memoDirPath, noteName+".txt"))
+	if err != nil {
+		return nil
+	}
+	r.layoutView.Refresh()
+	return nil
 }
 
 func (r *RshinMemo) closeNoteSelectView() {
