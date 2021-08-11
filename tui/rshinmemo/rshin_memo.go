@@ -215,10 +215,7 @@ func (r *RshinMemo) saveDailyData() error {
 	noteName := r.getNoteSelectCursorNoteName()
 
 	// 選択した日付を取得
-	selectedDate, err := r.dailyListView.GetCursorDate(0)
-	if err != nil {
-		return err
-	}
+	selectedDate := r.dateSelectView.GetSelectedDate()
 	newDailyData, err := r.createNewDailyData(selectedDate, noteName, r.dailyListInsertMode)
 	if err != nil {
 		return err

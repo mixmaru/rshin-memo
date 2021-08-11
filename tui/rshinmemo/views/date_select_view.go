@@ -2,6 +2,7 @@ package views
 
 import (
 	"github.com/gdamore/tcell/v2"
+	"github.com/pkg/errors"
 	"github.com/rivo/tview"
 	"time"
 )
@@ -11,6 +12,7 @@ type DateSelectView struct {
 	name              string
 	whenPushEscapeKey []func() error
 	whenPushEnterKey  []func() error
+	selectedDate      time.Time
 }
 
 func (d *DateSelectView) GetTviewTable() *tview.Table {
@@ -39,7 +41,12 @@ func (d *DateSelectView) initView() {
 			}
 			return nil
 		case tcell.KeyEnter:
-			err := d.executeWhenPushEnterKey()
+			var err error
+			d.selectedDate, err = d.getSelectedDate()
+			if err != nil {
+				panic(err)
+			}
+			err = d.executeWhenPushEnterKey()
 			if err != nil {
 				panic(err)
 			}
@@ -47,6 +54,17 @@ func (d *DateSelectView) initView() {
 		return event
 	})
 	d.view = view
+}
+
+func (d *DateSelectView) getSelectedDate() (time.Time, error) {
+	row, _ := d.view.GetSelection()
+	cell := d.view.GetCell(row, 0)
+	dateStr := cell.Text
+	date, err := time.ParseInLocation("2006-01-02", dateStr, time.Local)
+	if err != nil {
+		return time.Time{}, errors.WithStack(err)
+	}
+	return date, nil
 }
 
 func (d *DateSelectView) AddWhenPushEnterKey(function func() error) {
@@ -71,6 +89,11 @@ func (d *DateSelectView) SetData(dates []time.Time) {
 	for i, date := range dates {
 		d.view.SetCellSimple(i+1, 0, date.Format("2006-01-02"))
 	}
+}
+
+func (d *DateSelectView) GetSelectedDate() time.Time {
+	// 選択された日付を返す
+	return d.selectedDate
 }
 
 //func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.Table, error) {
