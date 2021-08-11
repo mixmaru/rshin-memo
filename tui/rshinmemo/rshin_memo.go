@@ -20,6 +20,8 @@ type RshinMemo struct {
 
 	dailyDataRep repositories.DailyDataRepositoryInterface
 	noteRep      repositories.NoteRepositoryInterface
+
+	selectedDate time.Time
 }
 
 func NewRshinMemo(
@@ -115,7 +117,8 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*views.
 		return nil
 	})
 
-	dateSelectView.AddWhenPushEnterKey(func() error {
+	dateSelectView.AddWhenPushEnterKeyOnDateLine(func(selectedDate time.Time) error {
+		r.selectedDate = selectedDate
 		// noteSelectViewを表示してフォーカスを移す
 		var err error
 		r.noteSelectView, err = r.createNoteSelectView()
@@ -214,9 +217,7 @@ func (r *RshinMemo) saveDailyData() error {
 	// 選択note名を取得する
 	noteName := r.getNoteSelectCursorNoteName()
 
-	// 選択した日付を取得
-	selectedDate := r.dateSelectView.GetSelectedDate()
-	newDailyData, err := r.createNewDailyData(selectedDate, noteName, r.dailyListInsertMode)
+	newDailyData, err := r.createNewDailyData(r.selectedDate, noteName, r.dailyListInsertMode)
 	if err != nil {
 		return err
 	}

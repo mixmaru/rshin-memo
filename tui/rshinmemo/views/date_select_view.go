@@ -8,11 +8,11 @@ import (
 )
 
 type DateSelectView struct {
-	view              *tview.Table
-	name              string
-	whenPushEscapeKey []func() error
-	whenPushEnterKey  []func() error
-	selectedDate      time.Time
+	view                               *tview.Table
+	name                               string
+	whenPushEscapeKey                  []func() error
+	whenPushEnterKeyOnDateLine         []func(selectedDate time.Time) error
+	whenPushEnterKeyOnInputNewDateLine []func() error
 }
 
 func (d *DateSelectView) GetTviewTable() *tview.Table {
@@ -41,14 +41,20 @@ func (d *DateSelectView) initView() {
 			}
 			return nil
 		case tcell.KeyEnter:
-			var err error
-			d.selectedDate, err = d.getSelectedDate()
-			if err != nil {
-				panic(err)
-			}
-			err = d.executeWhenPushEnterKey()
-			if err != nil {
-				panic(err)
+			if d.isSelectedInputNewDate() {
+				err := d.executeWhenPushEnterKeyOnInputNewDateLine()
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				selectedDate, err := d.getSelectedDate()
+				if err != nil {
+					panic(err)
+				}
+				err = d.executeWhenPushEnterKeyOnDateLine(selectedDate)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 		return event
@@ -67,8 +73,12 @@ func (d *DateSelectView) getSelectedDate() (time.Time, error) {
 	return date, nil
 }
 
-func (d *DateSelectView) AddWhenPushEnterKey(function func() error) {
-	d.whenPushEnterKey = append(d.whenPushEnterKey, function)
+func (d *DateSelectView) AddWhenPushEnterKeyOnDateLine(function func(selectedDate time.Time) error) {
+	d.whenPushEnterKeyOnDateLine = append(d.whenPushEnterKeyOnDateLine, function)
+}
+
+func (d *DateSelectView) AddWhenPushEnterKeyOnInputNewDateLine(function func() error) {
+	d.whenPushEnterKeyOnInputNewDateLine = append(d.whenPushEnterKeyOnInputNewDateLine, function)
 }
 
 func (d *DateSelectView) AddWhenPushEscapeKey(function func() error) {
@@ -79,67 +89,31 @@ func (d *DateSelectView) executeWhenPushEscapeKey() error {
 	return executeFunctions(d.whenPushEscapeKey)
 }
 
-func (d *DateSelectView) executeWhenPushEnterKey() error {
-	return executeFunctions(d.whenPushEnterKey)
+func (d *DateSelectView) executeWhenPushEnterKeyOnDateLine(selectedDate time.Time) error {
+	for _, function := range d.whenPushEnterKeyOnDateLine {
+		err := function(selectedDate)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
+
+func (d *DateSelectView) executeWhenPushEnterKeyOnInputNewDateLine() error {
+	return executeFunctions(d.whenPushEnterKeyOnInputNewDateLine)
+}
+
+const NEW_INPUT_DATE_TITLE = "手入力する"
 
 func (d *DateSelectView) SetData(dates []time.Time) {
 	d.view.Clear()
-	d.view.SetCellSimple(0, 0, "手入力する")
+	d.view.SetCellSimple(0, 0, NEW_INPUT_DATE_TITLE)
 	for i, date := range dates {
 		d.view.SetCellSimple(i+1, 0, date.Format("2006-01-02"))
 	}
 }
 
-func (d *DateSelectView) GetSelectedDate() time.Time {
-	// 選択された日付を返す
-	return d.selectedDate
+func (d *DateSelectView) isSelectedInputNewDate() bool {
+	row, _ := d.view.GetSelection()
+	return d.view.GetCell(row, 0).Text == NEW_INPUT_DATE_TITLE
 }
-
-//func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*tview.Table, error) {
-//	dateSelectView := tview.NewTable().SetSelectable(true, false)
-//	// event設定
-//	dateSelectView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-//		var err error
-//		switch event.Key() {
-//		case tcell.KeyEscape:
-//			// dateSelectViewを削除してDailyListにフォーカスを戻す
-//			r.closeDateSelectView()
-//			return nil
-//		case tcell.KeyEnter:
-//			// noteSelectViewを表示してフォーカスを移す
-//			r.noteSelectView, err = r.createNoteSelectView()
-//			if err != nil {
-//				panic(err)
-//			}
-//			r.LayoutView.AddPage("noteSelectView", r.noteSelectView)
-//		}
-//		return event
-//	})
-//	dateSelectView.SetCellSimple(0, 0, "手入力する")
-//
-//	// 表示する日付の範囲を決定する
-//	overCurrentDate, err := r.getDailyListCursorDate(-1)
-//	if err != nil {
-//		return nil, err
-//	}
-//	currentDate, err := r.getDailyListCursorDate(0)
-//	if err != nil {
-//		return nil, err
-//	}
-//	underCurrentDate, err := r.getDailyListCursorDate(1)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	now := time.Now().In(time.Local)
-//	useCase := usecases.NewGetDateSelectRangeUseCase(now)
-//	dates, err := useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
-//	if err != nil {
-//		return nil, err
-//	}
-//	for i, date := range dates {
-//		dateSelectView.SetCellSimple(i+1, 0, date.Format("2006-01-02"))
-//	}
-//	return dateSelectView, nil
-//}
