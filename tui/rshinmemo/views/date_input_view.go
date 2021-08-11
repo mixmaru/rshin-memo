@@ -9,6 +9,7 @@ type DateInputView struct {
 	view              *tview.InputField
 	name              string
 	whenPushEscapeKey []func() error
+	whenPushEnterKey  []func(inputDateStr string) (*ValidationError, error)
 }
 
 func NewDateInputView() *DateInputView {
@@ -38,6 +39,16 @@ func (d *DateInputView) init() {
 				panic(err)
 			}
 			return nil
+		case tcell.KeyEnter:
+			validErr, err := d.executeWhenPushEnterKey()
+			if err != nil {
+				panic(err)
+			}
+			if validErr != nil {
+				// バリデーションエラー。何もしない。
+				return nil
+			}
+			return nil
 		}
 		return event
 	})
@@ -50,4 +61,29 @@ func (d *DateInputView) executeWhenPushEscapeKey() error {
 
 func (d *DateInputView) AddWhenPushEscapeKey(function func() error) {
 	d.whenPushEscapeKey = append(d.whenPushEscapeKey, function)
+}
+
+type ValidationError struct {
+	No      int
+	Message string
+}
+
+const VALIDATION_ERROR_1_MESSAGE = "formatがYYYY-MM-DDではない"
+
+func (d *DateInputView) executeWhenPushEnterKey() (*ValidationError, error) {
+
+	for _, function := range d.whenPushEnterKey {
+		validErr, err := function(d.view.GetText())
+		if err != nil {
+			return nil, err
+		}
+		if validErr != nil {
+			return validErr, nil
+		}
+	}
+	return nil, nil
+}
+
+func (d *DateInputView) AddWhenPushEnterKey(function func(inputDateStr string) (*ValidationError, error)) {
+	d.whenPushEnterKey = append(d.whenPushEnterKey, function)
 }

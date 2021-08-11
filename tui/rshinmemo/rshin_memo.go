@@ -133,10 +133,6 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*views.
 	dateSelectView.AddWhenPushEnterKeyOnInputNewDateLine(func() error {
 		// 日付入力viewを表示する
 		r.dateInputView = r.createDateInputView()
-		r.dateInputView.AddWhenPushEscapeKey(func() error {
-			r.closeDateInputView()
-			return nil
-		})
 		r.layoutView.AddPage(r.dateInputView)
 		return nil
 	})
@@ -285,5 +281,24 @@ func (r *RshinMemo) createNewDailyData(date time.Time, noteName string, mode use
 }
 
 func (r *RshinMemo) createDateInputView() *views.DateInputView {
-	return views.NewDateInputView()
+	dateInputView := views.NewDateInputView()
+	dateInputView.AddWhenPushEscapeKey(func() error {
+		r.closeDateInputView()
+		return nil
+	})
+	dateInputView.AddWhenPushEnterKey(func(inputDateStr string) (*views.ValidationError, error) {
+		// 入力値をパースしてtime型で渡す
+		date, err := time.ParseInLocation("2006-01-02", inputDateStr, time.Local)
+		if err != nil {
+			return &views.ValidationError{No: 1, Message: views.VALIDATION_ERROR_1_MESSAGE}, nil
+		}
+		r.selectedDate = date
+		r.noteSelectView, err = r.createNoteSelectView()
+		if err != nil {
+			return nil, err
+		}
+		r.layoutView.AddPage(r.noteSelectView)
+		return nil, nil
+	})
+	return dateInputView
 }
