@@ -15,7 +15,7 @@ type DateSelectView struct {
 	whenPushEnterKeyOnInputNewDateLine []func() error
 }
 
-func (d *DateSelectView) GetTviewTable() *tview.Table {
+func (d *DateSelectView) GetTviewPrimitive() tview.Primitive {
 	return d.view
 }
 

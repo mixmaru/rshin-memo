@@ -3,6 +3,6 @@ package views
 import "github.com/rivo/tview"
 
 type viewInterface interface {
-	GetTviewTable() *tview.Table
+	GetTviewPrimitive() tview.Primitive
 	GetName() string
 }

@@ -12,7 +12,7 @@ type NoteSelectView struct {
 	whenPushEnterKey  []func() error
 }
 
-func (n *NoteSelectView) GetTviewTable() *tview.Table {
+func (n *NoteSelectView) GetTviewPrimitive() tview.Primitive {
 	return n.view
 }
 

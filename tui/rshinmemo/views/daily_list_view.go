@@ -16,7 +16,7 @@ type DailyListView struct {
 	whenPushUpperOkey []func() error
 }
 
-func (d *DailyListView) GetTviewTable() *tview.Table {
+func (d *DailyListView) GetTviewPrimitive() tview.Primitive {
 	return d.view
 }
 

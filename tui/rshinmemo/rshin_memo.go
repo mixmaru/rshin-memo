@@ -16,6 +16,7 @@ type RshinMemo struct {
 	dailyListView       *views.DailyListView
 	dailyListInsertMode usecases.InsertMode
 	dateSelectView      *views.DateSelectView
+	dateInputView       *views.DateInputView
 	noteSelectView      *views.NoteSelectView
 
 	dailyDataRep repositories.DailyDataRepositoryInterface
@@ -129,6 +130,17 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*views.
 		return nil
 	})
 
+	dateSelectView.AddWhenPushEnterKeyOnInputNewDateLine(func() error {
+		// 日付入力viewを表示する
+		r.dateInputView = r.createDateInputView()
+		r.dateInputView.AddWhenPushEscapeKey(func() error {
+			r.closeDateInputView()
+			return nil
+		})
+		r.layoutView.AddPage(r.dateInputView)
+		return nil
+	})
+
 	// データセット
 	dates, err := r.createDates(mode)
 	if err != nil {
@@ -161,6 +173,11 @@ func (r *RshinMemo) createDates(mode usecases.InsertMode) ([]time.Time, error) {
 func (r *RshinMemo) closeDateSelectView() {
 	r.layoutView.RemovePage(r.dateSelectView)
 	r.dateSelectView = nil
+}
+
+func (r *RshinMemo) closeDateInputView() {
+	r.layoutView.RemovePage(r.dateInputView)
+	r.dateInputView = nil
 }
 
 func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
@@ -265,4 +282,8 @@ func (r *RshinMemo) createNewDailyData(date time.Time, noteName string, mode use
 		retData.Notes = append(retData.Notes, noteName)
 	}
 	return retData, nil
+}
+
+func (r *RshinMemo) createDateInputView() *views.DateInputView {
+	return views.NewDateInputView()
 }
