@@ -99,7 +99,7 @@ func (d *DailyListView) SetData(data []usecases.DailyData) {
 	}
 }
 
-// dailyListのカーソル位置の日付を取得する。
+// GetCursorDate dailyListのカーソル位置の日付を取得する。
 // cursorPointAdjustに数値を指定すると、指定分カーソル位置からずれた位置の日付を取得する
 func (d *DailyListView) GetCursorDate(cursorPointAdjust int) (time.Time, error) {
 	row, _ := d.view.GetSelection()

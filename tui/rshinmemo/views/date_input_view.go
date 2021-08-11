@@ -69,6 +69,7 @@ type ValidationError struct {
 }
 
 const VALIDATION_ERROR_1_MESSAGE = "formatがYYYY-MM-DDではない"
+const VALIDATION_ERROR_2_MESSAGE = "入力日付が想定の範囲内ではない"
 
 func (d *DateInputView) executeWhenPushEnterKey() (*ValidationError, error) {
 

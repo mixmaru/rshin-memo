@@ -292,6 +292,14 @@ func (r *RshinMemo) createDateInputView() *views.DateInputView {
 		if err != nil {
 			return &views.ValidationError{No: 1, Message: views.VALIDATION_ERROR_1_MESSAGE}, nil
 		}
+		// dateが許容範囲内かチェック
+		result, err := r.IsDateInRange(date)
+		if err != nil {
+			return nil, err
+		}
+		if !result {
+			return &views.ValidationError{No: 2, Message: views.VALIDATION_ERROR_2_MESSAGE}, nil
+		}
 		r.selectedDate = date
 		r.noteSelectView, err = r.createNoteSelectView()
 		if err != nil {
@@ -301,4 +309,47 @@ func (r *RshinMemo) createDateInputView() *views.DateInputView {
 		return nil, nil
 	})
 	return dateInputView
+}
+
+// IsDateInRange dateが想定の範囲内かどうかチェックする
+func (r *RshinMemo) IsDateInRange(date time.Time) (bool, error) {
+	var from, to time.Time
+	var err error
+	switch r.dailyListInsertMode {
+	case usecases.INSERT_OVER_DATE_MODE:
+		from, err = r.dailyListView.GetCursorDate(0)
+		if err != nil {
+			return false, err
+		}
+		to, err = r.dailyListView.GetCursorDate(-1)
+		if err != nil {
+			return false, err
+		}
+	case usecases.INSERT_UNDER_DATE_MODE:
+		from, err = r.dailyListView.GetCursorDate(1)
+		if err != nil {
+			return false, err
+		}
+		to, err = r.dailyListView.GetCursorDate(0)
+		if err != nil {
+			return false, err
+		}
+	default:
+		return false, errors.Errorf("想定外エラー。r.dailyListInsertMode: %v", r.dailyListView)
+	}
+	return IsDateInRange(date, from, to), nil
+}
+
+func IsDateInRange(date, from, to time.Time) bool {
+	if !from.IsZero() {
+		if !(from.Before(date) || from.Equal(date)) {
+			return false
+		}
+	}
+	if !to.IsZero() {
+		if !(date.Before(to) || date.Equal(to)) {
+			return false
+		}
+	}
+	return true
 }
