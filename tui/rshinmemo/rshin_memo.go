@@ -16,7 +16,9 @@ type RshinMemo struct {
 	dailyListView       *views.DailyListView
 	dailyListInsertMode usecases.InsertMode
 	dateSelectView      *views.DateSelectView
+	dateInputView       *views.DateInputView
 	noteSelectView      *views.NoteSelectView
+	noteNameInputView   *views.NoteNameInputView
 
 	dailyDataRep repositories.DailyDataRepositoryInterface
 	noteRep      repositories.NoteRepositoryInterface
@@ -129,6 +131,13 @@ func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*views.
 		return nil
 	})
 
+	dateSelectView.AddWhenPushEnterKeyOnInputNewDateLine(func() error {
+		// 日付入力viewを表示する
+		r.dateInputView = r.createDateInputView()
+		r.layoutView.AddPage(r.dateInputView)
+		return nil
+	})
+
 	// データセット
 	dates, err := r.createDates(mode)
 	if err != nil {
@@ -158,9 +167,39 @@ func (r *RshinMemo) createDates(mode usecases.InsertMode) ([]time.Time, error) {
 	return useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
 }
 
+func (r *RshinMemo) closeAllView() {
+	if r.noteNameInputView != nil {
+		r.closeNoteNameInputView()
+	}
+	if r.noteSelectView != nil {
+		r.closeNoteSelectView()
+	}
+	if r.dateInputView != nil {
+		r.closeDateInputView()
+	}
+	if r.dateSelectView != nil {
+		r.closeDateSelectView()
+	}
+}
+
+func (r *RshinMemo) closeNoteSelectView() {
+	r.layoutView.RemovePage(r.noteSelectView)
+	r.noteSelectView = nil
+}
+
+func (r *RshinMemo) closeDateInputView() {
+	r.layoutView.RemovePage(r.dateInputView)
+	r.dateInputView = nil
+}
+
 func (r *RshinMemo) closeDateSelectView() {
 	r.layoutView.RemovePage(r.dateSelectView)
 	r.dateSelectView = nil
+}
+
+func (r *RshinMemo) closeNoteNameInputView() {
+	r.layoutView.RemovePage(r.noteNameInputView)
+	r.noteNameInputView = nil
 }
 
 func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
@@ -169,24 +208,15 @@ func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
 		r.closeNoteSelectView()
 		return nil
 	})
-	noteSelectView.AddWhenPushEnterKey(func() error {
-		// 指定のnoteをデータに追加
-		err := r.saveDailyData()
-		if err != nil {
-			return err
-		}
+	noteSelectView.AddWhenPushEnterKeyOnNoteNameLine(func(noteName string) error {
+		return r.createAndOpenNoteAndClose(noteName)
+	})
 
-		noteName := r.getNoteSelectCursorNoteName()
-		err = r.openVim(noteName)
-		if err != nil {
-			return err
-		}
-
-		// dailyList表示までもどす
-		r.closeNoteSelectView()
-		r.closeDateSelectView()
-		// データ再読込
-		return r.loadDailyListAllData()
+	noteSelectView.AddWhenPushEnterKeyOnInputNewNoteNameLine(func() error {
+		// NoteNameInputViewを表示する
+		r.noteNameInputView = r.createNoteNameInputView()
+		r.layoutView.AddPage(r.noteNameInputView)
+		return nil
 	})
 
 	useCase := usecases.NewGetAllNotesUseCase(r.noteRep)
@@ -208,15 +238,7 @@ func (r *RshinMemo) openVim(noteName string) error {
 	return nil
 }
 
-func (r *RshinMemo) closeNoteSelectView() {
-	r.layoutView.RemovePage(r.noteSelectView)
-	r.noteSelectView = nil
-}
-
-func (r *RshinMemo) saveDailyData() error {
-	// 選択note名を取得する
-	noteName := r.getNoteSelectCursorNoteName()
-
+func (r *RshinMemo) saveDailyData(noteName string) error {
 	newDailyData, err := r.createNewDailyData(r.selectedDate, noteName, r.dailyListInsertMode)
 	if err != nil {
 		return err
@@ -229,13 +251,6 @@ func (r *RshinMemo) saveDailyData() error {
 	}
 
 	return nil
-}
-
-// noteSelectViewのカーソル位置のnome名を取得する
-func (r *RshinMemo) getNoteSelectCursorNoteName() (noteName string) {
-	row, _ := r.noteSelectView.GetSelection()
-	cell := r.noteSelectView.GetCell(row, 0)
-	return cell.Text
 }
 
 // わたされた日付のnote一覧を取得
@@ -265,4 +280,107 @@ func (r *RshinMemo) createNewDailyData(date time.Time, noteName string, mode use
 		retData.Notes = append(retData.Notes, noteName)
 	}
 	return retData, nil
+}
+
+func (r *RshinMemo) createDateInputView() *views.DateInputView {
+	dateInputView := views.NewDateInputView()
+	dateInputView.AddWhenPushEscapeKey(func() error {
+		r.closeDateInputView()
+		return nil
+	})
+	dateInputView.AddWhenPushEnterKey(func(inputDateStr string) (*views.ValidationError, error) {
+		// 入力値をパースしてtime型で渡す
+		date, err := time.ParseInLocation("2006-01-02", inputDateStr, time.Local)
+		if err != nil {
+			return &views.ValidationError{No: 1, Message: views.VALIDATION_ERROR_1_MESSAGE}, nil
+		}
+		// dateが許容範囲内かチェック
+		result, err := r.IsDateInRange(date)
+		if err != nil {
+			return nil, err
+		}
+		if !result {
+			return &views.ValidationError{No: 2, Message: views.VALIDATION_ERROR_2_MESSAGE}, nil
+		}
+		r.selectedDate = date
+		r.noteSelectView, err = r.createNoteSelectView()
+		if err != nil {
+			return nil, err
+		}
+		r.layoutView.AddPage(r.noteSelectView)
+		return nil, nil
+	})
+	return dateInputView
+}
+
+// IsDateInRange dateが想定の範囲内かどうかチェックする
+func (r *RshinMemo) IsDateInRange(date time.Time) (bool, error) {
+	var from, to time.Time
+	var err error
+	switch r.dailyListInsertMode {
+	case usecases.INSERT_OVER_DATE_MODE:
+		from, err = r.dailyListView.GetCursorDate(0)
+		if err != nil {
+			return false, err
+		}
+		to, err = r.dailyListView.GetCursorDate(-1)
+		if err != nil {
+			return false, err
+		}
+	case usecases.INSERT_UNDER_DATE_MODE:
+		from, err = r.dailyListView.GetCursorDate(1)
+		if err != nil {
+			return false, err
+		}
+		to, err = r.dailyListView.GetCursorDate(0)
+		if err != nil {
+			return false, err
+		}
+	default:
+		return false, errors.Errorf("想定外エラー。r.dailyListInsertMode: %v", r.dailyListView)
+	}
+	return IsDateInRange(date, from, to), nil
+}
+
+func (r *RshinMemo) createNoteNameInputView() *views.NoteNameInputView {
+	view := views.NewNoteNameInputView()
+	view.AddWhenPushEscapeKey(func() error {
+		r.closeNoteNameInputView()
+		return nil
+	})
+	view.AddWhenPushEnterKey(func(noteName string) error {
+		return r.createAndOpenNoteAndClose(noteName)
+	})
+	return view
+}
+
+func (r *RshinMemo) createAndOpenNoteAndClose(noteName string) error {
+	// 指定のnoteをデータに追加
+	err := r.saveDailyData(noteName)
+	if err != nil {
+		return err
+	}
+
+	err = r.openVim(noteName)
+	if err != nil {
+		return err
+	}
+	// dailyList表示までもどす
+	r.closeAllView()
+	// データ再読込
+	return r.loadDailyListAllData()
+}
+
+func IsDateInRange(date, from, to time.Time) bool {
+	if !from.IsZero() {
+		if !(from.Before(date) || from.Equal(date)) {
+			return false
+		}
+	}
+	if !to.IsZero() {
+		if !(date.Before(to) || date.Equal(to)) {
+			return false
+		}
+	}
+	return true
 }

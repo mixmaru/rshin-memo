@@ -6,13 +6,14 @@ import (
 )
 
 type NoteSelectView struct {
-	view              *tview.Table
-	name              string
-	whenPushEscapeKey []func() error
-	whenPushEnterKey  []func() error
+	view                                   *tview.Table
+	name                                   string
+	whenPushEscapeKey                      []func() error
+	whenPushEnterKeyOnNoteNameLine         []func(noteName string) error
+	whenPushEnterKeyOnInputNewNoteNameLine []func() error
 }
 
-func (n *NoteSelectView) GetTviewTable() *tview.Table {
+func (n *NoteSelectView) GetTviewPrimitive() tview.Primitive {
 	return n.view
 }
 
@@ -37,9 +38,18 @@ func (n *NoteSelectView) initView() {
 				panic(err)
 			}
 		case tcell.KeyEnter:
-			err := n.executeWhenPushEnterKey()
-			if err != nil {
-				panic(err)
+			if n.isSelectedInputNewNoteNameLine() {
+				err := n.executeWhenPushEnterKeyOnInputNewNoteNameLine()
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				row, _ := n.view.GetSelection()
+				noteName := n.view.GetCell(row, 0).Text
+				err := n.executeWhenPushEnterKeyOnNoteNameLine(noteName)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 		return event
@@ -48,16 +58,22 @@ func (n *NoteSelectView) initView() {
 	return
 }
 
+const INPUT_NEW_NOTE_NAME = "新規追加"
+
 func (n *NoteSelectView) SetData(notes []string) {
 	n.view.Clear()
-	n.view.SetCellSimple(0, 0, "新規追加")
+	n.view.SetCellSimple(0, 0, INPUT_NEW_NOTE_NAME)
 	for i, note := range notes {
 		n.view.SetCellSimple(i+1, 0, note)
 	}
 }
 
-func (n *NoteSelectView) AddWhenPushEnterKey(function func() error) {
-	n.whenPushEnterKey = append(n.whenPushEnterKey, function)
+func (n *NoteSelectView) AddWhenPushEnterKeyOnNoteNameLine(function func(noteName string) error) {
+	n.whenPushEnterKeyOnNoteNameLine = append(n.whenPushEnterKeyOnNoteNameLine, function)
+}
+
+func (n *NoteSelectView) AddWhenPushEnterKeyOnInputNewNoteNameLine(function func() error) {
+	n.whenPushEnterKeyOnInputNewNoteNameLine = append(n.whenPushEnterKeyOnInputNewNoteNameLine, function)
 }
 
 func (n *NoteSelectView) AddWhenPushEscapeKey(function func() error) {
@@ -68,14 +84,21 @@ func (n *NoteSelectView) executeWhenPushEscapeKey() error {
 	return executeFunctions(n.whenPushEscapeKey)
 }
 
-func (n *NoteSelectView) executeWhenPushEnterKey() error {
-	return executeFunctions(n.whenPushEnterKey)
+func (n *NoteSelectView) executeWhenPushEnterKeyOnNoteNameLine(noteName string) error {
+	for _, function := range n.whenPushEnterKeyOnNoteNameLine {
+		err := function(noteName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (n *NoteSelectView) GetSelection() (row, column int) {
-	return n.view.GetSelection()
+func (n *NoteSelectView) executeWhenPushEnterKeyOnInputNewNoteNameLine() error {
+	return executeFunctions(n.whenPushEnterKeyOnInputNewNoteNameLine)
 }
 
-func (n *NoteSelectView) GetCell(row int, column int) *tview.TableCell {
-	return n.view.GetCell(row, column)
+func (n *NoteSelectView) isSelectedInputNewNoteNameLine() bool {
+	row, _ := n.view.GetSelection()
+	return n.view.GetCell(row, 0).Text == INPUT_NEW_NOTE_NAME
 }

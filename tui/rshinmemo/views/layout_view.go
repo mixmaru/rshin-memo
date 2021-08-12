@@ -18,7 +18,7 @@ func NewLayoutView() *LayoutView {
 }
 
 func (l *LayoutView) AddPage(view viewInterface) {
-	l.layoutView.AddPage(view.GetName(), view.GetTviewTable(), true, true)
+	l.layoutView.AddPage(view.GetName(), view.GetTviewPrimitive(), true, true)
 }
 
 func (l *LayoutView) RemovePage(view viewInterface) {
