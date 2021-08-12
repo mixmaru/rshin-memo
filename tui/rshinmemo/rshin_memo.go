@@ -166,14 +166,31 @@ func (r *RshinMemo) createDates(mode usecases.InsertMode) ([]time.Time, error) {
 	return useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
 }
 
-func (r *RshinMemo) closeDateSelectView() {
-	r.layoutView.RemovePage(r.dateSelectView)
-	r.dateSelectView = nil
+func (r *RshinMemo) closeAllView() {
+	if r.noteSelectView != nil {
+		r.closeNoteSelectView()
+	}
+	if r.dateInputView != nil {
+		r.closeDateInputView()
+	}
+	if r.dateSelectView != nil {
+		r.closeDateSelectView()
+	}
+}
+
+func (r *RshinMemo) closeNoteSelectView() {
+	r.layoutView.RemovePage(r.noteSelectView)
+	r.noteSelectView = nil
 }
 
 func (r *RshinMemo) closeDateInputView() {
 	r.layoutView.RemovePage(r.dateInputView)
 	r.dateInputView = nil
+}
+
+func (r *RshinMemo) closeDateSelectView() {
+	r.layoutView.RemovePage(r.dateSelectView)
+	r.dateSelectView = nil
 }
 
 func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
@@ -196,8 +213,7 @@ func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
 		}
 
 		// dailyList表示までもどす
-		r.closeNoteSelectView()
-		r.closeDateSelectView()
+		r.closeAllView()
 		// データ再読込
 		return r.loadDailyListAllData()
 	})
@@ -219,11 +235,6 @@ func (r *RshinMemo) openVim(noteName string) error {
 	}
 	r.layoutView.Refresh()
 	return nil
-}
-
-func (r *RshinMemo) closeNoteSelectView() {
-	r.layoutView.RemovePage(r.noteSelectView)
-	r.noteSelectView = nil
 }
 
 func (r *RshinMemo) saveDailyData() error {
