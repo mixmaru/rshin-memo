@@ -18,6 +18,7 @@ type RshinMemo struct {
 	dateSelectView      *views.DateSelectView
 	dateInputView       *views.DateInputView
 	noteSelectView      *views.NoteSelectView
+	noteNameInputView   *views.NoteNameInputView
 
 	dailyDataRep repositories.DailyDataRepositoryInterface
 	noteRep      repositories.NoteRepositoryInterface
@@ -167,6 +168,9 @@ func (r *RshinMemo) createDates(mode usecases.InsertMode) ([]time.Time, error) {
 }
 
 func (r *RshinMemo) closeAllView() {
+	if r.noteNameInputView != nil {
+		r.closeNoteNameInputView()
+	}
 	if r.noteSelectView != nil {
 		r.closeNoteSelectView()
 	}
@@ -193,29 +197,26 @@ func (r *RshinMemo) closeDateSelectView() {
 	r.dateSelectView = nil
 }
 
+func (r *RshinMemo) closeNoteNameInputView() {
+	r.layoutView.RemovePage(r.noteNameInputView)
+	r.noteNameInputView = nil
+}
+
 func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
 	noteSelectView := views.NewNoteSelectView()
 	noteSelectView.AddWhenPushEscapeKey(func() error {
 		r.closeNoteSelectView()
 		return nil
 	})
-	noteSelectView.AddWhenPushEnterKey(func() error {
-		// 指定のnoteをデータに追加
-		err := r.saveDailyData()
-		if err != nil {
-			return err
-		}
+	noteSelectView.AddWhenPushEnterKeyOnNoteNameLine(func(noteName string) error {
+		return r.createAndOpenNoteAndClose(noteName)
+	})
 
-		noteName := r.getNoteSelectCursorNoteName()
-		err = r.openVim(noteName)
-		if err != nil {
-			return err
-		}
-
-		// dailyList表示までもどす
-		r.closeAllView()
-		// データ再読込
-		return r.loadDailyListAllData()
+	noteSelectView.AddWhenPushEnterKeyOnInputNewNoteNameLine(func() error {
+		// NoteNameInputViewを表示する
+		r.noteNameInputView = r.createNoteNameInputView()
+		r.layoutView.AddPage(r.noteNameInputView)
+		return nil
 	})
 
 	useCase := usecases.NewGetAllNotesUseCase(r.noteRep)
@@ -237,10 +238,7 @@ func (r *RshinMemo) openVim(noteName string) error {
 	return nil
 }
 
-func (r *RshinMemo) saveDailyData() error {
-	// 選択note名を取得する
-	noteName := r.getNoteSelectCursorNoteName()
-
+func (r *RshinMemo) saveDailyData(noteName string) error {
 	newDailyData, err := r.createNewDailyData(r.selectedDate, noteName, r.dailyListInsertMode)
 	if err != nil {
 		return err
@@ -253,13 +251,6 @@ func (r *RshinMemo) saveDailyData() error {
 	}
 
 	return nil
-}
-
-// noteSelectViewのカーソル位置のnome名を取得する
-func (r *RshinMemo) getNoteSelectCursorNoteName() (noteName string) {
-	row, _ := r.noteSelectView.GetSelection()
-	cell := r.noteSelectView.GetCell(row, 0)
-	return cell.Text
 }
 
 // わたされた日付のnote一覧を取得
@@ -349,6 +340,35 @@ func (r *RshinMemo) IsDateInRange(date time.Time) (bool, error) {
 		return false, errors.Errorf("想定外エラー。r.dailyListInsertMode: %v", r.dailyListView)
 	}
 	return IsDateInRange(date, from, to), nil
+}
+
+func (r *RshinMemo) createNoteNameInputView() *views.NoteNameInputView {
+	view := views.NewNoteNameInputView()
+	view.AddWhenPushEscapeKey(func() error {
+		r.closeNoteNameInputView()
+		return nil
+	})
+	view.AddWhenPushEnterKey(func(noteName string) error {
+		return r.createAndOpenNoteAndClose(noteName)
+	})
+	return view
+}
+
+func (r *RshinMemo) createAndOpenNoteAndClose(noteName string) error {
+	// 指定のnoteをデータに追加
+	err := r.saveDailyData(noteName)
+	if err != nil {
+		return err
+	}
+
+	err = r.openVim(noteName)
+	if err != nil {
+		return err
+	}
+	// dailyList表示までもどす
+	r.closeAllView()
+	// データ再読込
+	return r.loadDailyListAllData()
 }
 
 func IsDateInRange(date, from, to time.Time) bool {
