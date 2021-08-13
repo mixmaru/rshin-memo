@@ -86,7 +86,7 @@ func (r *RshinMemo) createDailyListView() (*views.DailyListView, error) {
 func (r *RshinMemo) displayDateSelectView(mode usecases.InsertMode) error {
 	var err error
 	r.dailyListInsertMode = mode
-	r.dateSelectView, err = r.createInitDailySelectView(r.dailyListInsertMode)
+	r.dateSelectView, err = r.createDateSelectView(r.dailyListInsertMode)
 	if err != nil {
 		panic(errors.WithStack(err))
 	}
@@ -111,7 +111,7 @@ func (r *RshinMemo) getDailyListAllData() ([]usecases.DailyData, error) {
 	useCase := usecases.NewGetAllDailyListUsecase(r.dailyDataRep)
 	return useCase.Handle()
 }
-func (r *RshinMemo) createInitDailySelectView(mode usecases.InsertMode) (*views.DateSelectView, error) {
+func (r *RshinMemo) createDateSelectView(mode usecases.InsertMode) (*views.DateSelectView, error) {
 	dateSelectView := views.NewDateSelectView()
 	dateSelectView.AddWhenPushEscapeKey(func() error {
 		// dateSelectViewを削除してDailyListにフォーカスを戻す

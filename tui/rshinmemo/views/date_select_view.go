@@ -8,7 +8,8 @@ import (
 )
 
 type DateSelectView struct {
-	view                               *tview.Table
+	grid                               *tview.Grid
+	table                              *tview.Table
 	name                               string
 	whenPushEscapeKey                  []func() error
 	whenPushEnterKeyOnDateLine         []func(selectedDate time.Time) error
@@ -16,7 +17,7 @@ type DateSelectView struct {
 }
 
 func (d *DateSelectView) GetTviewPrimitive() tview.Primitive {
-	return d.view
+	return d.grid
 }
 
 func (d *DateSelectView) GetName() string {
@@ -30,9 +31,9 @@ func NewDateSelectView() *DateSelectView {
 }
 
 func (d *DateSelectView) initView() {
-	view := tview.NewTable().SetSelectable(true, false)
+	table := tview.NewTable().SetSelectable(true, false)
 	// event設定
-	view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEscape:
 			err := d.executeWhenPushEscapeKey()
@@ -59,12 +60,18 @@ func (d *DateSelectView) initView() {
 		}
 		return event
 	})
-	d.view = view
+	grid := tview.NewGrid().SetRows(0, 1)
+	grid.AddItem(table, 0, 0, 1, 1, 0, 0, true)
+	message := tview.NewTextView().SetText("[esc]:back")
+	grid.AddItem(message, 1, 0, 1, 1, 0, 0, false)
+
+	d.table = table
+	d.grid = grid
 }
 
 func (d *DateSelectView) getSelectedDate() (time.Time, error) {
-	row, _ := d.view.GetSelection()
-	cell := d.view.GetCell(row, 0)
+	row, _ := d.table.GetSelection()
+	cell := d.table.GetCell(row, 0)
 	dateStr := cell.Text
 	date, err := time.ParseInLocation("2006-01-02", dateStr, time.Local)
 	if err != nil {
@@ -106,14 +113,14 @@ func (d *DateSelectView) executeWhenPushEnterKeyOnInputNewDateLine() error {
 const NEW_INPUT_DATE_TITLE = "手入力する"
 
 func (d *DateSelectView) SetData(dates []time.Time) {
-	d.view.Clear()
-	d.view.SetCellSimple(0, 0, NEW_INPUT_DATE_TITLE)
+	d.table.Clear()
+	d.table.SetCellSimple(0, 0, NEW_INPUT_DATE_TITLE)
 	for i, date := range dates {
-		d.view.SetCellSimple(i+1, 0, date.Format("2006-01-02"))
+		d.table.SetCellSimple(i+1, 0, date.Format("2006-01-02"))
 	}
 }
 
 func (d *DateSelectView) isSelectedInputNewDate() bool {
-	row, _ := d.view.GetSelection()
-	return d.view.GetCell(row, 0).Text == NEW_INPUT_DATE_TITLE
+	row, _ := d.table.GetSelection()
+	return d.table.GetCell(row, 0).Text == NEW_INPUT_DATE_TITLE
 }

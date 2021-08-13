@@ -6,7 +6,8 @@ import (
 )
 
 type NoteSelectView struct {
-	view                                   *tview.Table
+	grid                                   *tview.Grid
+	table                                  *tview.Table
 	name                                   string
 	whenPushEscapeKey                      []func() error
 	whenPushEnterKeyOnNoteNameLine         []func(noteName string) error
@@ -14,7 +15,7 @@ type NoteSelectView struct {
 }
 
 func (n *NoteSelectView) GetTviewPrimitive() tview.Primitive {
-	return n.view
+	return n.grid
 }
 
 func (n *NoteSelectView) GetName() string {
@@ -28,9 +29,9 @@ func NewNoteSelectView() *NoteSelectView {
 }
 
 func (n *NoteSelectView) initView() {
-	view := tview.NewTable()
-	view.SetSelectable(true, false)
-	view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	table := tview.NewTable()
+	table.SetSelectable(true, false)
+	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEscape:
 			err := n.executeWhenPushEscapeKey()
@@ -44,8 +45,8 @@ func (n *NoteSelectView) initView() {
 					panic(err)
 				}
 			} else {
-				row, _ := n.view.GetSelection()
-				noteName := n.view.GetCell(row, 0).Text
+				row, _ := n.table.GetSelection()
+				noteName := n.table.GetCell(row, 0).Text
 				err := n.executeWhenPushEnterKeyOnNoteNameLine(noteName)
 				if err != nil {
 					panic(err)
@@ -54,17 +55,22 @@ func (n *NoteSelectView) initView() {
 		}
 		return event
 	})
-	n.view = view
+	message := tview.NewTextView().SetText("[esc]:back [j]:up [k]:down [enter]:open memo")
+	grid := tview.NewGrid().SetRows(0, 1)
+	grid.AddItem(table, 0, 0, 1, 1, 0, 0, true)
+	grid.AddItem(message, 1, 0, 1, 1, 0, 0, false)
+	n.table = table
+	n.grid = grid
 	return
 }
 
 const INPUT_NEW_NOTE_NAME = "新規追加"
 
 func (n *NoteSelectView) SetData(notes []string) {
-	n.view.Clear()
-	n.view.SetCellSimple(0, 0, INPUT_NEW_NOTE_NAME)
+	n.table.Clear()
+	n.table.SetCellSimple(0, 0, INPUT_NEW_NOTE_NAME)
 	for i, note := range notes {
-		n.view.SetCellSimple(i+1, 0, note)
+		n.table.SetCellSimple(i+1, 0, note)
 	}
 }
 
@@ -99,6 +105,6 @@ func (n *NoteSelectView) executeWhenPushEnterKeyOnInputNewNoteNameLine() error {
 }
 
 func (n *NoteSelectView) isSelectedInputNewNoteNameLine() bool {
-	row, _ := n.view.GetSelection()
-	return n.view.GetCell(row, 0).Text == INPUT_NEW_NOTE_NAME
+	row, _ := n.table.GetSelection()
+	return n.table.GetCell(row, 0).Text == INPUT_NEW_NOTE_NAME
 }

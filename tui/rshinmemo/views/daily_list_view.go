@@ -9,7 +9,8 @@ import (
 )
 
 type DailyListView struct {
-	view              *tview.Table
+	grid              *tview.Grid
+	table             *tview.Table
 	name              string
 	whenPushEnterKey  []func() error
 	whenPushLowerOkey []func() error
@@ -17,7 +18,7 @@ type DailyListView struct {
 }
 
 func (d *DailyListView) GetTviewPrimitive() tview.Primitive {
-	return d.view
+	return d.grid
 }
 
 func (d *DailyListView) GetName() string {
@@ -33,6 +34,10 @@ func NewDailyListView() *DailyListView {
 func (d *DailyListView) initView() {
 	table := tview.NewTable()
 	table.SetSelectable(true, false)
+	message := tview.NewTextView().SetText("[j]:up [k]:down [o]:insert memo under the cursor [O]:insert memo just the cursor [enter]:open memo")
+	grid := tview.NewGrid().SetRows(0, 1)
+	grid.AddItem(table, 0, 0, 1, 1, 0, 0, true)
+	grid.AddItem(message, 1, 0, 1, 1, 0, 0, false)
 	// イベント設定
 	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
@@ -57,8 +62,8 @@ func (d *DailyListView) initView() {
 		}
 		return event
 	})
-	d.view = table
-
+	d.table = table
+	d.grid = grid
 	return
 }
 
@@ -87,13 +92,13 @@ func (d *DailyListView) whenPushUpperOKey() error {
 }
 
 func (d *DailyListView) SetData(data []usecases.DailyData) {
-	d.view.Clear()
+	d.table.Clear()
 	// データをテーブルにセット
 	row := 0
 	for _, data := range data {
 		for _, note := range data.Notes {
-			d.view.SetCellSimple(row, 0, data.Date)
-			d.view.SetCellSimple(row, 1, note)
+			d.table.SetCellSimple(row, 0, data.Date)
+			d.table.SetCellSimple(row, 1, note)
 			row++
 		}
 	}
@@ -102,13 +107,13 @@ func (d *DailyListView) SetData(data []usecases.DailyData) {
 // GetCursorDate dailyListのカーソル位置の日付を取得する。
 // cursorPointAdjustに数値を指定すると、指定分カーソル位置からずれた位置の日付を取得する
 func (d *DailyListView) GetCursorDate(cursorPointAdjust int) (time.Time, error) {
-	row, _ := d.view.GetSelection()
+	row, _ := d.table.GetSelection()
 	targetRow := row + cursorPointAdjust
-	if targetRow < 0 || targetRow+1 > d.view.GetRowCount() {
+	if targetRow < 0 || targetRow+1 > d.table.GetRowCount() {
 		// targetRow is out of range
 		return time.Time{}, nil
 	}
-	dateStr := d.view.GetCell(targetRow, 0)
+	dateStr := d.table.GetCell(targetRow, 0)
 	date, err := time.ParseInLocation("2006-01-02", dateStr.Text, time.Local)
 	if err != nil {
 		return time.Time{}, errors.WithStack(err)
@@ -117,13 +122,13 @@ func (d *DailyListView) GetCursorDate(cursorPointAdjust int) (time.Time, error) 
 }
 
 func (d *DailyListView) GetCursorNoteName() string {
-	row, _ := d.view.GetSelection()
-	note := d.view.GetCell(row, 1)
+	row, _ := d.table.GetSelection()
+	note := d.table.GetCell(row, 1)
 	return note.Text
 }
 
 func (d *DailyListView) GetInsertPoint(mode usecases.InsertMode) (int, error) {
-	cursorRow, _ := d.view.GetSelection()
+	cursorRow, _ := d.table.GetSelection()
 	switch mode {
 	case usecases.INSERT_OVER_DATE_MODE:
 		return cursorRow, nil
@@ -135,11 +140,11 @@ func (d *DailyListView) GetInsertPoint(mode usecases.InsertMode) (int, error) {
 }
 
 func (d *DailyListView) GetRowCount() int {
-	return d.view.GetRowCount()
+	return d.table.GetRowCount()
 }
 
 func (d *DailyListView) GetCell(row int, i int) *tview.TableCell {
-	return d.view.GetCell(row, i)
+	return d.table.GetCell(row, i)
 
 }
 
