@@ -15,6 +15,7 @@
 # vendor/
 
 /cmd/rshinmemo/rshinmemo
+/tui/rshinmemo/rshinmemo
 
 /_examples
 /core/repositories/test
