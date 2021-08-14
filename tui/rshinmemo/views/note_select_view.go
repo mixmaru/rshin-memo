@@ -8,10 +8,13 @@ import (
 type NoteSelectView struct {
 	grid                                   *tview.Grid
 	table                                  *tview.Table
+	message                                *tview.TextView
+	searchInputField                       *tview.InputField
 	name                                   string
 	whenPushEscapeKey                      []func() error
 	whenPushEnterKeyOnNoteNameLine         []func(noteName string) error
 	whenPushEnterKeyOnInputNewNoteNameLine []func() error
+	whenPushCtrlFKey                       []func() error
 }
 
 func (n *NoteSelectView) GetTviewPrimitive() tview.Primitive {
@@ -52,6 +55,11 @@ func (n *NoteSelectView) initView() {
 					panic(err)
 				}
 			}
+		case tcell.KeyCtrlF:
+			err := n.executeWhenPushCtrlFKey()
+			if err != nil {
+				panic(err)
+			}
 		}
 		return event
 	})
@@ -60,6 +68,7 @@ func (n *NoteSelectView) initView() {
 	grid.AddItem(table, 0, 0, 1, 1, 0, 0, true)
 	grid.AddItem(message, 1, 0, 1, 1, 0, 0, false)
 	n.table = table
+	n.message = message
 	n.grid = grid
 	return
 }
@@ -107,4 +116,18 @@ func (n *NoteSelectView) executeWhenPushEnterKeyOnInputNewNoteNameLine() error {
 func (n *NoteSelectView) isSelectedInputNewNoteNameLine() bool {
 	row, _ := n.table.GetSelection()
 	return n.table.GetCell(row, 0).Text == INPUT_NEW_NOTE_NAME
+}
+
+func (n *NoteSelectView) executeWhenPushCtrlFKey() error {
+	return executeFunctions(n.whenPushCtrlFKey)
+}
+
+func (n *NoteSelectView) AddWhenPushCtrlFKey(function func() error) {
+	n.whenPushCtrlFKey = append(n.whenPushCtrlFKey, function)
+}
+
+func (n *NoteSelectView) SearchMode(layout *LayoutView) {
+	n.searchInputField = tview.NewInputField().SetLabel("Search:")
+	n.grid.AddItem(n.searchInputField, 1, 0, 1, 1, 0, 0, true)
+	layout.SetFocus(n.searchInputField)
 }

@@ -219,6 +219,11 @@ func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
 		return nil
 	})
 
+	noteSelectView.AddWhenPushCtrlFKey(func() error {
+		r.noteSelectView.SearchMode(r.layoutView)
+		return nil
+	})
+
 	useCase := usecases.NewGetAllNotesUseCase(r.noteRep)
 	notes, err := useCase.Handle()
 	if err != nil {

@@ -41,3 +41,6 @@ func (l *LayoutView) Refresh() {
 	l.app.Sync()
 	return
 }
+func (l *LayoutView) SetFocus(primitive tview.Primitive) {
+	l.app.SetFocus(primitive)
+}
