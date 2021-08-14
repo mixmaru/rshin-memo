@@ -15,6 +15,7 @@ type NoteSelectView struct {
 	whenPushEnterKeyOnNoteNameLine         []func(noteName string) error
 	whenPushEnterKeyOnInputNewNoteNameLine []func() error
 	whenPushCtrlFKey                       []func() error
+	whenPushEnterKeyOnSearchInputField     []func(searchWord string) error
 }
 
 func (n *NoteSelectView) GetTviewPrimitive() tview.Primitive {
@@ -41,6 +42,7 @@ func (n *NoteSelectView) initView() {
 			if err != nil {
 				panic(err)
 			}
+			return nil
 		case tcell.KeyEnter:
 			if n.isSelectedInputNewNoteNameLine() {
 				err := n.executeWhenPushEnterKeyOnInputNewNoteNameLine()
@@ -55,15 +57,17 @@ func (n *NoteSelectView) initView() {
 					panic(err)
 				}
 			}
+			return nil
 		case tcell.KeyCtrlF:
 			err := n.executeWhenPushCtrlFKey()
 			if err != nil {
 				panic(err)
 			}
+			return nil
 		}
 		return event
 	})
-	message := tview.NewTextView().SetText("[esc]:back [j]:up [k]:down [enter]:open memo")
+	message := tview.NewTextView().SetText("[esc]:back [j]:up [k]:down [enter]:open memo [ctrl-f]:search memo")
 	grid := tview.NewGrid().SetRows(0, 1)
 	grid.AddItem(table, 0, 0, 1, 1, 0, 0, true)
 	grid.AddItem(message, 1, 0, 1, 1, 0, 0, false)
@@ -93,6 +97,10 @@ func (n *NoteSelectView) AddWhenPushEnterKeyOnInputNewNoteNameLine(function func
 
 func (n *NoteSelectView) AddWhenPushEscapeKey(function func() error) {
 	n.whenPushEscapeKey = append(n.whenPushEscapeKey, function)
+}
+
+func (n *NoteSelectView) AddWhenPushEnterKeyOnSearchInputField(function func(searchWord string) error) {
+	n.whenPushEnterKeyOnSearchInputField = append(n.whenPushEnterKeyOnSearchInputField, function)
 }
 
 func (n *NoteSelectView) executeWhenPushEscapeKey() error {
@@ -127,7 +135,44 @@ func (n *NoteSelectView) AddWhenPushCtrlFKey(function func() error) {
 }
 
 func (n *NoteSelectView) SearchMode(layout *LayoutView) {
-	n.searchInputField = tview.NewInputField().SetLabel("Search:")
+	n.searchInputField = n.createSearchInputField(layout)
+	n.grid.RemoveItem(n.message)
 	n.grid.AddItem(n.searchInputField, 1, 0, 1, 1, 0, 0, true)
 	layout.app.SetFocus(n.searchInputField)
+}
+func (n *NoteSelectView) NoteSelectMode(layout *LayoutView) {
+	n.grid.RemoveItem(n.searchInputField)
+	n.grid.AddItem(n.message, 1, 0, 1, 1, 0, 0, true)
+	n.searchInputField = nil
+	layout.app.SetFocus(n.table)
+}
+
+func (n *NoteSelectView) createSearchInputField(layout *LayoutView) *tview.InputField {
+	searchInputField := tview.NewInputField().SetLabel("Search:")
+	searchInputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEscape:
+			n.NoteSelectMode(layout)
+			return nil
+		case tcell.KeyEnter:
+			searchWord := n.searchInputField.GetText()
+			err := n.executeWhenPushEnterKeyOnSearchInputField(searchWord)
+			if err != nil {
+				panic(err)
+			}
+			return nil
+		}
+		return event
+	})
+	return searchInputField
+}
+
+func (n *NoteSelectView) executeWhenPushEnterKeyOnSearchInputField(searchWord string) error {
+	for _, function := range n.whenPushEnterKeyOnSearchInputField {
+		err := function(searchWord)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

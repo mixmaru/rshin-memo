@@ -224,6 +224,17 @@ func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
 		return nil
 	})
 
+	noteSelectView.AddWhenPushEnterKeyOnSearchInputField(func(searchWord string) error {
+		searchUseCase := usecases.NewGetNotesBySearchTextUseCase(r.noteRep)
+		notes, err := searchUseCase.Handle(searchWord)
+		if err != nil {
+			return err
+		}
+		noteSelectView.SetData(notes)
+		noteSelectView.NoteSelectMode(r.layoutView)
+		return nil
+	})
+
 	useCase := usecases.NewGetAllNotesUseCase(r.noteRep)
 	notes, err := useCase.Handle()
 	if err != nil {
