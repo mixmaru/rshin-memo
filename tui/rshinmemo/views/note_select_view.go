@@ -129,5 +129,5 @@ func (n *NoteSelectView) AddWhenPushCtrlFKey(function func() error) {
 func (n *NoteSelectView) SearchMode(layout *LayoutView) {
 	n.searchInputField = tview.NewInputField().SetLabel("Search:")
 	n.grid.AddItem(n.searchInputField, 1, 0, 1, 1, 0, 0, true)
-	layout.SetFocus(n.searchInputField)
+	layout.app.SetFocus(n.searchInputField)
 }
