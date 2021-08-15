@@ -2,8 +2,7 @@
 
 ターミナル上で動作するメモアプリです。  
 
-![Animation](https://user-images.githubusercontent.com/2360858/121778993-82a09780-cbd4-11eb-9c3d-3cbd705db189.gif)
-
+![Animation_tview](https://user-images.githubusercontent.com/2360858/129470230-18fdb215-7198-44ce-adf3-223f5d2c67c0.gif)
 
 # インストール方法
 ```
