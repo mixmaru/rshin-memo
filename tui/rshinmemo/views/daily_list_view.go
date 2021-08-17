@@ -46,6 +46,7 @@ func (d *DailyListView) initView() {
 			if err != nil {
 				panic(err)
 			}
+			return nil
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 'o':
@@ -53,11 +54,13 @@ func (d *DailyListView) initView() {
 				if err != nil {
 					panic(err)
 				}
+				return nil
 			case 'O':
 				err := d.whenPushUpperOKey()
 				if err != nil {
 					panic(err)
 				}
+				return nil
 			}
 		}
 		return event
