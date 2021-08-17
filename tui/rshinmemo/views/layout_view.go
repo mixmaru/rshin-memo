@@ -6,9 +6,8 @@ import (
 )
 
 type LayoutView struct {
-	app            *tview.Application
-	layoutView     *tview.Pages
-	suspendedFocus tview.Primitive
+	app        *tview.Application
+	layoutView *tview.Pages
 }
 
 func NewLayoutView() *LayoutView {
@@ -43,12 +42,10 @@ func (l *LayoutView) Refresh() {
 	return
 }
 
-func (l *LayoutView) SuspendFocus() {
-	l.suspendedFocus = l.app.GetFocus()
-	l.app.SetFocus(tview.NewTextView())
+func (l *LayoutView) Suspend(f func()) bool {
+	return l.app.Suspend(f)
 }
 
-func (l *LayoutView) ResumeFocus() {
-	l.app.SetFocus(l.suspendedFocus)
-	l.suspendedFocus = nil
+func (l *LayoutView) Stop() {
+	l.app.Stop()
 }

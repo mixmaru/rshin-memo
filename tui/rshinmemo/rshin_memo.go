@@ -246,12 +246,9 @@ func (r *RshinMemo) createNoteSelectView() (*views.NoteSelectView, error) {
 
 // vimでひらく
 func (r *RshinMemo) openVim(noteName string) error {
-	r.layoutView.SuspendFocus()
-	err := utils.OpenVim(filepath.Join(r.memoDirPath, noteName+".txt"))
-	if err != nil {
-		return nil
-	}
-	r.layoutView.ResumeFocus()
+	r.layoutView.Suspend(func() {
+		utils.OpenVim(filepath.Join(r.memoDirPath, noteName+".txt"))
+	})
 	r.layoutView.Refresh()
 	return nil
 }
