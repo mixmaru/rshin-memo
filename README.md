@@ -1,6 +1,7 @@
 # rshin-memo
 
 ターミナル上で動作するメモアプリです。  
+Ubuntu上での動作を確認しています。（現状macのターミナルだとvim起動時のキー入力に不具合があります。）
 
 ![Animation_tview](https://user-images.githubusercontent.com/2360858/129470230-18fdb215-7198-44ce-adf3-223f5d2c67c0.gif)
 
