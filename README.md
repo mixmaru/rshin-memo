@@ -1,13 +1,21 @@
 # rshin-memo
 
 ターミナル上で動作するメモアプリです。  
-Ubuntu上での動作を確認しています。（現状macのターミナルだとvim起動時のキー入力に不具合があります。）
 
 ![Animation_tview](https://user-images.githubusercontent.com/2360858/129470230-18fdb215-7198-44ce-adf3-223f5d2c67c0.gif)
 
+Ubuntu上での動作を確認しています。  
+
+旧版と新版があり、新版は現状macのターミナルだとvim起動時のキー入力の挙動があやしい場合があります。  
+macで利用する場合は旧版を使ってください。
+
 # インストール方法
 ```
+(新板)
 $ go get github.com/mixmaru/rshin-memo/tui/rshinmemo
+
+(旧版)
+$ go get github.com/mixmaru/rshin-memo/cmd/rshinmemo
 ```
 
 # 起動方法
