@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/mixmaru/rshin-memo/cmd/rshinmemo/utils"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
-	"github.com/mixmaru/rshin-memo/core/utils"
 	"github.com/mixmaru/rshin-memo/tui/rshinmemo/views"
 	"github.com/pkg/errors"
 	"path/filepath"
