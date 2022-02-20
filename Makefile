@@ -1,3 +1,9 @@
+build_webui:
+	cd ./web/rshinmemo && go build
+
+run_webui: build_webui
+	cd ./web/rshinmemo && ./rshinmemo
+
 build_gocui:
 	cd ./cmd/rshinmemo && go build
 
