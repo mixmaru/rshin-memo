@@ -17,7 +17,7 @@ func main() {
 
 func list(writer http.ResponseWriter, request *http.Request) {
 	// メモ一覧データ取得
-	rep := repositories.NewDailyDataRepository("testdata")
+	rep := repositories.NewDailyDataRepository("testdata/daily_data.json")
 	useCase := usecases.NewGetAllDailyListUsecase(rep)
 	dailyData, err := useCase.Handle()
 	if err != nil {
