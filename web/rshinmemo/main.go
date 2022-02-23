@@ -30,11 +30,11 @@ func list(writer http.ResponseWriter, request *http.Request) {
 		log.Fatalf("template error: %v", err)
 	}
 	if err := t.Execute(writer, struct {
-		Title   string
-		Content string
+		Title     string
+		DailyData []usecases.DailyData
 	}{
-		Title:   dailyData[0].Date,
-		Content: dailyData[0].Date,
+		Title:     "一覧",
+		DailyData: dailyData,
 	}); err != nil {
 		log.Printf("failed to execute template: %v", err)
 	}

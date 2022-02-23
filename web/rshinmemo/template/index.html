@@ -5,6 +5,18 @@
     <title>{{.Title}}</title>
 </head>
 <body>
-{{.Content}}
+
+<ul>
+    {{ range .DailyData }}
+        <li>
+            {{- .Date }}
+            <ul>
+                {{ range .Notes }}
+                    <li>{{- . }}</li>
+                {{ end }}
+            </ul>
+        </li>
+    {{ end }}
+</ul>
 </body>
 </html>
