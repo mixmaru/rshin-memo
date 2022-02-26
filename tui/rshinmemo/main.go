@@ -2,13 +2,12 @@ package main
 
 import (
 	"github.com/mixmaru/rshin-memo/core/repositories"
-	"github.com/pkg/errors"
-	"os"
+	"github.com/mixmaru/rshin-memo/utils"
 	"path/filepath"
 )
 
 func main() {
-	baseDirPath, err := getRshinMamoBaseDirPath()
+	baseDirPath, err := utils.GetRshinMamoBaseDirPath()
 	if err != nil {
 		panic(err)
 	}
@@ -27,16 +26,8 @@ func main() {
 	}
 }
 
-func getRshinMamoBaseDirPath() (string, error) {
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	return filepath.Join(homedir, "rshinmemo"), nil
-}
-
 func getRshinMamoDailyDataJsonFilePath() (string, error) {
-	baseDirPath, err := getRshinMamoBaseDirPath()
+	baseDirPath, err := utils.GetRshinMamoBaseDirPath()
 	if err != nil {
 		return "", err
 	}
