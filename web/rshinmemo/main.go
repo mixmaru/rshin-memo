@@ -14,7 +14,7 @@ func main() {
 	}
 	// コマンド引数定義
 	port := flag.String("port", "8080", "利用ポート番号")
-	dataDirPathFlag := flag.String("datadir", dataDirPath, "利用ポート番号")
+	dataDirPathFlag := flag.String("datadir", dataDirPath, "データディレクトリパス")
 	flag.Parse()
 
 	// データディレクトリパス

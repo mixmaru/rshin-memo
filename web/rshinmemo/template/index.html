@@ -12,7 +12,7 @@
             {{- .Date }}
             <ul>
                 {{ range .Notes }}
-                    <li>{{- . }}</li>
+                    <li><a href="/{{- . }}">{{- . }}</a></li>
                 {{ end }}
             </ul>
         </li>
