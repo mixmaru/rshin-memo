@@ -14,7 +14,7 @@ func TestWebApp_list(t *testing.T) {
 	////// 実行
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
-	app.list(rec, req)
+	app.list_old(rec, req)
 
 	////// 検証
 	assert.Equal(t, rec.Code, 200)
