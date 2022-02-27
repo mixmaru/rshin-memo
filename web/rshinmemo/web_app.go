@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/labstack/echo/v4"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"html/template"
@@ -19,10 +20,15 @@ func NewWebApp(port string, dataDirPath string) *WebApp {
 }
 
 func (w *WebApp) Run() {
-	http.HandleFunc("/", w.list)
+	e := echo.New()
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "こんにちは!")
+	})
+	e.Logger.Fatal(e.Start(":8080"))
+	//http.HandleFunc("/", w.list)
 
-	log.Printf("Server listening on port %s", w.port)
-	log.Print(http.ListenAndServe(":"+w.port, nil))
+	//log.Printf("Server listening on port %s", w.port)
+	//log.Print(http.ListenAndServe(":"+w.port, nil))
 }
 
 func (w *WebApp) list(writer http.ResponseWriter, request *http.Request) {
