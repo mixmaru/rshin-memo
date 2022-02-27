@@ -1,9 +1,11 @@
 package main
 
 import (
+	"github.com/labstack/echo/v4"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -19,13 +21,25 @@ func NewWebApp(port string, dataDirPath string) *WebApp {
 }
 
 func (w *WebApp) Run() {
-	http.HandleFunc("/", w.list)
+	e := w.initRouter()
+	e.Logger.Fatal(e.Start(":" + w.port))
+	//http.HandleFunc("/", w.list)
 
-	log.Printf("Server listening on port %s", w.port)
-	log.Print(http.ListenAndServe(":"+w.port, nil))
+	//log.Printf("Server listening on port %s", w.port)
+	//log.Print(http.ListenAndServe(":"+w.port, nil))
 }
 
-func (w *WebApp) list(writer http.ResponseWriter, request *http.Request) {
+func (w *WebApp) initRouter() *echo.Echo {
+	e := echo.New()
+	t := &Template{
+		templates: template.Must(template.ParseGlob("template/*.html")),
+	}
+	e.Renderer = t
+	e.GET("/", w.list)
+	return e
+}
+
+func (w *WebApp) list(c echo.Context) error {
 	// メモ一覧データ取得
 	rep := repositories.NewDailyDataRepository(filepath.Join(w.dataDirPath, "daily_data.json"))
 	useCase := usecases.NewGetAllDailyListUsecase(rep)
@@ -35,17 +49,16 @@ func (w *WebApp) list(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// 出力
-	t, err := template.ParseFiles("template/index.html")
-	if err != nil {
-		log.Fatalf("template error: %v", err)
-	}
-	if err := t.Execute(writer, struct {
-		Title     string
-		DailyData []usecases.DailyData
-	}{
-		Title:     "一覧",
-		DailyData: dailyData,
-	}); err != nil {
-		log.Printf("failed to execute template: %v", err)
-	}
+	return c.Render(http.StatusOK, "index.html", map[string]interface{}{
+		"Title":     "一覧",
+		"DailyData": dailyData,
+	})
+}
+
+type Template struct {
+	templates *template.Template
+}
+
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
 }
