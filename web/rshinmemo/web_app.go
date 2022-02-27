@@ -5,6 +5,7 @@ import (
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -30,15 +31,15 @@ func (w *WebApp) Run() {
 
 func (w *WebApp) initRouter() *echo.Echo {
 	e := echo.New()
+	t := &Template{
+		templates: template.Must(template.ParseGlob("template/*.html")),
+	}
+	e.Renderer = t
 	e.GET("/", w.list)
 	return e
 }
 
 func (w *WebApp) list(c echo.Context) error {
-	return c.String(http.StatusOK, "こんにちは!")
-}
-
-func (w *WebApp) list_old(writer http.ResponseWriter, request *http.Request) {
 	// メモ一覧データ取得
 	rep := repositories.NewDailyDataRepository(filepath.Join(w.dataDirPath, "daily_data.json"))
 	useCase := usecases.NewGetAllDailyListUsecase(rep)
@@ -48,17 +49,16 @@ func (w *WebApp) list_old(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// 出力
-	t, err := template.ParseFiles("template/index.html")
-	if err != nil {
-		log.Fatalf("template error: %v", err)
-	}
-	if err := t.Execute(writer, struct {
-		Title     string
-		DailyData []usecases.DailyData
-	}{
-		Title:     "一覧",
-		DailyData: dailyData,
-	}); err != nil {
-		log.Printf("failed to execute template: %v", err)
-	}
+	return c.Render(http.StatusOK, "index.html", map[string]interface{}{
+		"Title":     "一覧",
+		"DailyData": dailyData,
+	})
+}
+
+type Template struct {
+	templates *template.Template
+}
+
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
 }
