@@ -20,13 +20,18 @@ func NewWebApp(port string, dataDirPath string) *WebApp {
 }
 
 func (w *WebApp) Run() {
-	e := echo.New()
-	e.GET("/", w.list)
+	e := w.initRouter()
 	e.Logger.Fatal(e.Start(":" + w.port))
 	//http.HandleFunc("/", w.list)
 
 	//log.Printf("Server listening on port %s", w.port)
 	//log.Print(http.ListenAndServe(":"+w.port, nil))
+}
+
+func (w *WebApp) initRouter() *echo.Echo {
+	e := echo.New()
+	e.GET("/", w.list)
+	return e
 }
 
 func (w *WebApp) list(c echo.Context) error {
