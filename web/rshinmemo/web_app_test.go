@@ -14,11 +14,10 @@ func TestWebApp_list(t *testing.T) {
 
 	////// 実行
 	req := httptest.NewRequest("GET", "/", nil)
-	req.Header.Set("Content-Type", "text/html") //formからの入力ということを指定してるっぽい
+	req.Header.Set("Content-Type", "text/html")
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 
 	////// 検証
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
-

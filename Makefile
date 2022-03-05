@@ -2,6 +2,9 @@ build_webui:
 	cd ./web/rshinmemo && go build
 
 run_webui: build_webui
+	cd ./web/rshinmemo && ./rshinmemo
+
+run_webui_with_test_data: build_webui
 	cd ./web/rshinmemo && ./rshinmemo -datadir=./testdata
 
 build_gocui:
