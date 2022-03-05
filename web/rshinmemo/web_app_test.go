@@ -21,3 +21,18 @@ func TestWebApp_list(t *testing.T) {
 	////// 検証
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
+
+func TestWebApp_memo(t *testing.T) {
+	////// 準備
+	app := NewWebApp("8080", "./testdata/")
+	router := app.initRouter()
+
+	////// 実行
+	req := httptest.NewRequest("GET", "/memo", nil)
+	req.Header.Set("Content-Type", "text/html")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	////// 検証
+	assert.Equal(t, http.StatusOK, rec.Code)
+}

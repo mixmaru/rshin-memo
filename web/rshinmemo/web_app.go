@@ -36,6 +36,7 @@ func (w *WebApp) initRouter() *echo.Echo {
 	}
 	e.Renderer = t
 	e.GET("/", w.list)
+	e.GET("/:memo", w.memo)
 	return e
 }
 
@@ -52,6 +53,15 @@ func (w *WebApp) list(c echo.Context) error {
 	return c.Render(http.StatusOK, "index.html", map[string]interface{}{
 		"Title":     "一覧",
 		"DailyData": dailyData,
+	})
+}
+func (w *WebApp) memo(c echo.Context) error {
+
+	// 出力
+	return c.Render(http.StatusOK, "memo.html", map[string]interface{}{
+		"Title":       "title",
+		"memoTitle":   "memoTitle",
+		"memoContent": "memoContent",
 	})
 }
 
