@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"regexp"
 )
 
 type WebApp struct {
@@ -70,11 +71,13 @@ func (w *WebApp) memo(c echo.Context) error {
 		return c.NoContent(http.StatusNotFound)
 	}
 
+	reg := "\r\n|\n"
+	noteLines := regexp.MustCompile(reg).Split(note, -1)
 	// 出力
 	return c.Render(http.StatusOK, "memo.html", map[string]interface{}{
-		"Title":       noteName,
-		"memoTitle":   noteName,
-		"memoContent": note,
+		"Title":            noteName,
+		"memoTitle":        noteName,
+		"memoContentLines": noteLines,
 	})
 }
 

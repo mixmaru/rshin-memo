@@ -7,7 +7,9 @@
 <body>
 <h1>{{ .memoTitle }}</h1>
 <p>
-    {{ .memoContent }}
+    {{ range .memoContentLines }}
+        {{ . }}<br>
+    {{ end }}
 </p>
 </body>
 </html>
