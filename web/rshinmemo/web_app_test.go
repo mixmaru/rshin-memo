@@ -23,16 +23,33 @@ func TestWebApp_list(t *testing.T) {
 }
 
 func TestWebApp_memo(t *testing.T) {
-	////// 準備
-	app := NewWebApp("8080", "./testdata/")
-	router := app.initRouter()
+	t.Run("200", func(t *testing.T) {
+		////// 準備
+		app := NewWebApp("8080", "./testdata/")
+		router := app.initRouter()
 
-	////// 実行
-	req := httptest.NewRequest("GET", "/memo", nil)
-	req.Header.Set("Content-Type", "text/html")
-	rec := httptest.NewRecorder()
-	router.ServeHTTP(rec, req)
+		////// 実行
+		req := httptest.NewRequest("GET", "/rshin_memo構築", nil)
+		req.Header.Set("Content-Type", "text/html")
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
 
-	////// 検証
-	assert.Equal(t, http.StatusOK, rec.Code)
+		////// 検証
+		assert.Equal(t, http.StatusOK, rec.Code)
+	})
+
+	t.Run("404", func(t *testing.T) {
+		////// 準備
+		app := NewWebApp("8080", "./testdata/")
+		router := app.initRouter()
+
+		////// 実行
+		req := httptest.NewRequest("GET", "/notFound", nil)
+		req.Header.Set("Content-Type", "text/html")
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		////// 検証
+		assert.Equal(t, http.StatusNotFound, rec.Code)
+	})
 }

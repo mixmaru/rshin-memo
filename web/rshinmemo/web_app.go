@@ -56,12 +56,21 @@ func (w *WebApp) list(c echo.Context) error {
 	})
 }
 func (w *WebApp) memo(c echo.Context) error {
+	noteName := c.Param("memo")
+	useCase := usecases.NewGetNoteUseCase(repositories.NewNoteRepository(w.dataDirPath))
+	note, notExist, err := useCase.Handle(noteName)
+	if err != nil {
+		log.Fatalf("fail getting data: %v", err)
+	}
+	if notExist {
+		return echo.NewHTTPError(http.StatusNotFound)
+	}
 
 	// 出力
 	return c.Render(http.StatusOK, "memo.html", map[string]interface{}{
-		"Title":       "title",
-		"memoTitle":   "memoTitle",
-		"memoContent": "memoContent",
+		"Title":       noteName,
+		"memoTitle":   noteName,
+		"memoContent": note,
 	})
 }
 
