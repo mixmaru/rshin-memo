@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"path/filepath"
 )
 
@@ -56,14 +57,17 @@ func (w *WebApp) list(c echo.Context) error {
 	})
 }
 func (w *WebApp) memo(c echo.Context) error {
-	noteName := c.Param("memo")
+	noteName, err := url.PathUnescape(c.Param("memo"))
+	if err != nil {
+		return c.NoContent(http.StatusNotFound)
+	}
 	useCase := usecases.NewGetNoteUseCase(repositories.NewNoteRepository(w.dataDirPath))
 	note, notExist, err := useCase.Handle(noteName)
 	if err != nil {
 		log.Fatalf("fail getting data: %v", err)
 	}
 	if notExist {
-		return echo.NewHTTPError(http.StatusNotFound)
+		return c.NoContent(http.StatusNotFound)
 	}
 
 	// 出力
