@@ -7,12 +7,12 @@
 <body>
 
 <ul>
-    {{ range .DailyData }}
+    {{ range $dailyData := .DailyData }}
         <li>
-            {{- .Date }}
+            {{- $dailyData.Date }}
             <ul>
-                {{ range .Notes }}
-                    <li><a href="/{{- . }}">{{- . }}</a> add: <a href="">↑</a> <a href="">↓</a></li>
+                {{ range $note := $dailyData.Notes }}
+                    <li><a href="/{{- $note }}">{{- $note }}</a> add: <a href="/note/new?base={{ $note }}&date={{ $dailyData.Date }}&to=newer">↑</a> <a href="/note/new?base={{ $note }}&date={{ $dailyData.Date }}&to=older">↓</a></li>
                 {{ end }}
             </ul>
         </li>

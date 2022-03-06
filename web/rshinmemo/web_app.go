@@ -25,10 +25,6 @@ func NewWebApp(port string, dataDirPath string) *WebApp {
 func (w *WebApp) Run() {
 	e := w.initRouter()
 	e.Logger.Fatal(e.Start(":" + w.port))
-	//http.HandleFunc("/", w.list)
-
-	//log.Printf("Server listening on port %s", w.port)
-	//log.Print(http.ListenAndServe(":"+w.port, nil))
 }
 
 func (w *WebApp) initRouter() *echo.Echo {
@@ -36,9 +32,11 @@ func (w *WebApp) initRouter() *echo.Echo {
 	t := &Template{
 		templates: template.Must(template.ParseGlob("template/*.html")),
 	}
+
 	e.Renderer = t
 	e.GET("/", w.list)
 	e.GET("/:memo", w.memo)
+	e.GET("/note/new", w.noteNew)
 	return e
 }
 
@@ -78,6 +76,13 @@ func (w *WebApp) memo(c echo.Context) error {
 		"Title":            noteName,
 		"memoTitle":        noteName,
 		"memoContentLines": noteLines,
+	})
+}
+
+func (w *WebApp) noteNew(c echo.Context) error {
+
+	return c.Render(http.StatusOK, "new_form.html", map[string]interface{}{
+		"Title": "note追加",
 	})
 }
 
