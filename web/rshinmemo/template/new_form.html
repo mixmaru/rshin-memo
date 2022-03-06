@@ -6,13 +6,14 @@
 </head>
 <body>
 <form action="/note/new" method="post">
-    <input type="hidden" name="base" value="">
-    <input type="hidden" name="date" value="">
-    <input type="hidden" name="to" value="">
-    <textarea name="memo">
-        aaa
-        iii
-    </textarea>
+    <input type="hidden" name="base" value="{{ .Base }}">
+    <input type="hidden" name="date" value="{{ .Date }}">
+    <input type="hidden" name="to" value="{{ .To }}">
+    <select name="date">
+        <option value="2022-02-02">2022-02-02</option>
+        <option value="2022-02-03">2022-02-03</option>
+    </select>
+    <textarea name="memo"></textarea>
     <button type="submit">決定</button>
 </form>
 </body>

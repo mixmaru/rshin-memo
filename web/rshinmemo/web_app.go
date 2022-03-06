@@ -80,9 +80,11 @@ func (w *WebApp) memo(c echo.Context) error {
 }
 
 func (w *WebApp) noteNew(c echo.Context) error {
-
 	return c.Render(http.StatusOK, "new_form.html", map[string]interface{}{
 		"Title": "note追加",
+		"Base":  c.QueryParam("base"),
+		"Date":  c.QueryParam("date"),
+		"To":    c.QueryParam("to"),
 	})
 }
 
