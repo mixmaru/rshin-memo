@@ -5,6 +5,15 @@
     <title>{{.Title}}</title>
 </head>
 <body>
-新規追加
+<form action="/note/new" method="post">
+    <input type="hidden" name="base" value="">
+    <input type="hidden" name="date" value="">
+    <input type="hidden" name="to" value="">
+    <textarea name="memo">
+        aaa
+        iii
+    </textarea>
+    <button type="submit">決定</button>
+</form>
 </body>
 </html>
