@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -11,23 +12,24 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		t.Run("INSERT_OLDER_MODE", func(t *testing.T) {
 			////// 準備
 			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-			useCase := NewGetDateSelectRangeVer2UseCase(now)
+			repo := &repositories.DailyDataRepositoryMock{}
+			useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
 
 			//overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
-			currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
+			currentDate := time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local)
 			//underCurrentDate := time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local)
 
 			////// 検証1
 			//dates, err := useCase.Handle(overCurrentDate, currentDate, underCurrentDate, INSERT_OLDER_MODE)
-			dates, err := useCase.Handle("memo2", currentDate, INSERT_NEWER_MODE)
+			dates, err := useCase.Handle("noteB", currentDate, INSERT_NEWER_MODE)
 			assert.NoError(t, err)
 			expected := []time.Time{
-				time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
-				time.Date(2021, 1, 9, 0, 0, 0, 0, time.Local),
-				time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
-				time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
-				time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
-				time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+				//time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
+				//time.Date(2021, 1, 9, 0, 0, 0, 0, time.Local),
+				//time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
+				//time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
+				//time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
+				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
 			}
 			assert.Equal(t, expected, dates)
 		})

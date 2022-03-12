@@ -1,16 +1,21 @@
 package usecases
 
 import (
+	"github.com/mixmaru/rshin-memo/core/entities"
+	"github.com/mixmaru/rshin-memo/core/repositories"
+	"github.com/pkg/errors"
 	"time"
 )
 
 type GetDateSelectRangeVer2UseCase struct {
-	now time.Time
+	now                 time.Time
+	dailyDataRepository repositories.DailyDataRepositoryInterface
 }
 
-func NewGetDateSelectRangeVer2UseCase(now time.Time) *GetDateSelectRangeVer2UseCase {
+func NewGetDateSelectRangeVer2UseCase(now time.Time, repositoryInterface repositories.DailyDataRepositoryInterface) *GetDateSelectRangeVer2UseCase {
 	return &GetDateSelectRangeVer2UseCase{
-		now: now,
+		now:                 now,
+		dailyDataRepository: repositoryInterface,
 	}
 }
 
@@ -24,15 +29,53 @@ func NewGetDateSelectRangeVer2UseCase(now time.Time) *GetDateSelectRangeVer2UseC
 
 //func (g *GetDateSelectRangeVer2UseCase) Handle(overCursorDate, currentCursorDate, underCursorDate time.Time, insertMode InsertMode) ([]time.Time, error) {
 func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, date time.Time, insertMode InsertMode) ([]time.Time, error) {
-	retDates := []time.Time{
-		time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
-		time.Date(2021, 1, 9, 0, 0, 0, 0, time.Local),
-		time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
-		time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
-		time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
-		time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+	// dateのmemoNameのmemo一覧を取得
+	// dateの前後1日のmemo一覧も取得
+	// NewerModeの場合
+	// 		指定のmemoの上に同日でmemoがある場合
+	//			指定dateのみを返す
+	//		そうでない場合
+	//			次のdateまでの範囲を返す
+	// OlderModeの場合
+	//		指定のmemoの↓に同日でmemoがある場合
+	//			指定dateのみを返す
+	// 		そうでない場合
+	//			次のdateまでの範囲を返す
+	dailyDataList, err := g.dailyDataRepository.Get()
+	if err != nil {
+		return nil, err
 	}
-	return retDates, nil
+	switch insertMode {
+	case INSERT_NEWER_MODE:
+		isExist, err := existUpperMemo(dailyDataList, date, memoName)
+		if err != nil {
+			return nil, err
+		}
+		if isExist {
+			// 指定dateのみを返す
+			retDates := []time.Time{
+				date,
+			}
+			return retDates, nil
+		} else {
+			// 次のdateまでの範囲を返す
+			return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
+		}
+	case INSERT_OLDER_MODE:
+		return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
+	default:
+		return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
+	}
+
+	//retDates := []time.Time{
+	//	time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
+	//	time.Date(2021, 1, 9, 0, 0, 0, 0, time.Local),
+	//	time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
+	//	time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
+	//	time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
+	//	time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+	//}
+	//return retDates, nil
 	//var from, to time.Time
 	//switch insertMode {
 	//case INSERT_NEWER_MODE:
@@ -76,6 +119,25 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, date time.Time, 
 	//	}
 	//}
 	//return retDates, nil
+}
+
+func existUpperMemo(dailyDataList []*entities.DailyDataEntity, date time.Time, memoName string) (bool, error) {
+	for _, dailyData := range dailyDataList {
+		if dailyData.Date() == date {
+			for index, memo := range dailyData.NoteNames() {
+				if memo == memoName {
+					if index != 0 {
+						return true, nil
+					} else {
+						return false, nil
+					}
+				}
+				continue
+			}
+		}
+		continue
+	}
+	return false, errors.Errorf("想定外エラー dailyDataList: %v, date: %v, memoName: %v", dailyDataList, date, memoName)
 }
 
 func (g *GetDateSelectRangeVer2UseCase) adjustFromDate(currentCursorDate time.Time, underCursorDate time.Time) time.Time {
