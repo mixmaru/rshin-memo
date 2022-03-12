@@ -68,10 +68,10 @@ func (r *RshinMemo) createDailyListView() (*views.DailyListView, error) {
 		return r.openVim(noteName)
 	})
 	dailyList.AddWhenPushLowerOKey(func() error {
-		return r.displayDateSelectView(usecases.INSERT_UNDER_DATE_MODE)
+		return r.displayDateSelectView(usecases.INSERT_OLDER_MODE)
 	})
 	dailyList.AddWhenPushUpperOKey(func() error {
-		return r.displayDateSelectView(usecases.INSERT_OVER_DATE_MODE)
+		return r.displayDateSelectView(usecases.INSERT_NEWER_MODE)
 	})
 
 	// データセット
@@ -334,7 +334,7 @@ func (r *RshinMemo) IsDateInRange(date time.Time) (bool, error) {
 	var from, to time.Time
 	var err error
 	switch r.dailyListInsertMode {
-	case usecases.INSERT_OVER_DATE_MODE:
+	case usecases.INSERT_NEWER_MODE:
 		from, err = r.dailyListView.GetCursorDate(0)
 		if err != nil {
 			return false, err
@@ -343,7 +343,7 @@ func (r *RshinMemo) IsDateInRange(date time.Time) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-	case usecases.INSERT_UNDER_DATE_MODE:
+	case usecases.INSERT_OLDER_MODE:
 		from, err = r.dailyListView.GetCursorDate(1)
 		if err != nil {
 			return false, err

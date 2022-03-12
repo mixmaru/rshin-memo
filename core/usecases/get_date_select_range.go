@@ -18,18 +18,18 @@ func NewGetDateSelectRangeUseCase(now time.Time) *GetDateSelectRangeUseCase {
 type InsertMode int
 
 const (
-	INSERT_OVER_DATE_MODE InsertMode = iota
-	INSERT_UNDER_DATE_MODE
+	INSERT_NEWER_MODE InsertMode = iota
+	INSERT_OLDER_MODE
 )
 const maxCount = 30
 
 func (g *GetDateSelectRangeUseCase) Handle(overCursorDate, currentCursorDate, underCursorDate time.Time, insertMode InsertMode) ([]time.Time, error) {
 	var from, to time.Time
 	switch insertMode {
-	case INSERT_OVER_DATE_MODE:
+	case INSERT_NEWER_MODE:
 		from = currentCursorDate
 		to = overCursorDate
-	case INSERT_UNDER_DATE_MODE:
+	case INSERT_OLDER_MODE:
 		from = g.adjustFromDate(currentCursorDate, underCursorDate)
 		to = currentCursorDate
 	default:
@@ -61,7 +61,7 @@ func (g *GetDateSelectRangeUseCase) Handle(overCursorDate, currentCursorDate, un
 		counter++
 	}
 
-	if insertMode == INSERT_UNDER_DATE_MODE {
+	if insertMode == INSERT_OLDER_MODE {
 		for i := 0; i < len(retDates)/2; i++ {
 			retDates[i], retDates[len(retDates)-i-1] = retDates[len(retDates)-i-1], retDates[i]
 		}
