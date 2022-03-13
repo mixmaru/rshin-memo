@@ -85,7 +85,17 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, date time.Time, 
 			return retDates, nil
 		} else {
 			// 次のdateまでの範囲を返す
-			return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
+			fromDate := date
+			toDate, err := getToDateForOlderMode(dailyDataList, date)
+			if err != nil {
+				return nil, err
+			}
+			// 1日減らしながら1つまえの日付までloop
+			retDates := []time.Time{}
+			for date := fromDate; date.Equal(toDate) || date.After(toDate); date = date.AddDate(0, 0, -1) {
+				retDates = append(retDates, date)
+			}
+			return retDates, nil
 		}
 	default:
 		return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
@@ -152,7 +162,17 @@ func getToDate(dailyList []*entities.DailyDataEntity, date time.Time) (time.Time
 		}
 		continue
 	}
-	return time.Time{}, errors.Errorf("想定外エラー")
+	return time.Time{}, errors.Errorf("想定外エラー dailyList: %v, date: %v", dailyList, date)
+}
+
+func getToDateForOlderMode(dailyList []*entities.DailyDataEntity, date time.Time) (time.Time, error) {
+	for index := range dailyList {
+		if dailyList[index].Date().Equal(date) {
+			return dailyList[index+1].Date(), nil
+		}
+		continue
+	}
+	return time.Time{}, errors.Errorf("想定外エラー dailyList: %v, date: %v", dailyList, date)
 }
 
 func existUpperMemo(dailyDataList []*entities.DailyDataEntity, date time.Time, memoName string) (bool, error) {

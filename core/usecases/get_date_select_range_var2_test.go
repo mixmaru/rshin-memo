@@ -100,6 +100,24 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 				}
 				assert.Equal(t, expected, dates)
 			})
+
+			t.Run("older", func(t *testing.T) {
+				////// 検証
+				date := time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local)
+				dates, err := useCase.Handle("noteA", date, INSERT_OLDER_MODE)
+				assert.NoError(t, err)
+				expected := []time.Time{
+					time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 31, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 30, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 29, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 28, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 27, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 26, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local),
+				}
+				assert.Equal(t, expected, dates)
+			})
 		})
 
 		//t.Run("INSERT_OLDER_MODE", func(t *testing.T) {
