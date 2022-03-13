@@ -148,23 +148,23 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 					assert.Equal(t, expected, dates)
 				})
 
-				//t.Run("今日までの日付が返ってくるとき", func(t *testing.T) {
-				//	now := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
-				//	useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
-				//	////// 検証
-				//	date := time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local)
-				//	dates, err := useCase.Handle("noteC", date, INSERT_NEWER_MODE)
-				//	assert.NoError(t, err)
-				//	expected := []time.Time{
-				//		time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
-				//		time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
-				//		time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
-				//		time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
-				//		time.Date(2021, 1, 9, 0, 0, 0, 0, time.Local),
-				//		time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
-				//	}
-				//	assert.Equal(t, expected, dates)
-				//})
+				t.Run("今日までの日付が返ってくるとき", func(t *testing.T) {
+					now := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
+					useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+					////// 検証
+					date := time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local)
+					dates, err := useCase.Handle("noteC", date, INSERT_NEWER_MODE)
+					assert.NoError(t, err)
+					expected := []time.Time{
+						time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+						time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
+						time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
+						time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
+						time.Date(2021, 1, 9, 0, 0, 0, 0, time.Local),
+						time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
+					}
+					assert.Equal(t, expected, dates)
+				})
 			})
 
 			t.Run("older", func(t *testing.T) {

@@ -28,7 +28,7 @@ func NewGetDateSelectRangeVer2UseCase(now time.Time, repositoryInterface reposit
 //const maxCount = 30
 
 //func (g *GetDateSelectRangeVer2UseCase) Handle(overCursorDate, currentCursorDate, underCursorDate time.Time, insertMode InsertMode) ([]time.Time, error) {
-func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, date time.Time, insertMode InsertMode) ([]time.Time, error) {
+func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, memoDate time.Time, insertMode InsertMode) ([]time.Time, error) {
 	// dateのmemoNameのmemo一覧を取得
 	// dateの前後1日のmemo一覧も取得
 	// NewerModeの場合
@@ -47,21 +47,21 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, date time.Time, 
 	}
 	switch insertMode {
 	case INSERT_NEWER_MODE:
-		isExist, err := existUpperMemo(dailyDataList, date, memoName)
+		isExist, err := existUpperMemo(dailyDataList, memoDate, memoName)
 		if err != nil {
 			return nil, err
 		}
 		if isExist {
 			// 指定dateのみを返す
 			retDates := []time.Time{
-				date,
+				memoDate,
 			}
 			return retDates, nil
 		} else {
 			// 次のdateまでの範囲を返す
 			// 一つ前の日付を取得
-			fromDate := date
-			toDate, err := getToDate(dailyDataList, date)
+			fromDate := memoDate
+			toDate, err := getToDate(dailyDataList, memoDate, g.now)
 			if err != nil {
 				return nil, err
 			}
@@ -73,20 +73,20 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, date time.Time, 
 			return retDates, nil
 		}
 	case INSERT_OLDER_MODE:
-		isExist, err := existUnderMemo(dailyDataList, date, memoName)
+		isExist, err := existUnderMemo(dailyDataList, memoDate, memoName)
 		if err != nil {
 			return nil, err
 		}
 		if isExist {
 			// 指定dateのみを返す
 			retDates := []time.Time{
-				date,
+				memoDate,
 			}
 			return retDates, nil
 		} else {
 			// 次のdateまでの範囲を返す
-			fromDate := date
-			toDate, err := getToDateForOlderMode(dailyDataList, date)
+			fromDate := memoDate
+			toDate, err := getToDateForOlderMode(dailyDataList, memoDate)
 			if err != nil {
 				return nil, err
 			}
@@ -155,12 +155,17 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, date time.Time, 
 	//return retDates, nil
 }
 
-func getToDate(dailyList []*entities.DailyDataEntity, date time.Time) (time.Time, error) {
+func getToDate(dailyList []*entities.DailyDataEntity, fromDate, limitDate time.Time) (time.Time, error) {
 	for i := len(dailyList); i >= 0; i-- {
-		if dailyList[i-1].Date().Equal(date) {
+		if dailyList[i-1].Date().Equal(fromDate) {
 			if i-1 == 0 {
 				// 先頭だった場合はmax値を返す
-				return date.AddDate(0, 0, maxCount-1), nil
+				maxDate := fromDate.AddDate(0, 0, maxCount-1)
+				if maxDate.Before(limitDate) {
+					return maxDate, nil
+				} else {
+					return limitDate, nil
+				}
 			} else {
 				// 一つ前の日付を返す
 				return dailyList[i-2].Date(), nil
@@ -168,7 +173,7 @@ func getToDate(dailyList []*entities.DailyDataEntity, date time.Time) (time.Time
 		}
 		continue
 	}
-	return time.Time{}, errors.Errorf("想定外エラー dailyList: %v, date: %v", dailyList, date)
+	return time.Time{}, errors.Errorf("想定外エラー dailyList: %v, fromDate: %v", dailyList, fromDate)
 }
 
 func getToDateForOlderMode(dailyList []*entities.DailyDataEntity, date time.Time) (time.Time, error) {
