@@ -158,7 +158,13 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, date time.Time, 
 func getToDate(dailyList []*entities.DailyDataEntity, date time.Time) (time.Time, error) {
 	for i := len(dailyList); i >= 0; i-- {
 		if dailyList[i-1].Date().Equal(date) {
-			return dailyList[i-2].Date(), nil
+			if i-1 == 0 {
+				// 先頭だった場合はmax値を返す
+				return date.AddDate(0, 0, maxCount-1), nil
+			} else {
+				// 一つ前の日付を返す
+				return dailyList[i-2].Date(), nil
+			}
 		}
 		continue
 	}

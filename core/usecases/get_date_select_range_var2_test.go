@@ -101,6 +101,46 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 				assert.Equal(t, expected, dates)
 			})
 
+			t.Run("指定memoが最新だったとき", func(t *testing.T) {
+				////// 検証
+				date := time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local)
+				dates, err := useCase.Handle("noteC", date, INSERT_NEWER_MODE)
+				assert.NoError(t, err)
+				expected := []time.Time{
+					time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 9, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 11, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 12, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 13, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 14, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 16, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 17, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 18, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 19, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 20, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 21, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 22, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 23, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 24, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 25, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 26, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 27, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 28, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 29, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 30, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 1, 31, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 2, 1, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 2, 2, 0, 0, 0, 0, time.Local),
+					time.Date(2021, 2, 3, 0, 0, 0, 0, time.Local),
+				}
+				assert.Equal(t, expected, dates)
+			})
+
 			t.Run("older", func(t *testing.T) {
 				////// 検証
 				date := time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local)
