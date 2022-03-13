@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"github.com/mixmaru/rshin-memo/core/entities"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -13,6 +14,25 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 			////// 準備
 			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
 			repo := &repositories.DailyDataRepositoryMock{}
+			repo.SetGetFunc(func() ([]*entities.DailyDataEntity, error) {
+				retEntities := []*entities.DailyDataEntity{
+					entities.NewDailyDataEntity(
+						time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
+						[]string{
+							"noteC",
+							"noteD",
+						},
+					),
+					entities.NewDailyDataEntity(
+						time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+						[]string{
+							"noteA",
+							"noteB",
+						},
+					),
+				}
+				return retEntities, nil
+			})
 			useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
 
 			//overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
@@ -33,6 +53,49 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 			}
 			assert.Equal(t, expected, dates)
 		})
+
+		//t.Run("INSERT_OLDER_MODE", func(t *testing.T) {
+		//	////// 準備
+		//	now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
+		//	repo := &repositories.DailyDataRepositoryMock{}
+		//	repo.SetGetFunc(func() ([]*entities.DailyDataEntity, error) {
+		//		retEntities := []*entities.DailyDataEntity{
+		//			entities.NewDailyDataEntity(
+		//				time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
+		//				[]string{
+		//					"noteC",
+		//					"noteD",
+		//				},
+		//			),
+		//			entities.NewDailyDataEntity(
+		//				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+		//				[]string{
+		//					"noteA",
+		//					"noteB",
+		//				},
+		//			),
+		//		}
+		//		return retEntities, nil
+		//	})
+		//	useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+		//
+		//	currentDate := time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local)
+		//
+		//	////// 検証1
+		//	//dates, err := useCase.Handle(overCurrentDate, currentDate, underCurrentDate, INSERT_OLDER_MODE)
+		//	dates, err := useCase.Handle("noteA", currentDate, INSERT_NEWER_MODE)
+		//	assert.NoError(t, err)
+		//	expected := []time.Time{
+		//		//time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
+		//		//time.Date(2021, 1, 9, 0, 0, 0, 0, time.Local),
+		//		//time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
+		//		//time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
+		//		//time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
+		//		time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
+		//		time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+		//	}
+		//	assert.Equal(t, expected, dates)
+		//})
 
 		//	t.Run("INSERT_OLDER_MODE 間がだいぶ空いている場合", func(t *testing.T) {
 		//		////// 準備
