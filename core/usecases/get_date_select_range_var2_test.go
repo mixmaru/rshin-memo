@@ -10,46 +10,61 @@ import (
 
 func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 	t.Run("カーソル上下にデータがある場合のテスト", func(t *testing.T) {
-		t.Run("INSERT_OLDER_MODE", func(t *testing.T) {
-			////// 準備
-			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-			repo := &repositories.DailyDataRepositoryMock{}
-			repo.SetGetFunc(func() ([]*entities.DailyDataEntity, error) {
-				retEntities := []*entities.DailyDataEntity{
-					entities.NewDailyDataEntity(
-						time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
-						[]string{
-							"noteC",
-							"noteD",
-						},
-					),
-					entities.NewDailyDataEntity(
-						time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
-						[]string{
-							"noteA",
-							"noteB",
-						},
-					),
-				}
-				return retEntities, nil
-			})
-			useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+		////// 準備
+		now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
+		repo := &repositories.DailyDataRepositoryMock{}
+		repo.SetGetFunc(func() ([]*entities.DailyDataEntity, error) {
+			retEntities := []*entities.DailyDataEntity{
+				entities.NewDailyDataEntity(
+					time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+					[]string{
+						"noteC",
+						"noteB",
+						"noteA",
+					},
+				),
+				entities.NewDailyDataEntity(
+					time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+					[]string{
+						"noteC",
+						"noteB",
+						"noteA",
+					},
+				),
+				entities.NewDailyDataEntity(
+					time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local),
+					[]string{
+						"noteC",
+						"noteB",
+						"noteA",
+					},
+				),
+			}
+			return retEntities, nil
+		})
+		useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
 
-			//overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
-			currentDate := time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local)
-			//underCurrentDate := time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local)
+		//t.Run("一番古い指定で更に古い方に追加", func(t *testing.T) {
+		//
+		//	////// 検証1
+		//	date := time.Date(2021, 2, 1, 0, 0, 0, 0, time.Local)
+		//	dates, err := useCase.Handle("noteA", date, INSERT_NEWER_MODE)
+		//	assert.NoError(t, err)
+		//	expected := []time.Time{
+		//		time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local),
+		//		time.Date(2020, 12, 24, 0, 0, 0, 0, time.Local),
+		//		// ...
+		//	}
+		//	assert.Equal(t, expected, dates)
+		//})
 
-			////// 検証1
-			//dates, err := useCase.Handle(overCurrentDate, currentDate, underCurrentDate, INSERT_OLDER_MODE)
-			dates, err := useCase.Handle("noteB", currentDate, INSERT_NEWER_MODE)
+		t.Run("同日のみ", func(t *testing.T) {
+			////// 検証
+			date := time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local)
+			dates, err := useCase.Handle("noteB", date, INSERT_NEWER_MODE)
 			assert.NoError(t, err)
 			expected := []time.Time{
-				//time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
-				//time.Date(2021, 1, 9, 0, 0, 0, 0, time.Local),
-				//time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
-				//time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
-				//time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
-				time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+				time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local),
 			}
 			assert.Equal(t, expected, dates)
 		})
