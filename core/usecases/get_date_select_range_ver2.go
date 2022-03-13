@@ -62,7 +62,20 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, date time.Time, 
 			return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
 		}
 	case INSERT_OLDER_MODE:
-		return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
+		isExist, err := existUnderMemo(dailyDataList, date, memoName)
+		if err != nil {
+			return nil, err
+		}
+		if isExist {
+			// 指定dateのみを返す
+			retDates := []time.Time{
+				date,
+			}
+			return retDates, nil
+		} else {
+			// 次のdateまでの範囲を返す
+			return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
+		}
 	default:
 		return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
 	}
@@ -127,6 +140,25 @@ func existUpperMemo(dailyDataList []*entities.DailyDataEntity, date time.Time, m
 			for index, memo := range dailyData.NoteNames() {
 				if memo == memoName {
 					if index != 0 {
+						return true, nil
+					} else {
+						return false, nil
+					}
+				}
+				continue
+			}
+		}
+		continue
+	}
+	return false, errors.Errorf("想定外エラー dailyDataList: %v, date: %v, memoName: %v", dailyDataList, date, memoName)
+}
+
+func existUnderMemo(dailyDataList []*entities.DailyDataEntity, date time.Time, memoName string) (bool, error) {
+	for _, dailyData := range dailyDataList {
+		if dailyData.Date() == date {
+			for i := len(dailyData.NoteNames()); i >= 0; i-- {
+				if dailyData.NoteNames()[i-1] == memoName {
+					if i != len(dailyData.NoteNames()) {
 						return true, nil
 					} else {
 						return false, nil
