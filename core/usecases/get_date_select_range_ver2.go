@@ -49,7 +49,7 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, memoDate time.Ti
 	switch insertMode {
 	case INSERT_NEWER_MODE:
 		// dailyDataListから日付範囲を取得する
-		return g.getDateList(dailyDataList, memoDate, memoName)
+		return g.getDateListForNewerMode(dailyDataList, memoDate, memoName)
 	case INSERT_OLDER_MODE:
 		return g.getDateListForOlderMode(dailyDataList, memoDate, memoName)
 	default:
@@ -57,7 +57,7 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, memoDate time.Ti
 	}
 }
 
-func (g *GetDateSelectRangeVer2UseCase) getDateList(dailyDataList []*entities.DailyDataEntity, memoDate time.Time, memoName string) ([]time.Time, error) {
+func (g *GetDateSelectRangeVer2UseCase) getDateListForNewerMode(dailyDataList []*entities.DailyDataEntity, memoDate time.Time, memoName string) ([]time.Time, error) {
 	// 同日内で上にmemoが存在するかどうか
 	isExist, err := existUpperMemo(dailyDataList, memoDate, memoName)
 	if err != nil {
@@ -80,27 +80,6 @@ func (g *GetDateSelectRangeVer2UseCase) getDateList(dailyDataList []*entities.Da
 	}
 }
 
-func generateDateList(fromDate time.Time, toDate time.Time, maxLen int) ([]time.Time, error) {
-	retDates := []time.Time{}
-	if fromDate.Before(toDate) {
-		for date := fromDate; date.Equal(toDate) || date.Before(toDate); date = date.AddDate(0, 0, 1) {
-			retDates = append(retDates, date)
-			if len(retDates) >= maxLen {
-				break
-			}
-		}
-		return retDates, nil
-	} else {
-		for date := fromDate; date.Equal(toDate) || date.After(toDate); date = date.AddDate(0, 0, -1) {
-			retDates = append(retDates, date)
-			if len(retDates) >= maxCount {
-				break
-			}
-		}
-		return retDates, nil
-	}
-}
-
 func (g *GetDateSelectRangeVer2UseCase) getDateListForOlderMode(dailyDataList []*entities.DailyDataEntity, memoDate time.Time, memoName string) ([]time.Time, error) {
 	isExist, err := existUnderMemo(dailyDataList, memoDate, memoName)
 	if err != nil {
@@ -119,6 +98,27 @@ func (g *GetDateSelectRangeVer2UseCase) getDateListForOlderMode(dailyDataList []
 		}
 		// fromからtoまでのdateのリストを返す
 		return generateDateList(memoDate, toDate, maxCount)
+	}
+}
+
+func generateDateList(fromDate time.Time, toDate time.Time, maxLen int) ([]time.Time, error) {
+	var retDates []time.Time
+	if fromDate.Before(toDate) {
+		for date := fromDate; date.Equal(toDate) || date.Before(toDate); date = date.AddDate(0, 0, 1) {
+			retDates = append(retDates, date)
+			if len(retDates) >= maxLen {
+				break
+			}
+		}
+		return retDates, nil
+	} else {
+		for date := fromDate; date.Equal(toDate) || date.After(toDate); date = date.AddDate(0, 0, -1) {
+			retDates = append(retDates, date)
+			if len(retDates) >= maxLen {
+				break
+			}
+		}
+		return retDates, nil
 	}
 }
 
