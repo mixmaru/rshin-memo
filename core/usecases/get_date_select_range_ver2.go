@@ -70,27 +70,35 @@ func (g *GetDateSelectRangeVer2UseCase) getDateList(dailyDataList []*entities.Da
 		}
 		return retDates, nil
 	} else {
-		// 次のdateまでの範囲を返す
-		fromDate := memoDate
 		// 一つ前の日付を取得
 		toDate, err := getToDate(dailyDataList, memoDate, g.now)
 		if err != nil {
 			return nil, err
 		}
 		// fromからtoまでのdateのリストを返す
-		return generateDateList(fromDate, toDate, maxCount)
+		return generateDateList(memoDate, toDate, maxCount)
 	}
 }
 
 func generateDateList(fromDate time.Time, toDate time.Time, maxLen int) ([]time.Time, error) {
 	retDates := []time.Time{}
-	for date := fromDate; date.Equal(toDate) || date.Before(toDate); date = date.AddDate(0, 0, 1) {
-		retDates = append(retDates, date)
-		if len(retDates) >= maxLen {
-			break
+	if fromDate.Before(toDate) {
+		for date := fromDate; date.Equal(toDate) || date.Before(toDate); date = date.AddDate(0, 0, 1) {
+			retDates = append(retDates, date)
+			if len(retDates) >= maxLen {
+				break
+			}
 		}
+		return retDates, nil
+	} else {
+		for date := fromDate; date.Equal(toDate) || date.After(toDate); date = date.AddDate(0, 0, -1) {
+			retDates = append(retDates, date)
+			if len(retDates) >= maxCount {
+				break
+			}
+		}
+		return retDates, nil
 	}
-	return retDates, nil
 }
 
 func (g *GetDateSelectRangeVer2UseCase) getDateListForOlderMode(dailyDataList []*entities.DailyDataEntity, memoDate time.Time, memoName string) ([]time.Time, error) {
@@ -105,21 +113,12 @@ func (g *GetDateSelectRangeVer2UseCase) getDateListForOlderMode(dailyDataList []
 		}
 		return retDates, nil
 	} else {
-		// 次のdateまでの範囲を返す
-		fromDate := memoDate
 		toDate, err := getToDateForOlderMode(dailyDataList, memoDate)
 		if err != nil {
 			return nil, err
 		}
-		// 1日減らしながら1つまえの日付までloop
-		retDates := []time.Time{}
-		for date := fromDate; date.Equal(toDate) || date.After(toDate); date = date.AddDate(0, 0, -1) {
-			retDates = append(retDates, date)
-			if len(retDates) >= maxCount {
-				break
-			}
-		}
-		return retDates, nil
+		// fromからtoまでのdateのリストを返す
+		return generateDateList(memoDate, toDate, maxCount)
 	}
 }
 
