@@ -27,7 +27,6 @@ func NewGetDateSelectRangeVer2UseCase(now time.Time, repositoryInterface reposit
 //)
 //const maxCount = 30
 
-//func (g *GetDateSelectRangeVer2UseCase) Handle(overCursorDate, currentCursorDate, underCursorDate time.Time, insertMode InsertMode) ([]time.Time, error) {
 func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, memoDate time.Time, insertMode InsertMode) ([]time.Time, error) {
 	// dateのmemoNameのmemo一覧を取得
 	// dateの前後1日のmemo一覧も取得
@@ -106,59 +105,6 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, memoDate time.Ti
 	default:
 		return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
 	}
-
-	//retDates := []time.Time{
-	//	time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
-	//	time.Date(2021, 1, 9, 0, 0, 0, 0, time.Local),
-	//	time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
-	//	time.Date(2021, 1, 7, 0, 0, 0, 0, time.Local),
-	//	time.Date(2021, 1, 6, 0, 0, 0, 0, time.Local),
-	//	time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
-	//}
-	//return retDates, nil
-	//var from, to time.Time
-	//switch insertMode {
-	//case INSERT_NEWER_MODE:
-	//	from = currentCursorDate
-	//	to = overCursorDate
-	//case INSERT_OLDER_MODE:
-	//	from = g.adjustFromDate(currentCursorDate, underCursorDate)
-	//	to = currentCursorDate
-	//default:
-	//	return nil, errors.Errorf("想定外値 overCursorDate: %+v, currentCursorDate: %+v, underCursorDate: %+v, insertMode: %+v", overCursorDate, currentCursorDate, underCursorDate, insertMode)
-	//}
-	//
-	//if from.IsZero() && to.IsZero() {
-	//	// 両方zero値のときはnowを真ん中に前後でmaxCount分
-	//	from = g.now.AddDate(0, 0, -(maxCount / 2))
-	//	to = time.Unix(1<<63-62135596801, 999999999) // compareを使える範囲での最大値。https://stackoverflow.com/questions/25065055/what-is-the-maximum-time-time-in-go/32620397#32620397
-	//} else {
-	//	// fromがゼロ値(無指定)の場合の補正
-	//	if from.IsZero() {
-	//		from = to.AddDate(0, 0, -(maxCount - 1))
-	//	}
-	//	// toがゼロ値(無指定)の場合の補正
-	//	if to.IsZero() {
-	//		to = time.Unix(1<<63-62135596801, 999999999) // compareを使える範囲での最大値。https://stackoverflow.com/questions/25065055/what-is-the-maximum-time-time-in-go/32620397#32620397
-	//	}
-	//
-	//}
-	//
-	//retDates := []time.Time{}
-	//appendDate := from
-	//counter := 0
-	//for counter < maxCount && (appendDate.Before(to) || appendDate.Equal(to)) {
-	//	retDates = append(retDates, appendDate)
-	//	appendDate = appendDate.AddDate(0, 0, 1)
-	//	counter++
-	//}
-	//
-	//if insertMode == INSERT_OLDER_MODE {
-	//	for i := 0; i < len(retDates)/2; i++ {
-	//		retDates[i], retDates[len(retDates)-i-1] = retDates[len(retDates)-i-1], retDates[i]
-	//	}
-	//}
-	//return retDates, nil
 }
 
 func getToDate(dailyList []*entities.DailyDataEntity, fromDate, limitDate time.Time) (time.Time, error) {
