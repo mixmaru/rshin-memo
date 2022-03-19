@@ -194,6 +194,48 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 				}
 				assert.Equal(t, expected, dates)
 			})
+
+			t.Run("older: max", func(t *testing.T) {
+				now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
+				useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+				////// 検証
+				date := time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local)
+				dates, err := useCase.Handle("noteA", date, INSERT_OLDER_MODE)
+				assert.NoError(t, err)
+				expected := []time.Time{
+					time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 24, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 23, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 22, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 21, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 20, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 19, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 18, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 17, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 16, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 15, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 14, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 13, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 12, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 11, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 10, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 9, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 8, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 7, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 6, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 5, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 4, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 3, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 2, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 12, 1, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 11, 30, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 11, 29, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 11, 28, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 11, 27, 0, 0, 0, 0, time.Local),
+					time.Date(2020, 11, 26, 0, 0, 0, 0, time.Local),
+				}
+				assert.Equal(t, expected, dates)
+			})
 		})
 
 		//t.Run("INSERT_OLDER_MODE", func(t *testing.T) {
