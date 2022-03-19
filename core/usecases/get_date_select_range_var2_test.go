@@ -38,6 +38,14 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 						"noteA",
 					},
 				),
+				entities.NewDailyDataEntity(
+					time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local),
+					[]string{
+						"noteC",
+						"noteB",
+						"noteA",
+					},
+				),
 			}
 			return retEntities, nil
 		})
