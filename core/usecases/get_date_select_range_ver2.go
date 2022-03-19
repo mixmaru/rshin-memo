@@ -185,7 +185,13 @@ func getToDate(dailyList []*entities.DailyDataEntity, fromDate, limitDate time.T
 func getToDateForOlderMode(dailyList []*entities.DailyDataEntity, date time.Time) (time.Time, error) {
 	for index := range dailyList {
 		if dailyList[index].Date().Equal(date) {
-			return dailyList[index+1].Date(), nil
+			if index == len(dailyList)-1 {
+				// max
+				maxDate := date.AddDate(0, 0, -maxCount-1)
+				return maxDate, nil
+			} else {
+				return dailyList[index+1].Date(), nil
+			}
 		}
 		continue
 	}

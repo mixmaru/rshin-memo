@@ -26,7 +26,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 			20200101
 				c この上に入れるとき（30日ぶん表示する）pattern G
 				b
-				a この下にいれるとき(30日ぶん表示する)
+				a この下にいれるとき(30日ぶん表示する) pattern H
 		*/
 
 		////// 準備
@@ -295,6 +295,48 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 				time.Date(2020, 1, 28, 0, 0, 0, 0, time.Local),
 				time.Date(2020, 1, 29, 0, 0, 0, 0, time.Local),
 				time.Date(2020, 1, 30, 0, 0, 0, 0, time.Local),
+			}
+			assert.Equal(t, expected, dates)
+		})
+
+		t.Run("Pattern H", func(t *testing.T) {
+			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
+			useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+			////// 検証
+			date := time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local)
+			dates, err := useCase.Handle("noteA", date, INSERT_OLDER_MODE)
+			assert.NoError(t, err)
+			expected := []time.Time{
+				time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 31, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 30, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 29, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 28, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 27, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 26, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 25, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 24, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 23, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 22, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 21, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 20, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 19, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 18, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 17, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 16, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 15, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 14, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 13, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 12, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 11, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 10, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 9, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 8, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 7, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 6, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 5, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 4, 0, 0, 0, 0, time.Local),
+				time.Date(2019, 12, 3, 0, 0, 0, 0, time.Local),
 			}
 			assert.Equal(t, expected, dates)
 		})
