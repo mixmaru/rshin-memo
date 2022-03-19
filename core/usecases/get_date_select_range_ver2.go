@@ -69,6 +69,9 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, memoDate time.Ti
 			retDates := []time.Time{}
 			for date := fromDate; date.Equal(toDate) || date.Before(toDate); date = date.AddDate(0, 0, 1) {
 				retDates = append(retDates, date)
+				if len(retDates) >= maxCount {
+					break
+				}
 			}
 			return retDates, nil
 		}
