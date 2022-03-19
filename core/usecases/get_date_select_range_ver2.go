@@ -40,40 +40,16 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, memoDate time.Ti
 	//			指定dateのみを返す
 	// 		そうでない場合
 	//			次のdateまでの範囲を返す
+
+	// データ取得
 	dailyDataList, err := g.dailyDataRepository.Get()
 	if err != nil {
 		return nil, err
 	}
 	switch insertMode {
 	case INSERT_NEWER_MODE:
-		isExist, err := existUpperMemo(dailyDataList, memoDate, memoName)
-		if err != nil {
-			return nil, err
-		}
-		if isExist {
-			// 指定dateのみを返す
-			retDates := []time.Time{
-				memoDate,
-			}
-			return retDates, nil
-		} else {
-			// 次のdateまでの範囲を返す
-			// 一つ前の日付を取得
-			fromDate := memoDate
-			toDate, err := getToDate(dailyDataList, memoDate, g.now)
-			if err != nil {
-				return nil, err
-			}
-			// 1日addながら1つまえの日付までloop
-			retDates := []time.Time{}
-			for date := fromDate; date.Equal(toDate) || date.Before(toDate); date = date.AddDate(0, 0, 1) {
-				retDates = append(retDates, date)
-				if len(retDates) >= maxCount {
-					break
-				}
-			}
-			return retDates, nil
-		}
+		// dailyDataListから日付範囲を取得する
+		return g.getDateList(dailyDataList, memoDate, memoName)
 	case INSERT_OLDER_MODE:
 		isExist, err := existUnderMemo(dailyDataList, memoDate, memoName)
 		if err != nil {
@@ -104,6 +80,37 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, memoDate time.Ti
 		}
 	default:
 		return nil, errors.Errorf("想定外エラー insertMode: %v", insertMode)
+	}
+}
+
+func (g *GetDateSelectRangeVer2UseCase) getDateList(dailyDataList []*entities.DailyDataEntity, memoDate time.Time, memoName string) ([]time.Time, error) {
+	isExist, err := existUpperMemo(dailyDataList, memoDate, memoName)
+	if err != nil {
+		return nil, err
+	}
+	if isExist {
+		// 指定dateのみを返す
+		retDates := []time.Time{
+			memoDate,
+		}
+		return retDates, nil
+	} else {
+		// 次のdateまでの範囲を返す
+		// 一つ前の日付を取得
+		fromDate := memoDate
+		toDate, err := getToDate(dailyDataList, memoDate, g.now)
+		if err != nil {
+			return nil, err
+		}
+		// 1日addながら1つまえの日付までloop
+		retDates := []time.Time{}
+		for date := fromDate; date.Equal(toDate) || date.Before(toDate); date = date.AddDate(0, 0, 1) {
+			retDates = append(retDates, date)
+			if len(retDates) >= maxCount {
+				break
+			}
+		}
+		return retDates, nil
 	}
 }
 
