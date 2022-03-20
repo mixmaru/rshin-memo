@@ -71,9 +71,13 @@ func (g *GetDateSelectRangeVer2UseCase) getDateListForNewerMode(dailyDataList []
 		return retDates, nil
 	} else {
 		// 一つ前の日付を取得
-		toDate, err := getToDate(dailyDataList, memoDate, g.now)
+		exist, toDate, err := getToDate(dailyDataList, memoDate, g.now)
 		if err != nil {
 			return nil, err
+		}
+		// 一つ前の日付がなければ今日
+		if !exist {
+			toDate = g.now
 		}
 		// fromからtoまでのdateのリストを返す
 		return generateDateList(memoDate, toDate, maxCount)
@@ -122,25 +126,20 @@ func generateDateList(fromDate time.Time, toDate time.Time, maxLen int) ([]time.
 	}
 }
 
-func getToDate(dailyList []*entities.DailyDataEntity, fromDate, limitDate time.Time) (time.Time, error) {
+func getToDate(dailyList []*entities.DailyDataEntity, fromDate, limitDate time.Time) (exist bool, toDate time.Time, err error) {
 	for i := len(dailyList); i >= 0; i-- {
 		if dailyList[i-1].Date().Equal(fromDate) {
 			if i-1 == 0 {
-				// 先頭だった場合はmax値を返す
-				maxDate := fromDate.AddDate(0, 0, maxCount-1)
-				if maxDate.Before(limitDate) {
-					return maxDate, nil
-				} else {
-					return limitDate, nil
-				}
+				// 先頭だった場合はtoDateは存在しない
+				return false, time.Time{}, nil
 			} else {
 				// 一つ前の日付を返す
-				return dailyList[i-2].Date(), nil
+				return true, dailyList[i-2].Date(), nil
 			}
 		}
 		continue
 	}
-	return time.Time{}, errors.Errorf("想定外エラー dailyList: %v, fromDate: %v", dailyList, fromDate)
+	return false, time.Time{}, errors.Errorf("想定外エラー dailyList: %v, fromDate: %v", dailyList, fromDate)
 }
 
 func getToDateForOlderMode(dailyList []*entities.DailyDataEntity, date time.Time) (time.Time, error) {
