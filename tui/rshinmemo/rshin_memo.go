@@ -148,23 +148,14 @@ func (r *RshinMemo) createDateSelectView(mode usecases.InsertMode) (*views.DateS
 }
 
 func (r *RshinMemo) createDates(mode usecases.InsertMode) ([]time.Time, error) {
-	// 表示する日付の範囲を決定する
-	overCurrentDate, err := r.dailyListView.GetCursorDate(-1)
-	if err != nil {
-		return nil, err
-	}
 	currentDate, err := r.dailyListView.GetCursorDate(0)
 	if err != nil {
 		return nil, err
 	}
-	underCurrentDate, err := r.dailyListView.GetCursorDate(1)
-	if err != nil {
-		return nil, err
-	}
 
-	now := time.Now().In(time.Local)
-	useCase := usecases.NewGetDateSelectRangeUseCase(now)
-	return useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
+	useCase := usecases.NewGetDateSelectRangeVer2UseCase(time.Now().In(time.Local), r.dailyDataRep)
+	//return useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
+	return useCase.Handle(r.dailyListView.GetCursorNoteName(), currentDate, mode)
 }
 
 func (r *RshinMemo) closeAllView() {
