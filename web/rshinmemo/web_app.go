@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"time"
 )
 
 type WebApp struct {
@@ -80,8 +81,34 @@ func (w *WebApp) memo(c echo.Context) error {
 }
 
 func (w *WebApp) noteNew(c echo.Context) error {
+	/**
+	候補日付取得
+	選択の一つまえの日付と、選択日付と、選択の一つあとの日付が必要
+	*/
+	// 候補日付取得
+	memoName := c.QueryParam("base")
+	memoDate, err := time.Parse("2006-01-02T15:04:05.000000Z", c.QueryParam("date")+"T00:00:00.000000Z")
+	if err != nil {
+		return c.NoContent(http.StatusBadRequest)
+	}
+	now := time.Now()
+	rep := repositories.NewDailyDataRepository(filepath.Join(w.dataDirPath, "daily_data.json"))
+	usecase := usecases.NewGetDateSelectRangeUseCase(now, rep)
+	var mode usecases.InsertMode
+	switch c.QueryParam("to") {
+	case "newer":
+		mode = usecases.INSERT_NEWER_MODE
+	case "older":
+		mode = usecases.INSERT_OLDER_MODE
+	default:
+		return c.NoContent(http.StatusBadRequest)
+	}
+	dateList, err := usecase.Handle(memoName, memoDate, mode)
+	if err != nil {
+		log.Fatalf("fail getting data: %v", err)
+	}
 	return c.Render(http.StatusOK, "new_form.html", map[string]interface{}{
-		"Title": "note追加",
+		"Title": "note追加" + dateList[0].String(),
 		"Base":  c.QueryParam("base"),
 		"Date":  c.QueryParam("date"),
 		"To":    c.QueryParam("to"),

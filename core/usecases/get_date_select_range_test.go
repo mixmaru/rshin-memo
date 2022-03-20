@@ -86,7 +86,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		t.Run("同日のみ", func(t *testing.T) {
 			t.Run("newer", func(t *testing.T) {
 				now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-				useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+				useCase := NewGetDateSelectRangeUseCase(now, repo)
 				////// 検証
 				date := time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local)
 				dates, err := useCase.Handle("noteB", date, INSERT_NEWER_MODE)
@@ -99,7 +99,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 
 			t.Run("older", func(t *testing.T) {
 				now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-				useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+				useCase := NewGetDateSelectRangeUseCase(now, repo)
 				////// 検証
 				date := time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local)
 				dates, err := useCase.Handle("noteB", date, INSERT_OLDER_MODE)
@@ -114,7 +114,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		t.Run("範囲で返ってくる", func(t *testing.T) {
 			t.Run("newer", func(t *testing.T) {
 				now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-				useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+				useCase := NewGetDateSelectRangeUseCase(now, repo)
 				////// 検証
 				date := time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local)
 				dates, err := useCase.Handle("noteC", date, INSERT_NEWER_MODE)
@@ -135,7 +135,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 			t.Run("指定memoが最新だったとき", func(t *testing.T) {
 				t.Run("max返ってくるとき", func(t *testing.T) {
 					now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-					useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+					useCase := NewGetDateSelectRangeUseCase(now, repo)
 					////// 検証
 					date := time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local)
 					dates, err := useCase.Handle("noteC", date, INSERT_NEWER_MODE)
@@ -177,7 +177,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 
 				t.Run("今日までの日付が返ってくるとき", func(t *testing.T) {
 					now := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
-					useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+					useCase := NewGetDateSelectRangeUseCase(now, repo)
 					////// 検証
 					date := time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local)
 					dates, err := useCase.Handle("noteC", date, INSERT_NEWER_MODE)
@@ -196,7 +196,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 
 			t.Run("older", func(t *testing.T) {
 				now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-				useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+				useCase := NewGetDateSelectRangeUseCase(now, repo)
 				////// 検証
 				date := time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local)
 				dates, err := useCase.Handle("noteA", date, INSERT_OLDER_MODE)
@@ -216,7 +216,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 
 			t.Run("older: max", func(t *testing.T) {
 				now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-				useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+				useCase := NewGetDateSelectRangeUseCase(now, repo)
 				////// 検証
 				date := time.Date(2020, 12, 25, 0, 0, 0, 0, time.Local)
 				dates, err := useCase.Handle("noteA", date, INSERT_OLDER_MODE)
@@ -259,7 +259,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 
 		t.Run("Pattern G", func(t *testing.T) {
 			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-			useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+			useCase := NewGetDateSelectRangeUseCase(now, repo)
 			////// 検証
 			date := time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local)
 			dates, err := useCase.Handle("noteC", date, INSERT_NEWER_MODE)
@@ -301,7 +301,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 
 		t.Run("Pattern H", func(t *testing.T) {
 			now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-			useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+			useCase := NewGetDateSelectRangeUseCase(now, repo)
 			////// 検証
 			date := time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local)
 			dates, err := useCase.Handle("noteA", date, INSERT_OLDER_MODE)
@@ -364,7 +364,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		//		}
 		//		return retEntities, nil
 		//	})
-		//	useCase := NewGetDateSelectRangeVer2UseCase(now, repo)
+		//	useCase := NewGetDateSelectRangeUseCase(now, repo)
 		//
 		//	currentDate := time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local)
 		//
@@ -387,7 +387,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		//	t.Run("INSERT_OLDER_MODE 間がだいぶ空いている場合", func(t *testing.T) {
 		//		////// 準備
 		//		now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-		//		useCase := NewGetDateSelectRangeVer2UseCase(now)
+		//		useCase := NewGetDateSelectRangeUseCase(now)
 		//
 		//		overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
 		//		currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -434,7 +434,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		//	t.Run("INSERT_NEWER_MODE", func(t *testing.T) {
 		//		////// 準備
 		//		now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-		//		useCase := NewGetDateSelectRangeVer2UseCase(now)
+		//		useCase := NewGetDateSelectRangeUseCase(now)
 		//
 		//		overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
 		//		currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -459,7 +459,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		//	t.Run("INSERT_OLDER_MODE", func(t *testing.T) {
 		//		////// 準備
 		//		now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-		//		useCase := NewGetDateSelectRangeVer2UseCase(now)
+		//		useCase := NewGetDateSelectRangeUseCase(now)
 		//
 		//		overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
 		//		currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -506,7 +506,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		//	t.Run("INSERT_NEWER_MODE", func(t *testing.T) {
 		//		////// 準備
 		//		now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-		//		useCase := NewGetDateSelectRangeVer2UseCase(now)
+		//		useCase := NewGetDateSelectRangeUseCase(now)
 		//
 		//		overCurrentDate := time.Date(2021, 1, 15, 0, 0, 0, 0, time.Local)
 		//		currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -531,7 +531,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		//	t.Run("INSERT_OLDER_MODE", func(t *testing.T) {
 		//		////// 準備
 		//		now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-		//		useCase := NewGetDateSelectRangeVer2UseCase(now)
+		//		useCase := NewGetDateSelectRangeUseCase(now)
 		//
 		//		overCurrentDate := time.Time{}
 		//		currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -554,7 +554,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		//	t.Run("INSERT_NEWER_MODE", func(t *testing.T) {
 		//		////// 準備
 		//		now := time.Date(2021, 5, 1, 0, 0, 0, 0, time.Local)
-		//		useCase := NewGetDateSelectRangeVer2UseCase(now)
+		//		useCase := NewGetDateSelectRangeUseCase(now)
 		//
 		//		overCurrentDate := time.Time{}
 		//		currentDate := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
@@ -603,7 +603,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		//	t.Run("INSERT_OLDER_MODE", func(t *testing.T) {
 		//		////// 準備
 		//		now := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
-		//		useCase := NewGetDateSelectRangeVer2UseCase(now)
+		//		useCase := NewGetDateSelectRangeUseCase(now)
 		//
 		//		overCurrentDate := time.Time{}
 		//		currentDate := time.Time{}
@@ -650,7 +650,7 @@ func TestGetDateRangeUseCaseVer2_Handle(t *testing.T) {
 		//	t.Run("INSERT_NEWER_MODE", func(t *testing.T) {
 		//		////// 準備
 		//		now := time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local)
-		//		useCase := NewGetDateSelectRangeVer2UseCase(now)
+		//		useCase := NewGetDateSelectRangeUseCase(now)
 		//
 		//		overCurrentDate := time.Time{}
 		//		currentDate := time.Time{}

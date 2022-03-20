@@ -153,7 +153,7 @@ func (r *RshinMemo) createDates(mode usecases.InsertMode) ([]time.Time, error) {
 		return nil, err
 	}
 
-	useCase := usecases.NewGetDateSelectRangeVer2UseCase(time.Now().In(time.Local), r.dailyDataRep)
+	useCase := usecases.NewGetDateSelectRangeUseCase(time.Now().In(time.Local), r.dailyDataRep)
 	//return useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
 	return useCase.Handle(r.dailyListView.GetCursorNoteName(), currentDate, mode)
 }

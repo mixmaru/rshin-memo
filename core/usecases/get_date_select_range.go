@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-type GetDateSelectRangeVer2UseCase struct {
+type GetDateSelectRangeUseCase struct {
 	now                 time.Time
 	dailyDataRepository repositories.DailyDataRepositoryInterface
 }
 
-func NewGetDateSelectRangeVer2UseCase(now time.Time, repositoryInterface repositories.DailyDataRepositoryInterface) *GetDateSelectRangeVer2UseCase {
-	return &GetDateSelectRangeVer2UseCase{
+func NewGetDateSelectRangeUseCase(now time.Time, repositoryInterface repositories.DailyDataRepositoryInterface) *GetDateSelectRangeUseCase {
+	return &GetDateSelectRangeUseCase{
 		now:                 now,
 		dailyDataRepository: repositoryInterface,
 	}
@@ -27,7 +27,7 @@ const (
 )
 const maxCount = 30
 
-func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, memoDate time.Time, insertMode InsertMode) ([]time.Time, error) {
+func (g *GetDateSelectRangeUseCase) Handle(memoName string, memoDate time.Time, insertMode InsertMode) ([]time.Time, error) {
 	// dateのmemoNameのmemo一覧を取得
 	// dateの前後1日のmemo一覧も取得
 	// NewerModeの場合
@@ -57,7 +57,7 @@ func (g *GetDateSelectRangeVer2UseCase) Handle(memoName string, memoDate time.Ti
 	}
 }
 
-func (g *GetDateSelectRangeVer2UseCase) getDateListForNewerMode(dailyDataList []*entities.DailyDataEntity, memoDate time.Time, memoName string) ([]time.Time, error) {
+func (g *GetDateSelectRangeUseCase) getDateListForNewerMode(dailyDataList []*entities.DailyDataEntity, memoDate time.Time, memoName string) ([]time.Time, error) {
 	// 同日内で上にmemoが存在するかどうか
 	isExist, err := existUpperMemo(dailyDataList, memoDate, memoName)
 	if err != nil {
@@ -84,7 +84,7 @@ func (g *GetDateSelectRangeVer2UseCase) getDateListForNewerMode(dailyDataList []
 	}
 }
 
-func (g *GetDateSelectRangeVer2UseCase) getDateListForOlderMode(dailyDataList []*entities.DailyDataEntity, memoDate time.Time, memoName string) ([]time.Time, error) {
+func (g *GetDateSelectRangeUseCase) getDateListForOlderMode(dailyDataList []*entities.DailyDataEntity, memoDate time.Time, memoName string) ([]time.Time, error) {
 	isExist, err := existUnderMemo(dailyDataList, memoDate, memoName)
 	if err != nil {
 		return nil, err
@@ -197,7 +197,7 @@ func existUnderMemo(dailyDataList []*entities.DailyDataEntity, date time.Time, m
 	return false, errors.Errorf("想定外エラー dailyDataList: %v, date: %v, memoName: %v", dailyDataList, date, memoName)
 }
 
-func (g *GetDateSelectRangeVer2UseCase) adjustFromDate(currentCursorDate time.Time, underCursorDate time.Time) time.Time {
+func (g *GetDateSelectRangeUseCase) adjustFromDate(currentCursorDate time.Time, underCursorDate time.Time) time.Time {
 	duration := currentCursorDate.Sub(underCursorDate)
 	if duration >= maxCount*24*60*60*1000*1000*1000 {
 		return time.Date(currentCursorDate.Year(), currentCursorDate.Month(), currentCursorDate.Day()-(maxCount-1), 0, 0, 0, 0, time.Local)
