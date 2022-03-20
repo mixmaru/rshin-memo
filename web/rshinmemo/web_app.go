@@ -87,7 +87,7 @@ func (w *WebApp) noteNew(c echo.Context) error {
 	*/
 	// 候補日付取得
 	memoName := c.QueryParam("base")
-	memoDate, err := time.Parse("2006-01-02T15:04:05.000000Z", c.QueryParam("date")+"T00:00:00.000000Z")
+	memoDate, err := time.ParseInLocation("2006-01-02T15:04:05.000000Z", c.QueryParam("date")+"T00:00:00.000000Z", time.Local)
 	if err != nil {
 		return c.NoContent(http.StatusBadRequest)
 	}
@@ -108,10 +108,11 @@ func (w *WebApp) noteNew(c echo.Context) error {
 		log.Fatalf("fail getting data: %v", err)
 	}
 	return c.Render(http.StatusOK, "new_form.html", map[string]interface{}{
-		"Title": "note追加" + dateList[0].String(),
-		"Base":  c.QueryParam("base"),
-		"Date":  c.QueryParam("date"),
-		"To":    c.QueryParam("to"),
+		"Title":    "note追加",
+		"dateList": dateList,
+		"Base":     c.QueryParam("base"),
+		"Date":     c.QueryParam("date"),
+		"To":       c.QueryParam("to"),
 	})
 }
 
