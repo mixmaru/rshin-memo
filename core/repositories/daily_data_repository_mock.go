@@ -2,29 +2,18 @@ package repositories
 
 import (
 	"github.com/mixmaru/rshin-memo/core/entities"
-	"time"
 )
 
-type DailyDataRepositoryMock struct{}
+type DailyDataRepositoryMock struct {
+	getFunc func() ([]*entities.DailyDataEntity, error)
+}
 
 func (d *DailyDataRepositoryMock) Get() ([]*entities.DailyDataEntity, error) {
-	retEntities := []*entities.DailyDataEntity{
-		entities.NewDailyDataEntity(
-			time.Date(2021, 1, 2, 0, 0, 0, 0, time.Local),
-			[]string{
-				"noteC",
-				"noteD",
-			},
-		),
-		entities.NewDailyDataEntity(
-			time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
-			[]string{
-				"noteA",
-				"noteB",
-			},
-		),
-	}
-	return retEntities, nil
+	return d.getFunc()
+}
+
+func (d *DailyDataRepositoryMock) SetGetFunc(function func() ([]*entities.DailyDataEntity, error)) {
+	d.getFunc = function
 }
 
 func (d *DailyDataRepositoryMock) Save(entity *entities.DailyDataEntity) error {

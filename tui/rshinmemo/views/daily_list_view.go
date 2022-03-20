@@ -130,9 +130,9 @@ func (d *DailyListView) GetCursorNoteName() string {
 func (d *DailyListView) GetInsertPoint(mode usecases.InsertMode) (int, error) {
 	cursorRow, _ := d.table.GetSelection()
 	switch mode {
-	case usecases.INSERT_OVER_DATE_MODE:
+	case usecases.INSERT_NEWER_MODE:
 		return cursorRow, nil
-	case usecases.INSERT_UNDER_DATE_MODE:
+	case usecases.INSERT_OLDER_MODE:
 		return cursorRow + 1, nil
 	default:
 		return 0, errors.Errorf("考慮外の値. mode: %v", mode)

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Title}}</title>
+</head>
+<body>
+<form action="/note/new" method="post">
+    <input type="hidden" name="base" value="{{ .Base }}">
+    <input type="hidden" name="date" value="{{ .Date }}">
+    <input type="hidden" name="to" value="{{ .To }}">
+    <select name="date">
+        {{ range .dateList }}
+        <option value="{{ .Format "2006-01-02" }}">{{ .Format "2006-01-02" }}</option>
+        {{ end }}
+    </select>
+    <textarea name="memo"></textarea>
+    <button type="submit">決定</button>
+</form>
+</body>
+</html>

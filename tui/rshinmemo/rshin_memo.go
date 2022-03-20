@@ -68,10 +68,10 @@ func (r *RshinMemo) createDailyListView() (*views.DailyListView, error) {
 		return r.openVim(noteName)
 	})
 	dailyList.AddWhenPushLowerOKey(func() error {
-		return r.displayDateSelectView(usecases.INSERT_UNDER_DATE_MODE)
+		return r.displayDateSelectView(usecases.INSERT_OLDER_MODE)
 	})
 	dailyList.AddWhenPushUpperOKey(func() error {
-		return r.displayDateSelectView(usecases.INSERT_OVER_DATE_MODE)
+		return r.displayDateSelectView(usecases.INSERT_NEWER_MODE)
 	})
 
 	// データセット
@@ -148,23 +148,14 @@ func (r *RshinMemo) createDateSelectView(mode usecases.InsertMode) (*views.DateS
 }
 
 func (r *RshinMemo) createDates(mode usecases.InsertMode) ([]time.Time, error) {
-	// 表示する日付の範囲を決定する
-	overCurrentDate, err := r.dailyListView.GetCursorDate(-1)
-	if err != nil {
-		return nil, err
-	}
 	currentDate, err := r.dailyListView.GetCursorDate(0)
 	if err != nil {
 		return nil, err
 	}
-	underCurrentDate, err := r.dailyListView.GetCursorDate(1)
-	if err != nil {
-		return nil, err
-	}
 
-	now := time.Now().In(time.Local)
-	useCase := usecases.NewGetDateSelectRangeUseCase(now)
-	return useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
+	useCase := usecases.NewGetDateSelectRangeUseCase(time.Now().In(time.Local), r.dailyDataRep)
+	//return useCase.Handle(overCurrentDate, currentDate, underCurrentDate, mode)
+	return useCase.Handle(r.dailyListView.GetCursorNoteName(), currentDate, mode)
 }
 
 func (r *RshinMemo) closeAllView() {
@@ -334,7 +325,7 @@ func (r *RshinMemo) IsDateInRange(date time.Time) (bool, error) {
 	var from, to time.Time
 	var err error
 	switch r.dailyListInsertMode {
-	case usecases.INSERT_OVER_DATE_MODE:
+	case usecases.INSERT_NEWER_MODE:
 		from, err = r.dailyListView.GetCursorDate(0)
 		if err != nil {
 			return false, err
@@ -343,7 +334,7 @@ func (r *RshinMemo) IsDateInRange(date time.Time) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-	case usecases.INSERT_UNDER_DATE_MODE:
+	case usecases.INSERT_OLDER_MODE:
 		from, err = r.dailyListView.GetCursorDate(1)
 		if err != nil {
 			return false, err
