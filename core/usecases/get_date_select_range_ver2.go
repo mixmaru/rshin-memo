@@ -71,7 +71,7 @@ func (g *GetDateSelectRangeVer2UseCase) getDateListForNewerMode(dailyDataList []
 		return retDates, nil
 	} else {
 		// 一つ前の日付を取得
-		exist, toDate, err := getToDate(dailyDataList, memoDate, g.now)
+		exist, toDate, err := getToDateForNewerMode(dailyDataList, memoDate, g.now)
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +129,7 @@ func generateDateList(fromDate time.Time, toDate time.Time, maxLen int) ([]time.
 	}
 }
 
-func getToDate(dailyList []*entities.DailyDataEntity, fromDate, limitDate time.Time) (exist bool, toDate time.Time, err error) {
+func getToDateForNewerMode(dailyList []*entities.DailyDataEntity, fromDate, limitDate time.Time) (exist bool, toDate time.Time, err error) {
 	for i := len(dailyList); i >= 0; i-- {
 		if dailyList[i-1].Date().Equal(fromDate) {
 			if i-1 == 0 {
