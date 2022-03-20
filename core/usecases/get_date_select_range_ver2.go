@@ -96,9 +96,12 @@ func (g *GetDateSelectRangeVer2UseCase) getDateListForOlderMode(dailyDataList []
 		}
 		return retDates, nil
 	} else {
-		toDate, err := getToDateForOlderMode(dailyDataList, memoDate)
+		exist, toDate, err := getToDateForOlderMode(dailyDataList, memoDate)
 		if err != nil {
 			return nil, err
+		}
+		if !exist {
+			toDate = time.Date(0, 0, 0, 0, 0, 0, 0, time.Local)
 		}
 		// fromからtoまでのdateのリストを返す
 		return generateDateList(memoDate, toDate, maxCount)
@@ -142,20 +145,18 @@ func getToDate(dailyList []*entities.DailyDataEntity, fromDate, limitDate time.T
 	return false, time.Time{}, errors.Errorf("想定外エラー dailyList: %v, fromDate: %v", dailyList, fromDate)
 }
 
-func getToDateForOlderMode(dailyList []*entities.DailyDataEntity, date time.Time) (time.Time, error) {
+func getToDateForOlderMode(dailyList []*entities.DailyDataEntity, date time.Time) (exist bool, toDate time.Time, err error) {
 	for index := range dailyList {
 		if dailyList[index].Date().Equal(date) {
 			if index == len(dailyList)-1 {
-				// max
-				maxDate := date.AddDate(0, 0, -maxCount-1)
-				return maxDate, nil
+				return false, time.Time{}, nil
 			} else {
-				return dailyList[index+1].Date(), nil
+				return true, dailyList[index+1].Date(), nil
 			}
 		}
 		continue
 	}
-	return time.Time{}, errors.Errorf("想定外エラー dailyList: %v, date: %v", dailyList, date)
+	return false, time.Time{}, errors.Errorf("想定外エラー dailyList: %v, date: %v", dailyList, date)
 }
 
 func existUpperMemo(dailyDataList []*entities.DailyDataEntity, date time.Time, memoName string) (bool, error) {
