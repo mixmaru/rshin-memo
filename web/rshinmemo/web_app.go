@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/pkg/errors"
 	"html/template"
 	"io"
 	"log"
@@ -38,6 +39,7 @@ func (w *WebApp) initRouter() *echo.Echo {
 	e.GET("/", w.list)
 	e.GET("/:memo", w.memo)
 	e.GET("/note/new", w.noteNew)
+	e.POST("/note/new", w.addNewNote)
 	return e
 }
 
@@ -114,6 +116,34 @@ func (w *WebApp) noteNew(c echo.Context) error {
 		"Date":     c.QueryParam("date"),
 		"To":       c.QueryParam("to"),
 	})
+}
+
+func (w *WebApp) addNewNote(c echo.Context) error {
+	// パラメータ取得
+	baseMemoDate, err := time.ParseInLocation("2006-01-02T15:04:05.000000Z", c.FormValue("base_memo_date")+"T00:00:00.000000Z", time.Local)
+	if err != nil {
+		// todo: バリデーションエラーにする
+		log.Fatalf("fail date parse: %v", errors.WithStack(err))
+	}
+	baseMemoName := c.FormValue("base_memo_name")
+
+	newMemoDate, err := time.ParseInLocation("2006-01-02T15:04:05.000000Z", c.FormValue("new_memo_date")+"T00:00:00.000000Z", time.Local)
+	if err != nil {
+		// todo: バリデーションエラーにする
+		log.Fatalf("fail date parse: %v", errors.WithStack(err))
+	}
+	newMemoName := c.FormValue("new_memo_name")
+	to := c.FormValue("to")
+	dummyUseCase(baseMemoDate, baseMemoName, newMemoDate, newMemoName, to)
+	/*
+
+	 */
+	// todo: メモ編集画面へリダイレクトさせる
+	return c.Redirect(http.StatusCreated, "/")
+}
+
+func dummyUseCase(date time.Time, name string, date2 time.Time, name2 string, to string) {
+
 }
 
 type Template struct {
