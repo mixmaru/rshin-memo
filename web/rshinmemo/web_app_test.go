@@ -74,17 +74,7 @@ func TestWebApp_noteNew(t *testing.T) {
 }
 
 func TestWebApp_addNewNote(t *testing.T) {
-	t.Run("302", func(t *testing.T) {
-		//// リクエストパラメータ作成
-		//body := url.Values{}
-		//body.Set("type", "aaaa")
-		//body.Set("name", "個人　太郎")
-		//
-		//// リクエスト実行
-		//req := httptest.NewRequest("POST", "/users/", strings.NewReader(body.Encode()))
-		//req.Header.Set("Content-Type", "application/x-www-form-urlencoded") //formからの入力ということを指定してるっぽい
-		//rec := httptest.NewRecorder()
-		//router.ServeHTTP(rec, req)
+	t.Run("正常系", func(t *testing.T) {
 		////// 準備
 		app := NewWebApp("8080", "./testdata/")
 		router := app.initRouter()
