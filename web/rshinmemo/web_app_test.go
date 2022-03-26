@@ -74,7 +74,7 @@ func TestWebApp_noteNew(t *testing.T) {
 }
 
 func TestWebApp_addNewNote(t *testing.T) {
-	t.Run("200", func(t *testing.T) {
+	t.Run("302", func(t *testing.T) {
 		//// リクエストパラメータ作成
 		//body := url.Values{}
 		//body.Set("type", "aaaa")
@@ -103,6 +103,7 @@ func TestWebApp_addNewNote(t *testing.T) {
 		router.ServeHTTP(rec, req)
 
 		////// 検証
-		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, http.StatusFound, rec.Code)
+		assert.Equal(t, "/", rec.Header().Get("Location"))
 	})
 }

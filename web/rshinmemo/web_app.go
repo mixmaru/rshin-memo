@@ -139,7 +139,7 @@ func (w *WebApp) addNewNote(c echo.Context) error {
 
 	 */
 	// todo: メモ編集画面へリダイレクトさせる
-	return c.Redirect(http.StatusCreated, "/")
+	return c.Redirect(http.StatusFound, "/")
 }
 
 func dummyUseCase(date time.Time, name string, date2 time.Time, name2 string, to string) {
