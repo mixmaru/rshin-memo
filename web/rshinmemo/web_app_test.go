@@ -57,7 +57,7 @@ func TestWebApp_memo(t *testing.T) {
 }
 
 func TestWebApp_noteNew(t *testing.T) {
-	t.Run("200", func(t *testing.T) {
+	t.Run("正常系", func(t *testing.T) {
 		////// 準備
 		app := NewWebApp("8080", "./testdata/")
 		router := app.initRouter()
@@ -70,6 +70,51 @@ func TestWebApp_noteNew(t *testing.T) {
 
 		////// 検証
 		assert.Equal(t, http.StatusOK, rec.Code)
+	})
+
+	t.Run("wrong date param", func(t *testing.T) {
+		////// 準備
+		app := NewWebApp("8080", "./testdata/")
+		router := app.initRouter()
+
+		////// 実行
+		req := httptest.NewRequest("GET", "/note/new?base=rshin_memo構築&date=aaaaaa&to=newer", nil)
+		req.Header.Set("Content-Type", "text/html")
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		////// 検証
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("wrong to param", func(t *testing.T) {
+		////// 準備
+		app := NewWebApp("8080", "./testdata/")
+		router := app.initRouter()
+
+		////// 実行
+		req := httptest.NewRequest("GET", "/note/new?base=rshin_memo構築&date=2022-02-19&to=tttttt", nil)
+		req.Header.Set("Content-Type", "text/html")
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		////// 検証
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("wrong memo name", func(t *testing.T) {
+		////// 準備
+		app := NewWebApp("8080", "./testdata/")
+		router := app.initRouter()
+
+		////// 実行
+		req := httptest.NewRequest("GET", "/note/new?base=waaaaaaa&date=2022-02-19&to=newer", nil)
+		req.Header.Set("Content-Type", "text/html")
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		////// 検証
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 }
 

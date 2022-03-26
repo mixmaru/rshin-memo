@@ -91,11 +91,14 @@ func (w *WebApp) noteNew(c echo.Context) error {
 	memoName := c.QueryParam("base")
 	memoDate, err := time.ParseInLocation("2006-01-02T15:04:05.000000Z", c.QueryParam("date")+"T00:00:00.000000Z", time.Local)
 	if err != nil {
+		err = errors.WithStack(err)
+		log.Printf("%+v", err)
 		return c.NoContent(http.StatusBadRequest)
 	}
 	dateList, err := w.getDateList(memoName, memoDate, c.QueryParam("to"))
 	if err != nil {
-		log.Fatalf("fail getting data: %v", err)
+		log.Printf("%+v", err)
+		return c.NoContent(http.StatusBadRequest)
 	}
 	return w.renderNewNoteForm(
 		c,
