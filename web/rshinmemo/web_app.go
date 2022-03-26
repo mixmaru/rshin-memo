@@ -93,28 +93,42 @@ func (w *WebApp) noteNew(c echo.Context) error {
 	if err != nil {
 		return c.NoContent(http.StatusBadRequest)
 	}
+	dateList, err := w.getDateList(memoName, memoDate, c.QueryParam("to"))
+	if err != nil {
+		log.Fatalf("fail getting data: %v", err)
+	}
+	return w.renderNewNoteForm(
+		c,
+		c.QueryParam("base"),
+		c.QueryParam("date"),
+		c.QueryParam("to"),
+		dateList,
+	)
+}
+
+func (w *WebApp) getDateList(memoName string, memoDate time.Time, to string) ([]time.Time, error) {
 	now := time.Now()
 	rep := repositories.NewDailyDataRepository(filepath.Join(w.dataDirPath, "daily_data.json"))
 	usecase := usecases.NewGetDateSelectRangeUseCase(now, rep)
 	var mode usecases.InsertMode
-	switch c.QueryParam("to") {
+	switch to {
 	case "newer":
 		mode = usecases.INSERT_NEWER_MODE
 	case "older":
 		mode = usecases.INSERT_OLDER_MODE
 	default:
-		return c.NoContent(http.StatusBadRequest)
+		return nil, errors.Errorf("toがおかしい to: %v", to)
 	}
-	dateList, err := usecase.Handle(memoName, memoDate, mode)
-	if err != nil {
-		log.Fatalf("fail getting data: %v", err)
-	}
+	return usecase.Handle(memoName, memoDate, mode)
+}
+
+func (w *WebApp) renderNewNoteForm(c echo.Context, base, date, to string, dateList []time.Time) error {
 	return c.Render(http.StatusOK, "new_form.html", map[string]interface{}{
 		"Title":    "note追加",
 		"dateList": dateList,
-		"Base":     c.QueryParam("base"),
-		"Date":     c.QueryParam("date"),
-		"To":       c.QueryParam("to"),
+		"Base":     base,
+		"Date":     date,
+		"To":       to,
 	})
 }
 
