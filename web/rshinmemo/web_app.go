@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
@@ -58,6 +59,7 @@ func (w *WebApp) list(c echo.Context) error {
 		"DailyData": dailyData,
 	})
 }
+
 func (w *WebApp) memo(c echo.Context) error {
 	noteName, err := url.PathUnescape(c.Param("memo"))
 	if err != nil {
@@ -139,15 +141,17 @@ func (w *WebApp) addNewNote(c echo.Context) error {
 	// パラメータ取得
 	baseMemoDate, err := time.ParseInLocation("2006-01-02T15:04:05.000000Z", c.FormValue("base_memo_date")+"T00:00:00.000000Z", time.Local)
 	if err != nil {
-		// todo: バリデーションエラーにする
-		log.Fatalf("fail date parse: %v", errors.WithStack(err))
+		// baseMemoDateがparseできないので初期画面に戻すしかない。(通常は起こりえないはず)
+		return w.list(c)
 	}
 	baseMemoName := c.FormValue("base_memo_name")
 
 	newMemoDate, err := time.ParseInLocation("2006-01-02T15:04:05.000000Z", c.FormValue("new_memo_date")+"T00:00:00.000000Z", time.Local)
 	if err != nil {
-		// todo: バリデーションエラーにする
-		log.Fatalf("fail date parse: %v", errors.WithStack(err))
+		// todo: バリデーションエラーにして画面を戻す
+		message := fmt.Sprintf("fail date parse: %+v", errors.WithStack(err))
+		log.Println(message)
+		return c.String(http.StatusBadRequest, message)
 	}
 	newMemoName := c.FormValue("new_memo_name")
 	to := c.FormValue("to")
