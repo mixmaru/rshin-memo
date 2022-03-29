@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/gdamore/tcell/v2 v2.4.0
-	github.com/golang/mock v1.6.0 // indirect
+	github.com/golang/mock v1.6.0
 	github.com/jroimartin/gocui v0.4.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/echo/v4 v4.6.3

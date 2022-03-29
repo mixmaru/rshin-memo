@@ -25,3 +25,7 @@ clean:
 
 test:
 	go test ./... -count=1 -cover
+
+generate_repository_mock:
+	mockgen -source=core/repositories/daily_data_repository.go -destination=core/repositories/mock/daily_data_repository.go && \
+	mockgen -source=core/repositories/note_repository.go -destination=core/repositories/mock/note_repository.go
