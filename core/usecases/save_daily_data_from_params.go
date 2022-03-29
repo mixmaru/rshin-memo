@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"github.com/mixmaru/rshin-memo/core/entities"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"time"
 )
@@ -21,6 +22,10 @@ func (c *SaveDailyDataFromParamsUseCase) Handle(
 	newMemoName string,
 	newMemoContent string,
 ) error {
+	a, _ := c.dailyDataRepository.Get()
+	println(a)
+	noteEntity := entities.NewNoteEntity("new_memo_name", "new_memo_内容")
+	c.noteRepository.Save(noteEntity)
 	/*
 		jsonファイルに入力
 
