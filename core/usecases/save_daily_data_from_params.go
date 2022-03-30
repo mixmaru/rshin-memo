@@ -22,8 +22,22 @@ func (c *SaveDailyDataFromParamsUseCase) Handle(
 	newMemoName string,
 	newMemoContent string,
 ) error {
-	a, _ := c.dailyDataRepository.Get()
-	println(a)
+	// データ取得
+	allDailyData, err := c.dailyDataRepository.Get()
+	if err != nil {
+		return err
+	}
+
+	// memoファイルを作成保存
+
+	// 対象のdailyDataEntityを作成
+
+	// dailyDataEntityを保存
+	// 		もし失敗したらファイルを削除site modosu
+
+	//
+
+	println(allDailyData)
 	noteEntity := entities.NewNoteEntity("new_memo_name", "new_memo_内容")
 	saveingEntity := entities.NewDailyDataEntity(
 		time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
