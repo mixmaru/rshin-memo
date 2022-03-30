@@ -25,6 +25,13 @@ func (c *SaveDailyDataFromParamsUseCase) Handle(
 	a, _ := c.dailyDataRepository.Get()
 	println(a)
 	noteEntity := entities.NewNoteEntity("new_memo_name", "new_memo_内容")
+	saveingEntity := entities.NewDailyDataEntity(
+		time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
+		[]string{
+			"newMemoName",
+		},
+	)
+	c.dailyDataRepository.Save(saveingEntity)
 	c.noteRepository.Save(noteEntity)
 	/*
 		jsonファイルに入力

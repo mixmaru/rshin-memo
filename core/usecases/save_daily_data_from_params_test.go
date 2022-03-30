@@ -30,6 +30,13 @@ func TestCreateNoteFromParamsUseCaseInteractor_Handle(t *testing.T) {
 			),
 		}
 
+		saveingEntity := entities.NewDailyDataEntity(
+			time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
+			[]string{
+				"newMemoName",
+			},
+		)
+
 		noteEntity := entities.NewNoteEntity("new_memo_name", "new_memo_内容")
 
 		// repository mock
@@ -37,6 +44,7 @@ func TestCreateNoteFromParamsUseCaseInteractor_Handle(t *testing.T) {
 		defer ctrl.Finish()
 		dailyDataRep := mock_repositories.NewMockDailyDataRepositoryInterface(ctrl)
 		dailyDataRep.EXPECT().Get().Return(retData, nil)
+		dailyDataRep.EXPECT().Save(saveingEntity)
 
 		noteRep := mock_repositories.NewMockNoteRepositoryInterface(ctrl)
 		noteRep.EXPECT().Save(noteEntity).Return(nil)
@@ -49,9 +57,9 @@ func TestCreateNoteFromParamsUseCaseInteractor_Handle(t *testing.T) {
 
 		// 実行
 		err := interactor.Handle(
-			time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
-			"base_memo_name",
-			time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local),
+			time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
+			"nameA",
+			time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
 			"new_memo_name",
 			"new_memo_内容",
 		)
