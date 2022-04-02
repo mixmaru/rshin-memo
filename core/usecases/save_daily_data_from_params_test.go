@@ -37,7 +37,7 @@ func TestCreateNoteFromParamsUseCaseInteractor_Handle(t *testing.T) {
 			},
 		)
 
-		noteEntity := entities.NewNoteEntity("new_memo_name", "new_memo_内容")
+		noteEntity := entities.NewNoteEntity("newMemoName", "new_memo_内容")
 
 		// repository mock
 		ctrl := gomock.NewController(t)
@@ -57,11 +57,12 @@ func TestCreateNoteFromParamsUseCaseInteractor_Handle(t *testing.T) {
 
 		// 実行
 		err := interactor.Handle(
-			time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
-			"nameA",
+			time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+			"noteC",
 			time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
-			"new_memo_name",
+			"newMemoName",
 			"new_memo_内容",
+			INSERT_NEWER_MODE,
 		)
 		// 検証,意図通りにmockを叩いているか？
 		assert.NoError(t, err)

@@ -50,3 +50,7 @@ func (d *DailyDataEntity) InsertNoteName(noteName string, index int) {
 		d.noteNames[index] = noteName
 	}
 }
+
+func (d *DailyDataEntity) InsertNoteNameToLast(noteName string) {
+	d.noteNames = append(d.noteNames, noteName)
+}

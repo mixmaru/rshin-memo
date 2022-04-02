@@ -26,13 +26,16 @@ func (c *SaveDailyDataFromParamsUseCase) Handle(
 ) error {
 	// memoファイルを作成保存
 	noteEntity := entities.NewNoteEntity(newMemoName, newMemoContent)
-	err = c.noteRepository.Save(noteEntity)
+	err := c.noteRepository.Save(noteEntity)
 	if err != nil {
 		return err
 	}
 
 	// 対象のdailyDataEntityを作成
-	dailyDataEntity := c.generageNewDailyDataEntity(newMemoDate, newMemoName, baseMemoDate, baseMemoName, mode)
+	dailyDataEntity, err := c.generateNewDailyDataEntity(newMemoDate, newMemoName, baseMemoDate, baseMemoName, mode)
+	if err != nil {
+		return err
+	}
 
 	// dailyDataEntityを保存
 	err = c.dailyDataRepository.Save(dailyDataEntity)
@@ -92,7 +95,7 @@ func (c *SaveDailyDataFromParamsUseCase) Handle(
 	//return nil
 }
 
-func (c *SaveDailyDataFromParamsUseCase) generageNewDailyDataEntity(newMemoDate time.Time, newMemoname string, baseMemoDate time.Time, baseMemoName string, mode InsertMode) (*entities.DailyDataEntity, error) {
+func (c *SaveDailyDataFromParamsUseCase) generateNewDailyDataEntity(newMemoDate time.Time, newMemoname string, baseMemoDate time.Time, baseMemoName string, mode InsertMode) (*entities.DailyDataEntity, error) {
 	// データ取得
 	allDailyData, err := c.dailyDataRepository.Get()
 	if err != nil {
@@ -100,21 +103,38 @@ func (c *SaveDailyDataFromParamsUseCase) generageNewDailyDataEntity(newMemoDate 
 	}
 	var pre *entities.DailyDataEntity
 	for _, dailyData := range allDailyData {
+		// 上からたどっていってベース日までたどる。
 		if !dailyData.Date().Equal(baseMemoDate) {
 			pre = dailyData
 			continue
 		}
 		switch mode {
 		case INSERT_NEWER_MODE:
+			// 上挿入の場合
 			for i, note := range dailyData.NoteNames() {
+				// ベースメモ名までたどる。このとき番号を数えておく
 				if note == baseMemoName {
 					if i != 0 {
-						// 一つ前にnewを挿入
+						// 番号が0(先頭)でなければ一つ前に挿入する。
+						dailyData.InsertNoteName(newMemoname, i)
 					} else {
-
+						// 番号が0であれば挿入日付を確認し、同じでなければ一つ前のやつの日付を確認する
+						if dailyData.Date() == newMemoDate {
+							// 同じであればそこの先頭に追加する
+							dailyData.InsertNoteName(newMemoname, 0)
+						} else if pre.Date() == newMemoDate {
+							// 同じでなければ一つ前のやつの日付を確認する。
+							//同じであればそこの末に追加する
+							dailyData.InsertNoteNameToLast(newMemoname)
+						} else {
+							// 異なれば新しいdailyDataを作成する
+							dailyData = entities.NewDailyDataEntity(newMemoDate, []string{newMemoname})
+						}
 					}
+					return dailyData, nil
 				}
 			}
+			return nil, errors.Errorf("想定外. dailyData:%v, newMemoDate:%v, newMemoname:%v, baseMemoDate:%v, baseMemoName:%v", dailyData, newMemoDate, newMemoname, baseMemoDate, baseMemoName)
 		case INSERT_OLDER_MODE:
 		default:
 			return nil, errors.Errorf("想定外エラー mode: %v", mode)
