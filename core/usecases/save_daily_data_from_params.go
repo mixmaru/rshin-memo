@@ -122,7 +122,7 @@ func (c *SaveDailyDataFromParamsUseCase) generateNewDailyDataEntity(newMemoDate 
 						if dailyData.Date() == newMemoDate {
 							// 同じであればそこの先頭に追加する
 							dailyData.InsertNoteName(newMemoname, 0)
-						} else if pre.Date() == newMemoDate {
+						} else if pre != nil && pre.Date() == newMemoDate {
 							// 同じでなければ一つ前のやつの日付を確認する。
 							//同じであればそこの末に追加する
 							dailyData.InsertNoteNameToLast(newMemoname)
