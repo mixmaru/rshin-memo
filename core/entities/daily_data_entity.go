@@ -39,3 +39,18 @@ func (d *DailyDataEntity) DateStr() string {
 func (d *DailyDataEntity) NoteNames() []string {
 	return d.noteNames
 }
+
+func (d *DailyDataEntity) InsertNoteName(noteName string, index int) {
+	// 末挿入の場合
+	if len(d.noteNames) <= index {
+		d.noteNames = append(d.noteNames, noteName)
+	} else {
+		// 中に挿入の場合
+		d.noteNames = append(d.noteNames[:index+1], d.noteNames[index:]...)
+		d.noteNames[index] = noteName
+	}
+}
+
+func (d *DailyDataEntity) InsertNoteNameToLast(noteName string) {
+	d.noteNames = append(d.noteNames, noteName)
+}

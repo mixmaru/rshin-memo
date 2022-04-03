@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/mixmaru/rshin-memo/core/repositories"
 	"github.com/mixmaru/rshin-memo/core/usecases"
+	"github.com/pkg/errors"
 	"html/template"
 	"io"
 	"log"
@@ -15,12 +17,17 @@ import (
 )
 
 type WebApp struct {
-	port        string
-	dataDirPath string
+	port         string
+	noteRep      *repositories.NoteRepository
+	dailyDataRep *repositories.DailyDataRepository
 }
 
 func NewWebApp(port string, dataDirPath string) *WebApp {
-	return &WebApp{dataDirPath: dataDirPath, port: port}
+	return &WebApp{
+		port:         port,
+		noteRep:      repositories.NewNoteRepository(dataDirPath),
+		dailyDataRep: repositories.NewDailyDataRepository(filepath.Join(dataDirPath, "daily_data.json")),
+	}
 }
 
 func (w *WebApp) Run() {
@@ -38,13 +45,13 @@ func (w *WebApp) initRouter() *echo.Echo {
 	e.GET("/", w.list)
 	e.GET("/:memo", w.memo)
 	e.GET("/note/new", w.noteNew)
+	e.POST("/note/new", w.addNewNote)
 	return e
 }
 
 func (w *WebApp) list(c echo.Context) error {
 	// メモ一覧データ取得
-	rep := repositories.NewDailyDataRepository(filepath.Join(w.dataDirPath, "daily_data.json"))
-	useCase := usecases.NewGetAllDailyListUsecase(rep)
+	useCase := usecases.NewGetAllDailyListUsecase(w.dailyDataRep)
 	dailyData, err := useCase.Handle()
 	if err != nil {
 		log.Fatalf("fail getting data: %v", err)
@@ -56,12 +63,13 @@ func (w *WebApp) list(c echo.Context) error {
 		"DailyData": dailyData,
 	})
 }
+
 func (w *WebApp) memo(c echo.Context) error {
 	noteName, err := url.PathUnescape(c.Param("memo"))
 	if err != nil {
 		return c.NoContent(http.StatusNotFound)
 	}
-	useCase := usecases.NewGetNoteUseCase(repositories.NewNoteRepository(w.dataDirPath))
+	useCase := usecases.NewGetNoteUseCase(w.noteRep)
 	note, notExist, err := useCase.Handle(noteName)
 	if err != nil {
 		log.Fatalf("fail getting data: %v", err)
@@ -89,31 +97,82 @@ func (w *WebApp) noteNew(c echo.Context) error {
 	memoName := c.QueryParam("base")
 	memoDate, err := time.ParseInLocation("2006-01-02T15:04:05.000000Z", c.QueryParam("date")+"T00:00:00.000000Z", time.Local)
 	if err != nil {
+		err = errors.WithStack(err)
+		log.Printf("%+v", err)
 		return c.NoContent(http.StatusBadRequest)
 	}
+	dateList, err := w.getDateList(memoName, memoDate, c.QueryParam("to"))
+	if err != nil {
+		log.Printf("%+v", err)
+		return c.NoContent(http.StatusBadRequest)
+	}
+	return w.renderNewNoteForm(
+		c,
+		c.QueryParam("base"),
+		c.QueryParam("date"),
+		c.QueryParam("to"),
+		dateList,
+	)
+}
+
+func (w *WebApp) getDateList(memoName string, memoDate time.Time, to string) ([]time.Time, error) {
 	now := time.Now()
-	rep := repositories.NewDailyDataRepository(filepath.Join(w.dataDirPath, "daily_data.json"))
-	usecase := usecases.NewGetDateSelectRangeUseCase(now, rep)
+	usecase := usecases.NewGetDateSelectRangeUseCase(now, w.dailyDataRep)
 	var mode usecases.InsertMode
-	switch c.QueryParam("to") {
+	switch to {
 	case "newer":
 		mode = usecases.INSERT_NEWER_MODE
 	case "older":
 		mode = usecases.INSERT_OLDER_MODE
 	default:
-		return c.NoContent(http.StatusBadRequest)
+		return nil, errors.Errorf("toがおかしい to: %v", to)
 	}
-	dateList, err := usecase.Handle(memoName, memoDate, mode)
-	if err != nil {
-		log.Fatalf("fail getting data: %v", err)
-	}
+	return usecase.Handle(memoName, memoDate, mode)
+}
+
+func (w *WebApp) renderNewNoteForm(c echo.Context, base, date, to string, dateList []time.Time) error {
 	return c.Render(http.StatusOK, "new_form.html", map[string]interface{}{
 		"Title":    "note追加",
 		"dateList": dateList,
-		"Base":     c.QueryParam("base"),
-		"Date":     c.QueryParam("date"),
-		"To":       c.QueryParam("to"),
+		"Base":     base,
+		"Date":     date,
+		"To":       to,
 	})
+}
+
+func (w *WebApp) addNewNote(c echo.Context) error {
+	// パラメータ取得
+	baseMemoDate, err := time.ParseInLocation("2006-01-02T15:04:05.000000Z", c.FormValue("base_memo_date")+"T00:00:00.000000Z", time.Local)
+	if err != nil {
+		// baseMemoDateがparseできないので初期画面に戻すしかない。(通常は起こりえないはず)
+		return w.list(c)
+	}
+	baseMemoName := c.FormValue("base_memo_name")
+
+	newMemoDate, err := time.ParseInLocation("2006-01-02T15:04:05.000000Z", c.FormValue("new_memo_date")+"T00:00:00.000000Z", time.Local)
+	if err != nil {
+		// todo: バリデーションエラーにして画面を戻す
+		message := fmt.Sprintf("fail date parse: %+v", errors.WithStack(err))
+		log.Println(message)
+		return c.String(http.StatusBadRequest, message)
+	}
+	newMemoName := c.FormValue("new_memo_name")
+	memo := c.FormValue("memo")
+	to := c.FormValue("to")
+	var mode usecases.InsertMode
+	switch to {
+	case "newer":
+		mode = usecases.INSERT_NEWER_MODE
+	case "older":
+		mode = usecases.INSERT_OLDER_MODE
+	default:
+		// todo: より良い方法検討
+		return c.NoContent(http.StatusBadRequest)
+	}
+	usecase := usecases.NewSaveDailyDataFromParamsUseCase(w.noteRep, w.dailyDataRep)
+	usecase.Handle(baseMemoDate, baseMemoName, newMemoDate, newMemoName, memo, mode)
+	// todo: メモ編集画面へリダイレクトさせる
+	return c.Redirect(http.StatusFound, "/")
 }
 
 type Template struct {

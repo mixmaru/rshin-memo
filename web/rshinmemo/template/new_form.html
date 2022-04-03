@@ -6,14 +6,15 @@
 </head>
 <body>
 <form action="/note/new" method="post">
-    <input type="hidden" name="base" value="{{ .Base }}">
-    <input type="hidden" name="date" value="{{ .Date }}">
+    <input type="hidden" name="base_memo_name" value="{{ .Base }}">
+    <input type="hidden" name="base_memo_date" value="{{ .Date }}">
     <input type="hidden" name="to" value="{{ .To }}">
-    <select name="date">
+    <select name="new_memo_date">
         {{ range .dateList }}
         <option value="{{ .Format "2006-01-02" }}">{{ .Format "2006-01-02" }}</option>
         {{ end }}
     </select>
+    <input type="text" name="new_memo_name" />
     <textarea name="memo"></textarea>
     <button type="submit">決定</button>
 </form>

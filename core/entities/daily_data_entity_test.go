@@ -58,3 +58,113 @@ func TestDailyDataEntity_DateStr(t *testing.T) {
 	)
 	assert.Equal(t, "2021-01-01", entity.DateStr())
 }
+
+func TestDailyDataEntity_InsertNoteName(t *testing.T) {
+	t.Run("先頭", func(t *testing.T) {
+		// 準備
+		entity := NewDailyDataEntity(
+			time.Date(2021, 1, 1, 12, 0, 0, 0, time.Local),
+			[]string{
+				"Note1",
+				"Note2",
+				"Note3",
+			},
+		)
+
+		// 実行
+		entity.InsertNoteName("insertNote", 0)
+
+		// 検証
+		expected := NewDailyDataEntity(
+			time.Date(2021, 1, 1, 12, 0, 0, 0, time.Local),
+			[]string{
+				"insertNote",
+				"Note1",
+				"Note2",
+				"Note3",
+			},
+		)
+		assert.Equal(t, expected, entity)
+	})
+
+	t.Run("中", func(t *testing.T) {
+		// 準備
+		entity := NewDailyDataEntity(
+			time.Date(2021, 1, 1, 12, 0, 0, 0, time.Local),
+			[]string{
+				"Note1",
+				"Note2",
+				"Note3",
+			},
+		)
+
+		// 実行
+		entity.InsertNoteName("insertNote", 1)
+
+		// 検証
+		expected := NewDailyDataEntity(
+			time.Date(2021, 1, 1, 12, 0, 0, 0, time.Local),
+			[]string{
+				"Note1",
+				"insertNote",
+				"Note2",
+				"Note3",
+			},
+		)
+		assert.Equal(t, expected, entity)
+	})
+
+	t.Run("末", func(t *testing.T) {
+		// 準備
+		entity := NewDailyDataEntity(
+			time.Date(2021, 1, 1, 12, 0, 0, 0, time.Local),
+			[]string{
+				"Note1",
+				"Note2",
+				"Note3",
+			},
+		)
+
+		// 実行
+		entity.InsertNoteName("insertNote", 3)
+
+		// 検証
+		expected := NewDailyDataEntity(
+			time.Date(2021, 1, 1, 12, 0, 0, 0, time.Local),
+			[]string{
+				"Note1",
+				"Note2",
+				"Note3",
+				"insertNote",
+			},
+		)
+		assert.Equal(t, expected, entity)
+	})
+
+	t.Run("末以降", func(t *testing.T) {
+		// 準備
+		entity := NewDailyDataEntity(
+			time.Date(2021, 1, 1, 12, 0, 0, 0, time.Local),
+			[]string{
+				"Note1",
+				"Note2",
+				"Note3",
+			},
+		)
+
+		// 実行
+		entity.InsertNoteName("insertNote", 10)
+
+		// 検証
+		expected := NewDailyDataEntity(
+			time.Date(2021, 1, 1, 12, 0, 0, 0, time.Local),
+			[]string{
+				"Note1",
+				"Note2",
+				"Note3",
+				"insertNote",
+			},
+		)
+		assert.Equal(t, expected, entity)
+	})
+}
