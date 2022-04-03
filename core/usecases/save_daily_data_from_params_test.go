@@ -262,6 +262,64 @@ func TestCreateNoteFromParamsUseCaseInteractor_Handle(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("(E)", func(t *testing.T) {
+		retData := []*entities.DailyDataEntity{
+			entities.NewDailyDataEntity(
+				time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
+				[]string{
+					"noteC",
+					"noteB",
+					"noteA",
+				},
+			),
+			entities.NewDailyDataEntity(
+				time.Date(2021, 1, 5, 0, 0, 0, 0, time.Local),
+				[]string{
+					"noteC",
+					"noteB",
+					"noteA",
+				},
+			),
+		}
+
+		saveingEntity := entities.NewDailyDataEntity(
+			time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
+			[]string{
+				"newMemoName",
+			},
+		)
+
+		noteEntity := entities.NewNoteEntity("newMemoName", "new_memo_内容")
+
+		// repository mock
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dailyDataRep := mock_repositories.NewMockDailyDataRepositoryInterface(ctrl)
+		dailyDataRep.EXPECT().Get().Return(retData, nil)
+		dailyDataRep.EXPECT().Save(saveingEntity)
+
+		noteRep := mock_repositories.NewMockNoteRepositoryInterface(ctrl)
+		noteRep.EXPECT().Save(noteEntity).Return(nil)
+
+		// create test data
+		interactor := NewSaveDailyDataFromParamsUseCase(
+			noteRep,
+			dailyDataRep,
+		)
+
+		// 実行
+		err := interactor.Handle(
+			time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
+			"noteA",
+			time.Date(2021, 1, 8, 0, 0, 0, 0, time.Local),
+			"newMemoName",
+			"new_memo_内容",
+			INSERT_OLDER_MODE,
+		)
+		// 検証,意図通りにmockを叩いているか？
+		assert.NoError(t, err)
+	})
+
 	t.Run("(F)存在しないNoteNameが1つ含まれている場合正常終了する", func(t *testing.T) {
 		retData := []*entities.DailyDataEntity{
 			entities.NewDailyDataEntity(
