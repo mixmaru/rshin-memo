@@ -17,12 +17,17 @@ import (
 )
 
 type WebApp struct {
-	port        string
-	dataDirPath string
+	port         string
+	noteRep      *repositories.NoteRepository
+	dailyDataRep *repositories.DailyDataRepository
 }
 
 func NewWebApp(port string, dataDirPath string) *WebApp {
-	return &WebApp{dataDirPath: dataDirPath, port: port}
+	return &WebApp{
+		port:         port,
+		noteRep:      repositories.NewNoteRepository(dataDirPath),
+		dailyDataRep: repositories.NewDailyDataRepository(filepath.Join(dataDirPath, "daily_data.json")),
+	}
 }
 
 func (w *WebApp) Run() {
@@ -46,8 +51,7 @@ func (w *WebApp) initRouter() *echo.Echo {
 
 func (w *WebApp) list(c echo.Context) error {
 	// メモ一覧データ取得
-	rep := repositories.NewDailyDataRepository(filepath.Join(w.dataDirPath, "daily_data.json"))
-	useCase := usecases.NewGetAllDailyListUsecase(rep)
+	useCase := usecases.NewGetAllDailyListUsecase(w.dailyDataRep)
 	dailyData, err := useCase.Handle()
 	if err != nil {
 		log.Fatalf("fail getting data: %v", err)
@@ -65,7 +69,7 @@ func (w *WebApp) memo(c echo.Context) error {
 	if err != nil {
 		return c.NoContent(http.StatusNotFound)
 	}
-	useCase := usecases.NewGetNoteUseCase(repositories.NewNoteRepository(w.dataDirPath))
+	useCase := usecases.NewGetNoteUseCase(w.noteRep)
 	note, notExist, err := useCase.Handle(noteName)
 	if err != nil {
 		log.Fatalf("fail getting data: %v", err)
@@ -113,8 +117,7 @@ func (w *WebApp) noteNew(c echo.Context) error {
 
 func (w *WebApp) getDateList(memoName string, memoDate time.Time, to string) ([]time.Time, error) {
 	now := time.Now()
-	rep := repositories.NewDailyDataRepository(filepath.Join(w.dataDirPath, "daily_data.json"))
-	usecase := usecases.NewGetDateSelectRangeUseCase(now, rep)
+	usecase := usecases.NewGetDateSelectRangeUseCase(now, w.dailyDataRep)
 	var mode usecases.InsertMode
 	switch to {
 	case "newer":
@@ -155,16 +158,20 @@ func (w *WebApp) addNewNote(c echo.Context) error {
 	}
 	newMemoName := c.FormValue("new_memo_name")
 	to := c.FormValue("to")
-	dummyUseCase(baseMemoDate, baseMemoName, newMemoDate, newMemoName, to)
-	/*
-
-	 */
+	var mode usecases.InsertMode
+	switch to {
+	case "newer":
+		mode = usecases.INSERT_NEWER_MODE
+	case "older":
+		mode = usecases.INSERT_OLDER_MODE
+	default:
+		// todo: より良い方法検討
+		return c.NoContent(http.StatusBadRequest)
+	}
+	usecase := usecases.NewSaveDailyDataFromParamsUseCase(w.noteRep, w.dailyDataRep)
+	usecase.Handle(baseMemoDate, baseMemoName, newMemoDate, newMemoName, "aaa", mode)
 	// todo: メモ編集画面へリダイレクトさせる
 	return c.Redirect(http.StatusFound, "/")
-}
-
-func dummyUseCase(date time.Time, name string, date2 time.Time, name2 string, to string) {
-
 }
 
 type Template struct {
