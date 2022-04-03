@@ -95,6 +95,7 @@ func (c *SaveDailyDataFromParamsUseCase) Handle(
 	//return nil
 }
 
+// todo: リファクタ
 func (c *SaveDailyDataFromParamsUseCase) generateNewDailyDataEntity(newMemoDate time.Time, newMemoname string, baseMemoDate time.Time, baseMemoName string, mode InsertMode) (*entities.DailyDataEntity, error) {
 	// データ取得
 	allDailyData, err := c.dailyDataRepository.Get()
