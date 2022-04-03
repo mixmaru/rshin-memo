@@ -102,7 +102,7 @@ func (c *SaveDailyDataFromParamsUseCase) generateNewDailyDataEntity(newMemoDate 
 		return nil, err
 	}
 	var pre *entities.DailyDataEntity
-	for _, dailyData := range allDailyData {
+	for i, dailyData := range allDailyData {
 		// 上からたどっていってベース日までたどる。
 		if !dailyData.Date().Equal(baseMemoDate) {
 			pre = dailyData
@@ -111,12 +111,12 @@ func (c *SaveDailyDataFromParamsUseCase) generateNewDailyDataEntity(newMemoDate 
 		switch mode {
 		case INSERT_NEWER_MODE:
 			// 上挿入の場合
-			for i, note := range dailyData.NoteNames() {
+			for j, note := range dailyData.NoteNames() {
 				// ベースメモ名までたどる。このとき番号を数えておく
 				if note == baseMemoName {
-					if i != 0 {
+					if j != 0 {
 						// 番号が0(先頭)でなければ一つ前に挿入する。
-						dailyData.InsertNoteName(newMemoname, i)
+						dailyData.InsertNoteName(newMemoname, j)
 					} else {
 						// 番号が0であれば挿入日付を確認し、同じでなければ一つ前のやつの日付を確認する
 						if dailyData.Date() == newMemoDate {
@@ -136,6 +136,33 @@ func (c *SaveDailyDataFromParamsUseCase) generateNewDailyDataEntity(newMemoDate 
 			}
 			return nil, errors.Errorf("想定外. dailyData:%v, newMemoDate:%v, newMemoname:%v, baseMemoDate:%v, baseMemoName:%v", dailyData, newMemoDate, newMemoname, baseMemoDate, baseMemoName)
 		case INSERT_OLDER_MODE:
+			// 下挿入の場合
+			for j, note := range dailyData.NoteNames() {
+				// ベースメモ名までたどる。このとき番号を数えておく
+				if note == baseMemoName {
+					if j != len(dailyData.NoteNames())-1 {
+						// 番号が末でなければ一つ後に挿入する。
+						dailyData.InsertNoteName(newMemoname, j+1)
+						return dailyData, nil
+					} else {
+						// 番号が末であれば挿入日付を確認し、
+						if dailyData.Date() == newMemoDate {
+							// 同じであればそこの末に追加する
+							dailyData.InsertNoteName(newMemoname, j+1)
+							return dailyData, nil
+						} else if allDailyData[i+1].Date().Equal(newMemoDate) {
+							// 同じでなければ次のやつの日付を確認する。
+							// 同じであればそこの先頭に追加する
+							allDailyData[j+1].InsertNoteName(newMemoname, 0)
+							return allDailyData[i+1], nil
+						} else {
+							// 異なれば新しいdailyDataを作成する
+							return entities.NewDailyDataEntity(newMemoDate, []string{newMemoname}), nil
+						}
+					}
+				}
+			}
+			return nil, errors.Errorf("想定外. dailyData:%v, newMemoDate:%v, newMemoname:%v, baseMemoDate:%v, baseMemoName:%v", dailyData, newMemoDate, newMemoname, baseMemoDate, baseMemoName)
 		default:
 			return nil, errors.Errorf("想定外エラー mode: %v", mode)
 		}
@@ -165,5 +192,5 @@ func (c *SaveDailyDataFromParamsUseCase) generateNewDailyDataEntity(newMemoDate 
 	                   違う
 	                       新しくデータを作ってそこに一つだけ追加する
 	*/
-	return nil, nil
+	return nil, errors.Errorf("想定外. newMemoDate:%v, newMemoname:%v, baseMemoDate:%v, baseMemoName:%v", newMemoDate, newMemoname, baseMemoDate, baseMemoName)
 }

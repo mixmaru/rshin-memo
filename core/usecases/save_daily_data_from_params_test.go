@@ -134,7 +134,7 @@ func TestCreateNoteFromParamsUseCaseInteractor_Handle(t *testing.T) {
 			time.Date(2021, 1, 10, 0, 0, 0, 0, time.Local),
 			"newMemoName",
 			"new_memo_内容",
-			INSERT_NEWER_MODE,
+			INSERT_OLDER_MODE,
 		)
 		// 検証,意図通りにmockを叩いているか？
 		assert.NoError(t, err)
