@@ -129,6 +129,7 @@ func TestWebApp_addNewNote(t *testing.T) {
 		body.Set("base_memo_date", "2022-02-19")
 		body.Set("new_memo_name", "新規memo")
 		body.Set("new_memo_date", "2022-02-19")
+		body.Set("memo", "memo内容")
 		body.Set("to", "older")
 
 		////// 実行
@@ -152,6 +153,7 @@ func TestWebApp_addNewNote(t *testing.T) {
 		body.Set("base_memo_date", "aaaaa")
 		body.Set("new_memo_name", "新規memo")
 		body.Set("new_memo_date", "2022-02-19")
+		body.Set("memo", "memo内容")
 		body.Set("to", "older")
 
 		////// 実行

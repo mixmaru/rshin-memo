@@ -157,6 +157,7 @@ func (w *WebApp) addNewNote(c echo.Context) error {
 		return c.String(http.StatusBadRequest, message)
 	}
 	newMemoName := c.FormValue("new_memo_name")
+	memo := c.FormValue("memo")
 	to := c.FormValue("to")
 	var mode usecases.InsertMode
 	switch to {
@@ -169,7 +170,7 @@ func (w *WebApp) addNewNote(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 	usecase := usecases.NewSaveDailyDataFromParamsUseCase(w.noteRep, w.dailyDataRep)
-	usecase.Handle(baseMemoDate, baseMemoName, newMemoDate, newMemoName, "aaa", mode)
+	usecase.Handle(baseMemoDate, baseMemoName, newMemoDate, newMemoName, memo, mode)
 	// todo: メモ編集画面へリダイレクトさせる
 	return c.Redirect(http.StatusFound, "/")
 }
