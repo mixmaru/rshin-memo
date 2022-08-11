@@ -9,6 +9,41 @@ import (
 	"testing"
 )
 
+func TestNoteRepository_New(t *testing.T) {
+	t.Run("存在するディレクトリを渡してインスタンス化ができる", func(t *testing.T) {
+		////// 準備
+		thisDir, err := os.Getwd()
+		if err != nil {
+			t.Fatalf("%+v", err)
+		}
+		targetDirPath := filepath.Join(thisDir, "test")
+
+		////// 実行
+		rep := NewNoteRepository(targetDirPath)
+
+		////// 検証
+		assert.NotNil(t, rep)
+	})
+
+	t.Run("存在しないディレクトリを渡してインスタンス化ができる。そのディレクトリが作成される", func(t *testing.T) {
+		////// 準備
+		thisDir, err := os.Getwd()
+		if err != nil {
+			t.Fatalf("%+v", err)
+		}
+		targetDirPath := filepath.Join(thisDir, "not_exist")
+		// 事前に消しておく。存在しなければエラーが起きるが存在しなければいいのでエラーは無視する
+		_ = os.Remove(targetDirPath)
+
+		////// 実行
+		rep := NewNoteRepository(targetDirPath)
+
+		////// 検証
+		assert.NotNil(t, rep)
+		assert.DirExists(t, targetDirPath)
+	})
+}
+
 func TestNoteRepository_GetByNoteName(t *testing.T) {
 	t.Run("指定のNoteファイルが存在しない場合、nullが返る", func(t *testing.T) {
 		////// 準備

@@ -22,6 +22,12 @@ type NoteRepository struct {
 }
 
 func NewNoteRepository(dirPath string) *NoteRepository {
+	// 対象ディレクトリが存在していなければ作成する
+	if f, err := os.Stat(dirPath); os.IsNotExist(err) || !f.IsDir() {
+		if err := os.Mkdir(dirPath, 0755); err != nil {
+			panic(err)
+		}
+	}
 	return &NoteRepository{dirPath: dirPath}
 }
 
